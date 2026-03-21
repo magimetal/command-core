@@ -1,0 +1,26 @@
+{
+  "name": "terminal-tower-defense",
+  "version": "1.0.0",
+  "description": "Terminal-native tower defense MVP",
+  "main": "dist/main.js",
+  "scripts": {
+    "start": "tsx src/main.ts",
+    "build": "tsc",
+    "test": "vitest run"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "ink": "^3.2.0",
+    "react": "^17.0.2"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "@types/react": "^17.0.91",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.0"
+  }
+}

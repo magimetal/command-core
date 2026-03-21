@@ -1,0 +1,57 @@
+import { describe, expect, test } from 'vitest';
+import { EnemyArchetype } from '../../src/const/enemies';
+import { ENEMY_PATH } from '../../src/const/map';
+import { createInitialState } from '../../src/simulation/create-initial-state';
+import { tick } from '../../src/simulation/tick';
+
+describe('economy', () => {
+  test('enemy removed with reward=10 increases currency by 10', () => {
+    const state = {
+      ...createInitialState(),
+      phase: 'WAVE_ACTIVE' as const,
+      spawnQueue: [],
+      enemies: [
+        {
+          id: 'enemy-dead',
+          archetype: EnemyArchetype.STANDARD,
+          pos: [2, 7] as [number, number],
+          pathIndex: 2,
+          hp: 0,
+          maxHp: 10,
+          moveCooldown: 1,
+          dead: true
+        }
+      ]
+    };
+
+    const result = tick(state);
+
+    expect(result.currency).toBe(state.currency + 10);
+    expect(result.enemies).toHaveLength(0);
+  });
+
+  test('TANK leak with leakDamage=3 reduces base HP by 3', () => {
+    const state = {
+      ...createInitialState(),
+      phase: 'WAVE_ACTIVE' as const,
+      spawnQueue: [],
+      enemies: [
+        {
+          id: 'enemy-tank',
+          archetype: EnemyArchetype.TANK,
+          pos: ENEMY_PATH[ENEMY_PATH.length - 2],
+          pathIndex: ENEMY_PATH.length - 2,
+          hp: 40,
+          maxHp: 40,
+          moveCooldown: 1,
+          dead: false
+        }
+      ]
+    };
+
+    const result = tick(state);
+
+    expect(result.baseHp).toBe(state.baseHp - 3);
+    expect(result.enemies).toHaveLength(0);
+  });
+});
