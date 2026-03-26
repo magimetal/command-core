@@ -1,9 +1,9 @@
-import { stripAnsi } from './color-map';
+import { getDisplayWidth, truncateDisplay } from './color-map';
 
 export const SECTION_BREAK = '__DIVIDER__';
 
 export const padVisibleLine = (line: string, width: number): string => {
-  const visibleLength = stripAnsi(line).length;
+  const visibleLength = getDisplayWidth(line);
   if (visibleLength >= width) {
     return line;
   }
@@ -12,7 +12,7 @@ export const padVisibleLine = (line: string, width: number): string => {
 };
 
 export const padCenteredVisibleLine = (line: string, width: number): string => {
-  const visibleLength = stripAnsi(line).length;
+  const visibleLength = getDisplayWidth(line);
   if (visibleLength >= width) {
     return line;
   }
@@ -26,11 +26,13 @@ export const padCenteredVisibleLine = (line: string, width: number): string => {
 
 export const composeBorder = (
   lines: string[],
-  options: { minInnerWidth?: number; align?: 'left' | 'center' } = {}
+  options: { minInnerWidth?: number; maxInnerWidth?: number; align?: 'left' | 'center' } = {}
 ): string => {
-  const { minInnerWidth = 0, align = 'left' } = options;
-  const contentWidth = Math.max(...lines.map((line) => stripAnsi(line).length));
-  const innerWidth = Math.max(contentWidth, minInnerWidth);
+  const { minInnerWidth = 0, maxInnerWidth, align = 'left' } = options;
+  const contentWidth = Math.max(...lines.map((line) => getDisplayWidth(line)));
+  const desiredInnerWidth = Math.max(contentWidth, minInnerWidth);
+  const innerWidth =
+    maxInnerWidth === undefined ? desiredInnerWidth : Math.max(1, Math.min(desiredInnerWidth, maxInnerWidth));
   const horizontal = '─'.repeat(innerWidth);
 
   return [
@@ -40,8 +42,11 @@ export const composeBorder = (
         return `├${horizontal}┤`;
       }
 
+      const fittedLine = getDisplayWidth(line) > innerWidth ? truncateDisplay(line, innerWidth) : line;
       const paddedLine =
-        align === 'center' ? padCenteredVisibleLine(line, innerWidth) : padVisibleLine(line, innerWidth);
+        align === 'center'
+          ? padCenteredVisibleLine(fittedLine, innerWidth)
+          : padVisibleLine(fittedLine, innerWidth);
       return `│${paddedLine}│`;
     }),
     `└${horizontal}┘`

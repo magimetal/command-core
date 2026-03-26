@@ -6,6 +6,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+- Design context persistence for future sessions:
+  - new `.impeccable.md` baseline for users, brand personality, aesthetic direction, and design principles
+  - mirrored `## Design Context` section in `AGENTS.md` for agent-wide consistency
+- Rendering hardening coverage:
+  - new reduced-motion checks and narrow-pane guard tests in `tests/rendering/frame-composer.test.ts`
+  - new grapheme/display-width test suite in `tests/rendering/color-map.test.ts`
+
+### Changed
+- Hardened frame rendering against real-world terminal inputs:
+  - frame composition now accepts terminal column limits and gracefully falls back with a guidance frame when panes are too narrow
+  - title bar map identity now truncates safely to prevent overflow from long labels/seeds
+  - border padding now uses display-width-aware fitting/truncation for ANSI + Unicode content
+- Added reduced-motion behavior via `REDUCED_MOTION=1`:
+  - disables title scanline animation
+  - disables base pulse alternation
+  - removes blinking end-state cursor prompt
+- Fixed right-border drift when enemies were present on the same row by correcting glyph width classification for gameplay symbols.
+
+### Documentation
+- Documented accessibility hardening flag in `README.md`.
+
 ## [2.0.0] - 2026-03-26
 
 ### Added

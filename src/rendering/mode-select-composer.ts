@@ -7,7 +7,7 @@ const composeModeCard = (label: string, description: string, selected: boolean):
   return selected ? chalk.bold.cyanBright(`▶ ${base}`) : `  ${base}`;
 };
 
-export const composeModeSelectFrame = (state: GameState): string => {
+export const composeModeSelectFrame = (state: GameState, maxInnerWidth?: number): string => {
   const operationsSelected = state.menuCursor === 0;
   const anomalySelected = state.menuCursor === 1;
 
@@ -21,6 +21,6 @@ export const composeModeSelectFrame = (state: GameState): string => {
       SECTION_BREAK,
       chalk.dim('↑↓ Navigate   Enter: Confirm   Q: Quit')
     ],
-    { minInnerWidth: 76, align: 'center' }
+    { minInnerWidth: 76, maxInnerWidth, align: 'center' }
   );
 };

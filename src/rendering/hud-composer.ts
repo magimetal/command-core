@@ -8,6 +8,7 @@ import {
   colorizeGridSymbol,
   colorizeHudValue,
   colorizePhaseLabel,
+  truncateDisplay,
   type EventMessageClass
 } from './color-map';
 import { getVisibleEventLog } from '../utils/event-log';
@@ -95,6 +96,7 @@ export const composeHud = (state: GameState): string => {
 };
 
 export const composeTitleBar = (state: GameState): string => {
+  const MAX_MAP_LABEL_WIDTH = 20;
   const mapLabel =
     state.runConfig.mode === 'ANOMALY'
       ? (state.runConfig.mapLabel.match(/#\d+/)?.[0] ?? state.runConfig.mapLabel)
@@ -103,7 +105,7 @@ export const composeTitleBar = (state: GameState): string => {
     state.runConfig.mode === 'ANOMALY'
       ? chalk.bold.magentaBright('[ANOMALY]')
       : chalk.bold.cyanBright('[OPERATIONS]');
-  const mapIdentity = chalk.bold.white(mapLabel);
+  const mapIdentity = chalk.bold.white(truncateDisplay(mapLabel, MAX_MAP_LABEL_WIDTH));
   const wave = chalk.cyan(`Wave ${state.wave}/${state.runConfig.waves.length}`);
   const phase = colorizePhaseLabel(state.phase);
 

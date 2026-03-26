@@ -124,6 +124,10 @@ The tests enforce this ordering.
 - Uses Unicode + ANSI for gameplay readability.
 - Rendering tests guard frame budget (max width/height constraints) for tmux-safe usage.
 
+### Accessibility / Hardening Flags
+
+- `REDUCED_MOTION=1` disables blinking and frame-based pulse/scanline motion.
+
 ## Project Docs
 
 - `SPEC.md` — product and MVP contract

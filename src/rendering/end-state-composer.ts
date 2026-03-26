@@ -1,10 +1,11 @@
 import chalk from 'chalk';
 import type { GameState } from '../models/game-state';
 import { calculateScore } from '../simulation/score';
+import { isReducedMotionEnabled } from './accessibility';
 import { colorizeHudValue } from './color-map';
 import { composeBorder, SECTION_BREAK } from './border';
 
-export const composeEndStateFrame = (state: GameState): string => {
+export const composeEndStateFrame = (state: GameState, maxInnerWidth?: number): string => {
   const isVictory = state.phase === 'VICTORY';
 
   const banner = isVictory
@@ -41,16 +42,12 @@ export const composeEndStateFrame = (state: GameState): string => {
     `Gold remaining: ${colorizeHudValue(`${state.currency}`, 'GOLD', state.baseHp)}`;
   const score = calculateScore(state);
   const scoreLine = `Score: ${colorizeHudValue(`${score}`, 'GOLD', state.baseHp)}`;
-  const blinkPrompt = `${chalk.bold.white('Press Q to quit')} \u001b[5m▌\u001b[0m`;
+  const blinkPrompt = isReducedMotionEnabled()
+    ? chalk.bold.white('Press Q to quit')
+    : `${chalk.bold.white('Press Q to quit')} \u001b[5m▌\u001b[0m`;
 
-  return composeBorder([
-    ...colorizedBanner,
-    SECTION_BREAK,
-    titleLine,
-    modeLine,
-    statLine,
-    scoreLine,
-    SECTION_BREAK,
-    blinkPrompt
-  ]);
+  return composeBorder(
+    [...colorizedBanner, SECTION_BREAK, titleLine, modeLine, statLine, scoreLine, SECTION_BREAK, blinkPrompt],
+    { maxInnerWidth }
+  );
 };

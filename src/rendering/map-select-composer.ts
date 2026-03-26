@@ -3,7 +3,7 @@ import { OPERATIONS_MAP_DEFS } from '../const/operations-maps';
 import type { GameState } from '../models/game-state';
 import { composeBorder, SECTION_BREAK } from './border';
 
-export const composeMapSelectFrame = (state: GameState): string => {
+export const composeMapSelectFrame = (state: GameState, maxInnerWidth?: number): string => {
   const mapLines = OPERATIONS_MAP_DEFS.map((mapDef, index) => {
     const selected = state.menuCursor === index;
     const line = `[${index + 1}] ${mapDef.label}  ${mapDef.description}`;
@@ -20,6 +20,6 @@ export const composeMapSelectFrame = (state: GameState): string => {
       SECTION_BREAK,
       chalk.dim('↑↓ Select   Enter: Confirm   Esc/B: Back')
     ],
-    { minInnerWidth: 76, align: 'center' }
+    { minInnerWidth: 76, maxInnerWidth, align: 'center' }
   );
 };

@@ -202,7 +202,7 @@ export const App = () => {
     return true;
   };
 
-  const frame = composeFrame(state);
+  const frame = composeFrame(state, { terminalColumns: process.stdout.columns });
 
   const handleMenuNavigate = (delta: number) => {
     setState((previousState) => navigateMenuState(previousState, delta));

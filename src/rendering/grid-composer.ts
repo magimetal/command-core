@@ -2,6 +2,7 @@ import { ENEMY_DEFS, EnemyArchetype } from '../const/enemies';
 import { getTowerDef, TowerArchetype } from '../const/towers';
 import { CellType } from '../models/cell';
 import { isPlacementPhase, type GameState } from '../models/game-state';
+import { isReducedMotionEnabled } from './accessibility';
 import { colorizeGridSymbol, type GridEntityClass } from './color-map';
 
 const CELL_SYMBOLS: Record<CellType, string> = {
@@ -122,6 +123,7 @@ const buildRangePreviewKeys = (state: GameState): Set<string> => {
 };
 
 export const composeGrid = (state: GameState): string[] => {
+  const reducedMotion = isReducedMotionEnabled();
   const enemyLookup = getEnemyLookup(state);
   const towerLookup = getTowerLookup(state);
   const projectileLookup = new Map(
@@ -182,7 +184,7 @@ export const composeGrid = (state: GameState): string[] => {
           cell.type === CellType.PATH
             ? getPathSymbol(state, rowIndex, colIndex)
             : cell.type === CellType.BASE
-              ? state.frame % 4 < 2
+              ? reducedMotion || state.frame % 4 < 2
                 ? '⬡'
                 : '⊡'
               : CELL_SYMBOLS[cell.type];

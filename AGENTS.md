@@ -79,3 +79,46 @@ npm test
 - Runtime is configured as CommonJS in `package.json`.
 - `FRAME_INTERVAL_MS=67` (~15 FPS target); loop stops on `GAME_OVER`/`VICTORY`.
 - No git metadata available in this workspace; AGENTS omits commit/branch specifics.
+
+## Design Context
+
+### Users
+- Primary users are **developers/hobbyists** and **strategy gamers**.
+- Typical usage context includes **quick runs** and **focused sessions**, often inside **tmux/SSH terminal panes**.
+- Core jobs to be done:
+  - Parse battlefield state at a glance (readability first)
+  - Make confident tactical decisions under wave pressure
+  - Explore higher-skill strategy/mastery over repeated runs
+  - Experience a polished terminal-native UX showcase
+
+### Brand Personality
+- 3-word personality: **Arcade · Retro · Energetic**.
+- Voice and tone should feel like a **command console with personality**: crisp, tactical messaging with selective bursts of excitement.
+- Emotional goals:
+  - **Confident control** (clear information hierarchy)
+  - **Tense urgency** (waves feel consequential)
+  - **Playful delight** (small moments of charm without sacrificing clarity)
+
+### Aesthetic Direction
+- Visual tone: **terminal-first tactical arcade** with Unicode glyph language and bordered frame composition.
+- References:
+  - **Traditional roguelikes** for dense, legible symbol semantics
+  - **Modern game UI/HUD patterns** for hierarchy, momentum, and feedback clarity
+- Anti-reference:
+  - Must **not** resemble a flat spreadsheet-like utility display.
+- Theme and color direction:
+  - ANSI-driven, terminal-native presentation (dark-terminal friendly by default)
+  - No strict required or forbidden brand colors currently
+  - Preserve symbol/text redundancy so meaning is never color-only
+
+### Design Principles
+1. **One-glance tactical readability**
+   - Critical state (HP, wave, threats, cursor context, recent events) must be scannable in under a second.
+2. **Energy without noise**
+   - Keep retro-arcade personality and tension cues, but avoid clutter that obscures decision-making.
+3. **Color is reinforcement, not dependency**
+   - Pair color with glyphs, prefixes, and labels to support accessibility and terminal variability.
+4. **Pane-safe composition**
+   - Respect constrained terminal layouts (tmux/SSH) and maintain strict frame-budget discipline.
+5. **Phase-aware ceremony**
+   - Title/mode/end states should feel intentional and expressive, while active gameplay remains information-first.

@@ -62,6 +62,26 @@ describe('composeFrame', () => {
     expect(frameZero).not.toBe(frameThree);
   });
 
+  test('reduced motion mode disables animated title scanline variation', () => {
+    const previousReducedMotion = process.env.REDUCED_MOTION;
+    const previousLevel = chalk.level;
+    process.env.REDUCED_MOTION = '1';
+    chalk.level = 3;
+
+    const base = createInitialState();
+    const frameZero = composeFrame({ ...base, frame: 0 });
+    const frameThree = composeFrame({ ...base, frame: 3 });
+
+    chalk.level = previousLevel;
+    if (previousReducedMotion === undefined) {
+      delete process.env.REDUCED_MOTION;
+    } else {
+      process.env.REDUCED_MOTION = previousReducedMotion;
+    }
+
+    expect(frameZero).toBe(frameThree);
+  });
+
   test('renders cohesive title logo block with framed top and bottom rows', () => {
     const frame = stripAnsi(composeFrame(createInitialState()));
 
@@ -299,6 +319,26 @@ describe('composeFrame', () => {
     expect(frame).toContain('┌');
   });
 
+  test('reduced motion mode removes blinking quit cursor from end-state prompt', () => {
+    const previousReducedMotion = process.env.REDUCED_MOTION;
+    process.env.REDUCED_MOTION = '1';
+
+    const state = {
+      ...createInitialState(),
+      phase: 'GAME_OVER' as const
+    };
+
+    const frame = composeFrame(state);
+
+    if (previousReducedMotion === undefined) {
+      delete process.env.REDUCED_MOTION;
+    } else {
+      process.env.REDUCED_MOTION = previousReducedMotion;
+    }
+
+    expect(frame).not.toContain('\u001b[5m');
+  });
+
   test('renders VICTORY ceremony screen', () => {
     const state = {
       ...createInitialState(),
@@ -421,6 +461,84 @@ describe('composeFrame', () => {
 
     expect(frame).toContain('[1-3] Tower');
     expect(frame).not.toContain('[1-4] Tower');
+  });
+
+  test('truncates excessively long map labels to preserve frame width budget', () => {
+    const state = {
+      ...createInitialState(),
+      phase: 'PREP' as const,
+      runConfig: {
+        ...createInitialState().runConfig,
+        mapLabel:
+          'Anomaly #999999999999999999999999999999999999999999999999999999999999999999'
+      }
+    };
+
+    const frame = stripAnsi(composeFrame(state));
+    const lines = frame.split('\n');
+    const width = Math.max(...lines.map((line) => line.length));
+
+    expect(width).toBeLessThanOrEqual(78);
+    expect(frame).toContain('Anomaly #');
+    expect(frame).toContain('…');
+  });
+
+  test('shows narrow-pane guidance when terminal width cannot fit battlefield grid', () => {
+    const state = {
+      ...createInitialState(),
+      phase: 'PREP' as const
+    };
+
+    const frame = stripAnsi(composeFrame(state, { terminalColumns: 48 }));
+
+    expect(frame).toContain('Terminal pane too narrow for battlefield view.');
+    expect(frame).toContain('Need at least 69 columns; current pane is 48.');
+    expect(frame).toContain('Widen pane or reduce terminal font size, then');
+  });
+
+  test('keeps right border aligned when enemies occupy a single row', () => {
+    const state = {
+      ...createInitialState(),
+      phase: 'WAVE_ACTIVE' as const,
+      enemies: [
+        {
+          id: 'enemy-standard',
+          archetype: EnemyArchetype.STANDARD,
+          pos: [6, 2] as [number, number],
+          pathIndex: 6,
+          hp: 10,
+          maxHp: 10,
+          moveCooldown: 2,
+          dead: false
+        },
+        {
+          id: 'enemy-fast',
+          archetype: EnemyArchetype.FAST,
+          pos: [8, 2] as [number, number],
+          pathIndex: 8,
+          hp: 5,
+          maxHp: 5,
+          moveCooldown: 1,
+          dead: false
+        },
+        {
+          id: 'enemy-tank',
+          archetype: EnemyArchetype.TANK,
+          pos: [10, 2] as [number, number],
+          pathIndex: 10,
+          hp: 40,
+          maxHp: 40,
+          moveCooldown: 4,
+          dead: false
+        }
+      ]
+    };
+
+    const frame = stripAnsi(composeFrame(state));
+    const lineLengths = frame.split('\n').map((line) => line.length);
+    const uniqueLengths = new Set(lineLengths);
+
+    expect(uniqueLengths.size).toBe(1);
   });
 
   test('SNIPER_TOWER color class is distinct from RAPID_TOWER', () => {
