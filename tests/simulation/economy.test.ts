@@ -54,4 +54,30 @@ describe('economy', () => {
     expect(result.baseHp).toBe(state.baseHp - 3);
     expect(result.enemies).toHaveLength(0);
   });
+
+  test('adds updated streak message at 5-kill milestone', () => {
+    const state = {
+      ...createInitialState(),
+      phase: 'WAVE_ACTIVE' as const,
+      enemiesKilled: 4,
+      spawnQueue: [],
+      enemies: [
+        {
+          id: 'enemy-dead',
+          archetype: EnemyArchetype.STANDARD,
+          pos: [2, 7] as [number, number],
+          pathIndex: 2,
+          hp: 0,
+          maxHp: 10,
+          moveCooldown: 1,
+          dead: true
+        }
+      ]
+    };
+
+    const result = tick(state);
+
+    expect(result.enemiesKilled).toBe(5);
+    expect(result.eventLog[0]).toBe('★ STREAK  5 kills — defense holding');
+  });
 });

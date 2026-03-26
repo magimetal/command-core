@@ -2,6 +2,7 @@ import type { Cell } from './cell';
 import type { EnemyArchetype } from '../const/enemies';
 import type { TowerArchetype } from '../const/towers';
 import type { Enemy } from './enemy';
+import type { Projectile } from './projectile';
 import type { Tower } from './tower';
 
 export type GamePhase =
@@ -16,6 +17,7 @@ export interface GameState {
   grid: Cell[][];
   enemies: Enemy[];
   towers: Tower[];
+  projectiles: Projectile[];
   currency: number;
   baseHp: number;
   wave: number;

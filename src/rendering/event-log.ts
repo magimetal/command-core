@@ -1,4 +1,4 @@
-const MAX_EVENT_LOG_ENTRIES = 5;
+const MAX_EVENT_LOG_ENTRIES = 7;
 
 export const appendEventLog = (eventLog: string[], message: string): string[] => {
   return [message, ...eventLog].slice(0, MAX_EVENT_LOG_ENTRIES);

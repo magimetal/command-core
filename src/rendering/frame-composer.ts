@@ -16,15 +16,76 @@ import {
 } from './color-map';
 import { getVisibleEventLog } from './event-log';
 import { composeHud } from './hud-composer';
+import { calculateScore } from '../simulation/score';
 
 const SECTION_BREAK = '__DIVIDER__';
 
 const CELL_SYMBOLS: Record<CellType, string> = {
-  [CellType.PATH]: '·',
-  [CellType.BUILDABLE]: '▪',
-  [CellType.BLOCKED]: '▓',
-  [CellType.SPAWN]: '⟶',
+  [CellType.PATH]: '─',
+  [CellType.BUILDABLE]: '░',
+  [CellType.BLOCKED]: '╠',
+  [CellType.SPAWN]: '⟹',
   [CellType.BASE]: '⬡'
+};
+
+const isPathLikeCell = (cellType: CellType): boolean => {
+  return cellType === CellType.PATH || cellType === CellType.SPAWN || cellType === CellType.BASE;
+};
+
+const getPathSymbol = (state: GameState, rowIndex: number, colIndex: number): string => {
+  const hasNorth = rowIndex > 0 && isPathLikeCell(state.grid[rowIndex - 1][colIndex].type);
+  const hasSouth =
+    rowIndex < state.grid.length - 1 && isPathLikeCell(state.grid[rowIndex + 1][colIndex].type);
+  const hasWest = colIndex > 0 && isPathLikeCell(state.grid[rowIndex][colIndex - 1].type);
+  const hasEast =
+    colIndex < state.grid[rowIndex].length - 1 &&
+    isPathLikeCell(state.grid[rowIndex][colIndex + 1].type);
+
+  if (hasNorth && hasSouth && hasEast && hasWest) {
+    return '┼';
+  }
+
+  if (hasNorth && hasSouth && hasEast) {
+    return '├';
+  }
+
+  if (hasNorth && hasSouth && hasWest) {
+    return '┤';
+  }
+
+  if (hasNorth && hasEast && hasWest) {
+    return '┴';
+  }
+
+  if (hasSouth && hasEast && hasWest) {
+    return '┬';
+  }
+
+  if (hasNorth && hasSouth) {
+    return '│';
+  }
+
+  if (hasEast && hasWest) {
+    return '─';
+  }
+
+  if (hasSouth && hasEast) {
+    return '┌';
+  }
+
+  if (hasSouth && hasWest) {
+    return '┐';
+  }
+
+  if (hasNorth && hasEast) {
+    return '└';
+  }
+
+  if (hasNorth && hasWest) {
+    return '┘';
+  }
+
+  return '─';
 };
 
 const getTowerLookup = (state: GameState): Map<string, TowerArchetype> => {
@@ -72,10 +133,49 @@ const getCellClass = (cellType: CellType): GridEntityClass => {
   return 'BASE';
 };
 
+const buildRangePreviewKeys = (state: GameState): Set<string> => {
+  const placementPhase = state.phase === 'PREP' || state.phase === 'WAVE_CLEAR';
+  if (!placementPhase) {
+    return new Set();
+  }
+
+  const [cursorCol, cursorRow] = state.cursor;
+  const cursorCell = state.grid[cursorRow]?.[cursorCol];
+  if (!cursorCell || cursorCell.type !== CellType.BUILDABLE || cursorCell.tower !== undefined) {
+    return new Set();
+  }
+
+  const towerDef = getTowerDef(state.selectedTowerArchetype);
+  const rangeSquared = towerDef.range * towerDef.range;
+  const keys = new Set<string>();
+
+  for (let row = 0; row < state.grid.length; row += 1) {
+    for (let col = 0; col < state.grid[row].length; col += 1) {
+      const gridCell = state.grid[row][col];
+      if (gridCell.type !== CellType.BUILDABLE || gridCell.tower !== undefined) {
+        continue;
+      }
+
+      const dx = col - cursorCol;
+      const dy = row - cursorRow;
+      if (dx * dx + dy * dy <= rangeSquared) {
+        keys.add(`${col},${row}`);
+      }
+    }
+  }
+
+  return keys;
+};
+
 const composeGrid = (state: GameState): string[] => {
   const enemyLookup = getEnemyLookup(state);
   const towerLookup = getTowerLookup(state);
+  const projectileLookup = new Map(
+    state.projectiles.map((projectile) => [`${projectile.pos[0]},${projectile.pos[1]}`, projectile])
+  );
   const cursorKey = `${state.cursor[0]},${state.cursor[1]}`;
+  const rangePreviewKeys = buildRangePreviewKeys(state);
+  const placementPhase = state.phase === 'PREP' || state.phase === 'WAVE_CLEAR';
 
   return state.grid.map((row, rowIndex) => {
     return row
@@ -91,7 +191,9 @@ const composeGrid = (state: GameState): string[] => {
 
           const hpRatio = enemy.hp / enemy.maxHp;
           const enemyClass =
-            enemy.archetype === EnemyArchetype.STANDARD
+            enemy.archetype === EnemyArchetype.FAST
+              ? 'FAST_ENEMY'
+              : enemy.archetype === EnemyArchetype.STANDARD
               ? 'STANDARD_ENEMY'
               : 'TANK_ENEMY';
 
@@ -99,6 +201,8 @@ const composeGrid = (state: GameState): string[] => {
         }
 
         const towerArchetype = towerLookup.get(key);
+        const projectile = projectileLookup.get(key);
+
         if (towerArchetype !== undefined) {
           const towerSymbol = getTowerDef(towerArchetype).symbol;
           if (key === cursorKey) {
@@ -108,13 +212,54 @@ const composeGrid = (state: GameState): string[] => {
           const towerClass =
             towerArchetype === TowerArchetype.RAPID
               ? 'RAPID_TOWER'
+              : towerArchetype === TowerArchetype.SNIPER
+                ? 'SNIPER_TOWER'
+              : towerArchetype === TowerArchetype.SLOW
+                ? 'SLOW_TOWER'
               : 'CANNON_TOWER';
 
           return colorizeGridSymbol(towerSymbol, towerClass);
         }
 
-        const cellSymbol = CELL_SYMBOLS[cell.type];
+        if (projectile !== undefined) {
+          if (key === cursorKey) {
+            return colorizeGridSymbol(projectile.symbol, 'CURSOR');
+          }
+
+          const projectileClass =
+            projectile.archetype === TowerArchetype.RAPID
+              ? 'RAPID_PROJ'
+              : projectile.archetype === TowerArchetype.SNIPER
+                ? 'SNIPER_PROJ'
+              : projectile.archetype === TowerArchetype.SLOW
+                ? 'SLOW_PROJ'
+              : 'CANNON_PROJ';
+
+          return colorizeGridSymbol(projectile.symbol, projectileClass);
+        }
+
+        if (
+          cell.type === CellType.BUILDABLE &&
+          rangePreviewKeys.has(key) &&
+          key !== cursorKey
+        ) {
+          return colorizeGridSymbol('◌', 'BUILDABLE');
+        }
+
+        const cellSymbol =
+          cell.type === CellType.PATH
+            ? getPathSymbol(state, rowIndex, colIndex)
+            : cell.type === CellType.BASE
+              ? state.frame % 4 < 2
+                ? '⬡'
+                : '⊡'
+              : CELL_SYMBOLS[cell.type];
         if (key === cursorKey) {
+          if (placementPhase && cell.type === CellType.BUILDABLE) {
+            const ghostSymbol = getTowerDef(state.selectedTowerArchetype).symbol;
+            return colorizeGridSymbol(ghostSymbol, 'CURSOR');
+          }
+
           return colorizeGridSymbol(cellSymbol, 'CURSOR');
         }
 
@@ -139,10 +284,14 @@ const composeEndStateFrame = (state: GameState): string => {
         '╚═╝╩ ╩╩ ╩╚═╝   ╚═╝ ╚╝ ╚═╝╩╚═'
       ];
 
-  const colorizedBanner = banner.map((line) => {
-    return isVictory
-      ? colorizeHudValue(line, 'WAVE', state.baseHp)
-      : colorizeHudValue(line, 'HP', 0);
+  const colorizedBanner = banner.map((line, index) => {
+    if (isVictory) {
+      const victoryPalette = [chalk.cyanBright, chalk.greenBright, chalk.bold.white];
+      return victoryPalette[index % victoryPalette.length](line);
+    }
+
+    const gameOverPalette = [chalk.red, chalk.dim.red, chalk.redBright];
+    return gameOverPalette[index % gameOverPalette.length](line);
   });
 
   const titleLine = isVictory
@@ -151,6 +300,8 @@ const composeEndStateFrame = (state: GameState): string => {
   const statLine =
     `Enemies killed: ${colorizeHudValue(`${state.enemiesKilled}`, 'GOLD', state.baseHp)}  ` +
     `Gold remaining: ${colorizeHudValue(`${state.currency}`, 'GOLD', state.baseHp)}`;
+  const score = calculateScore(state);
+  const scoreLine = `Score: ${colorizeHudValue(`${score}`, 'GOLD', state.baseHp)}`;
   const blinkPrompt = `${chalk.bold.white('Press Q to quit')} \u001b[5m▌\u001b[0m`;
 
   return composeBorder([
@@ -158,6 +309,7 @@ const composeEndStateFrame = (state: GameState): string => {
     SECTION_BREAK,
     titleLine,
     statLine,
+    scoreLine,
     SECTION_BREAK,
     blinkPrompt
   ]);
@@ -167,7 +319,8 @@ const composeTitleFrame = (state: GameState): string => {
   const titleArt = [
     '████████╗████████╗██████╗ ',
     '╚══██╔══╝╚══██╔══╝██╔══██╗',
-    '   ██║      ██║   ██║  ██║'
+    '   ██║      ██║   ██║  ██║',
+    '   ╚═╝      ╚═╝   ╚═╝  ╚═╝'
   ];
 
   const subtitleArt = [
@@ -175,20 +328,27 @@ const composeTitleFrame = (state: GameState): string => {
     ' ║ ║ ║║║║║╣ ╠╦╝    ║║║╣ ╠╣ ║╣ ║║║╚═╗║╣ ',
     ' ╩ ╚═╝╚╩╝╚═╝╩╚═   ═╩╝╚═╝╚  ╚═╝╝╚╝╚═╝╚═╝'
   ];
+  const scanRow = Math.floor(state.frame / 2) % titleArt.length;
 
   const lineOne = colorizeHudValue('TERMINAL TOWER DEFENSE', 'PHASE', state.baseHp);
   const lineTwo = colorizeHudValue('Defend the base across all waves.', 'WAVE', state.baseHp);
   const lineThree = colorizeEventLogMessage('Any key: deploy to PREP   |   Q: quit');
 
-  return composeBorder([
-    ...titleArt.map((line) => colorizeHudValue(line, 'GOLD', state.baseHp)),
-    ...subtitleArt.map((line) => colorizeHudValue(line, 'WAVE', state.baseHp)),
-    SECTION_BREAK,
-    lineOne,
-    lineTwo,
-    SECTION_BREAK,
-    lineThree
-  ]);
+  return composeBorder(
+    [
+      ...titleArt.map((line, index) => {
+        const colorized = colorizeHudValue(line, 'GOLD', state.baseHp);
+        return index === scanRow ? chalk.dim(colorized) : colorized;
+      }),
+      ...subtitleArt.map((line) => colorizeHudValue(line, 'WAVE', state.baseHp)),
+      SECTION_BREAK,
+      lineOne,
+      lineTwo,
+      SECTION_BREAK,
+      lineThree
+    ],
+    { minInnerWidth: 76, align: 'center' }
+  );
 };
 
 const composeTitleBar = (state: GameState): string => {
@@ -232,8 +392,26 @@ const padVisibleLine = (line: string, width: number): string => {
   return `${line}${' '.repeat(width - visibleLength)}`;
 };
 
-const composeBorder = (lines: string[]): string => {
-  const innerWidth = Math.max(...lines.map((line) => stripAnsi(line).length));
+const padCenteredVisibleLine = (line: string, width: number): string => {
+  const visibleLength = stripAnsi(line).length;
+  if (visibleLength >= width) {
+    return line;
+  }
+
+  const totalPadding = width - visibleLength;
+  const leftPadding = Math.floor(totalPadding / 2);
+  const rightPadding = totalPadding - leftPadding;
+
+  return `${' '.repeat(leftPadding)}${line}${' '.repeat(rightPadding)}`;
+};
+
+const composeBorder = (
+  lines: string[],
+  options: { minInnerWidth?: number; align?: 'left' | 'center' } = {}
+): string => {
+  const { minInnerWidth = 0, align = 'left' } = options;
+  const contentWidth = Math.max(...lines.map((line) => stripAnsi(line).length));
+  const innerWidth = Math.max(contentWidth, minInnerWidth);
   const horizontal = '─'.repeat(innerWidth);
   return [
     `┌${horizontal}┐`,
@@ -242,7 +420,9 @@ const composeBorder = (lines: string[]): string => {
         return `├${horizontal}┤`;
       }
 
-      return `│${padVisibleLine(line, innerWidth)}│`;
+      const paddedLine =
+        align === 'center' ? padCenteredVisibleLine(line, innerWidth) : padVisibleLine(line, innerWidth);
+      return `│${paddedLine}│`;
     }),
     `└${horizontal}┘`
   ].join('\n');
@@ -261,17 +441,13 @@ export const composeFrame = (state: GameState): string => {
   const hudLines = composeHud(state).split('\n');
   const eventLogLines = composeEventLog(state);
   const legendLine =
-    '[1/2] Tower  [↑↓←→] Move  [Enter] Place  [Space] Start  [Q] Quit';
-  const controlsLabel = chalk.dim('CONTROLS');
-  const eventLogLabel = chalk.dim('EVENT LOG');
+    '[1-4] Tower  [↑↓←→] Move  [Enter] Place  [S] Sell  [Space] Start  [Q] Quit';
 
   const gridVisibleWidth = Math.max(...gridLines.map((line) => stripAnsi(line).length));
   const nonGridVisibleWidth = Math.max(
     stripAnsi(composeTitleBar(state)).length,
     ...hudLines.map((line) => stripAnsi(line).length),
-    stripAnsi(controlsLabel).length,
     stripAnsi(legendLine).length,
-    stripAnsi(eventLogLabel).length,
     ...eventLogLines.map((line) => stripAnsi(line).length)
   );
   const leftPad = Math.max(0, Math.floor((nonGridVisibleWidth - gridVisibleWidth) / 2));
@@ -284,10 +460,8 @@ export const composeFrame = (state: GameState): string => {
     SECTION_BREAK,
     ...hudLines,
     SECTION_BREAK,
-    controlsLabel,
     legendLine,
     SECTION_BREAK,
-    eventLogLabel,
     ...eventLogLines
   ]);
 };

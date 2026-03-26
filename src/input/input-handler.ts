@@ -5,6 +5,7 @@ export interface InputHandlerProps {
   onAnyKey: () => boolean;
   onMoveCursor: (dx: number, dy: number) => void;
   onPlaceTower: () => void;
+  onSellTower: () => void;
   onSelectTower: (archetype: TowerArchetype) => void;
   onQuit: () => void;
   onSpace: () => void;
@@ -14,6 +15,7 @@ export const InputHandler = ({
   onAnyKey,
   onMoveCursor,
   onPlaceTower,
+  onSellTower,
   onSelectTower,
   onQuit,
   onSpace
@@ -35,6 +37,21 @@ export const InputHandler = ({
 
     if (input === '2') {
       onSelectTower(TowerArchetype.CANNON);
+      return;
+    }
+
+    if (input === '3') {
+      onSelectTower(TowerArchetype.SNIPER);
+      return;
+    }
+
+    if (input === '4') {
+      onSelectTower(TowerArchetype.SLOW);
+      return;
+    }
+
+    if (input.toLowerCase() === 's') {
+      onSellTower();
       return;
     }
 

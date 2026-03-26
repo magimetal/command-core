@@ -2,30 +2,34 @@
 
 Terminal-native tower defense built with **Node.js + TypeScript + Ink**.
 
-This project runs directly in your terminal (including tmux panes) and delivers a full MVP loop: place towers, start waves, defend the base, and reach either **VICTORY** or **GAME OVER**.
+This project runs directly in your terminal (including tmux panes) and now reflects a beta-style pass over the MVP loop: place/sell towers, start waves, defend the base, and finish with either **VICTORY** or **GAME OVER** plus final **Score**.
 
 ## Current State
 
-- ✅ Playable MVP complete
-- ✅ Two major visual/UX iteration passes completed
-- ✅ Test suite covering simulation, input, and rendering guardrails
-- ✅ Terminal dashboard presentation (title screen, framed playfield, HUD, controls, event log, end-state ceremony screens)
+- ✅ Playable terminal-first beta pass complete
+- ✅ Redesign + map overhaul integrated (wider grid, denser route, stronger readability)
+- ✅ Expanded simulation/rendering/input coverage for new mechanics
+- ✅ Framed dashboard presentation (title, playfield, HUD, controls, event log, ceremony end states)
 
 ## What’s Built
 
 ### Core Gameplay
 
-- Single handcrafted map with a non-linear S-curve enemy path
-- 3-wave progression with manual wave start (`Space`)
+- Single handcrafted **16x28** map with a denser multi-turn route
+- **5-wave** progression with manual wave start (`Space`)
 - Economy loop:
   - Earn gold from kills
   - Spend gold on tower placement
-- Two tower archetypes:
-  - **RAPID** (`△`) — low damage, faster firing
-  - **CANNON** (`◉`) — high damage, slower firing
-- Two enemy archetypes:
-  - **STANDARD** (`▸`) — lower HP, faster movement cadence
-  - **TANK** (`◈`) — higher HP, slower movement cadence, stronger leak damage
+  - Sell towers during placement phases (`S`) for partial refund
+- Four tower archetypes:
+  - **RAPID** (`⟁`) — low damage, fast cooldown
+  - **CANNON** (`⊛`) — high damage, slower cadence
+  - **SNIPER** (`⟇`) — long-range precision burst
+  - **SLOW** (`⊗`) — applies real movement slow debuff on hit
+- Three enemy archetypes:
+  - **STANDARD** (`◀`) — baseline HP/speed/reward
+  - **TANK** (`⬟`) — high HP, slower cadence, heavier leak damage
+  - **FAST** (`▷`) — low HP, highest movement tempo
 - Win/Lose outcomes:
   - **VICTORY** after all waves clear
   - **GAME OVER** when base HP reaches zero
@@ -34,15 +38,19 @@ This project runs directly in your terminal (including tmux panes) and delivers 
 
 - Full bordered frame layout in terminal
 - Title screen with launch prompt (`Any key`)
-- Colored grid entities (path, buildable, blocked, towers, enemies, cursor)
+- Colored grid entities (path, buildable, towers, enemies, cursor, projectile pass)
 - Centered grid region for readability
-- Two-line HUD with live stats + selected tower + cursor coordinates
+- Two-line HUD with wave preview, selected towers, cursor detail, and per-tower/enemy context
 - Structured controls and event-log sections
-- Event log with typed feedback:
+- Placement helpers:
+  - ghost tower cursor on valid build cells in placement phases
+  - visible placement range ring (`◌`) for selected archetype
+- Visible cosmetic projectiles per archetype
+- Event log (7 lines, newest-first) with typed feedback:
   - wave start/clear
   - tower placement success/failure
-  - kills, leaks, and thresholded enemy HP hit updates
-- Ceremony-style VICTORY/GAME OVER screens with run summary
+  - kills, leaks, sells, and thresholded enemy HP hit updates
+- Ceremony-style VICTORY/GAME OVER screens with run summary and score
 
 ## Install
 
@@ -73,8 +81,11 @@ npm test
 - `Any key` — advance from TITLE to PREP
 - `1` — select RAPID tower
 - `2` — select CANNON tower
+- `3` — select SNIPER tower
+- `4` — select SLOW tower
 - `↑ ↓ ← →` — move placement cursor
 - `Enter` — place selected tower at cursor
+- `S` — sell tower at cursor (PREP/WAVE_CLEAR only)
 - `Space` — start wave (PREP only)
 - `Q` — quit immediately
 
@@ -100,9 +111,9 @@ src/
   main.ts       CLI entrypoint
 
 tests/
-  simulation/   combat, movement, wave control, economy, placement, end-state
-  rendering/    frame composition and terminal-size guardrails
-  input/        control handling
+  simulation/   combat, movement, wave control, economy, placement/sell, tick flow, score, end-state
+  rendering/    frame composition, path/range/projectile behavior, terminal-size guardrails
+  input/        control handling (title gate, 1-4 selection, sell key)
 ```
 
 ### Tick Contract

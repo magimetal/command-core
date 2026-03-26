@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { EnemyArchetype } from '../../src/const/enemies';
+import { ENEMY_DEFS, EnemyArchetype } from '../../src/const/enemies';
 import { ENEMY_PATH } from '../../src/const/map';
 import type { Enemy } from '../../src/models/enemy';
 import { createInitialState } from '../../src/simulation/create-initial-state';
@@ -20,6 +20,12 @@ const createEnemy = (overrides: Partial<Enemy> = {}): Enemy => {
 };
 
 describe('advanceEnemies', () => {
+  test('FAST enemy archetype is defined with distinct symbol', () => {
+    expect(ENEMY_DEFS[EnemyArchetype.FAST].symbol).toBe('▷');
+    expect(ENEMY_DEFS[EnemyArchetype.FAST].symbol).not.toBe(ENEMY_DEFS[EnemyArchetype.STANDARD].symbol);
+    expect(ENEMY_DEFS[EnemyArchetype.FAST].symbol).not.toBe(ENEMY_DEFS[EnemyArchetype.TANK].symbol);
+  });
+
   test('moves STANDARD enemy every 2 ticks', () => {
     const initial = {
       ...createInitialState(),
@@ -69,6 +75,25 @@ describe('advanceEnemies', () => {
 
     expect(standard?.pathIndex).toBe(1);
     expect(tank?.pathIndex).toBe(0);
+  });
+
+  test('FAST enemy moves every tick (speed = 1)', () => {
+    const initial = {
+      ...createInitialState(),
+      enemies: [
+        createEnemy({
+          id: 'enemy-fast',
+          archetype: EnemyArchetype.FAST,
+          moveCooldown: 1
+        })
+      ]
+    };
+
+    const firstAdvance = advanceEnemies(initial);
+    const secondAdvance = advanceEnemies(firstAdvance);
+
+    expect(firstAdvance.enemies[0]?.pathIndex).toBe(1);
+    expect(secondAdvance.enemies[0]?.pathIndex).toBe(2);
   });
 
   test('does not remove dead enemies during movement step', () => {

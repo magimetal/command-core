@@ -10,6 +10,7 @@ import { createInitialState } from './simulation/create-initial-state';
 import { startWave } from './simulation/start-wave';
 import { tick } from './simulation/tick';
 import { placeTower } from './simulation/tower-placement';
+import { sellTower } from './simulation/tower-sell';
 
 const toPlacementFailureMessage = (error: string): string => {
   if (error === 'Cell is not buildable') {
@@ -145,6 +146,35 @@ export const App = () => {
     });
   };
 
+  const trySellTower = () => {
+    setState((previousState) => {
+      if (previousState.phase === 'TITLE') {
+        return previousState;
+      }
+
+      const nextState = sellTower(previousState, previousState.cursor);
+      if ('error' in nextState) {
+        const message =
+          nextState.error === 'No tower to sell'
+            ? '✗ No tower here to sell'
+            : `✗ ${nextState.error}`;
+        return {
+          ...previousState,
+          eventLog: appendEventLog(previousState.eventLog, message),
+          lastEventMessage: message
+        };
+      }
+
+      const [col, row] = previousState.cursor;
+      const message = `$ Tower sold at (${col},${row})`;
+      return {
+        ...nextState,
+        eventLog: appendEventLog(nextState.eventLog, message),
+        lastEventMessage: message
+      };
+    });
+  };
+
   const quitGame = () => {
     stopLoop();
     exit();
@@ -178,6 +208,7 @@ export const App = () => {
         onAnyKey={advanceFromTitle}
         onMoveCursor={moveCursor}
         onPlaceTower={tryPlaceTower}
+        onSellTower={trySellTower}
         onSelectTower={selectTower}
         onQuit={quitGame}
         onSpace={() =>

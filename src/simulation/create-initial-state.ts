@@ -10,6 +10,7 @@ export const createInitialState = (): GameState => {
     grid: cloneGrid(),
     enemies: [],
     towers: [],
+    projectiles: [],
     currency: STARTING_CURRENCY,
     baseHp: STARTING_BASE_HP,
     wave: 1,

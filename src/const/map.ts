@@ -1,7 +1,7 @@
 import { CellType, type Cell } from '../models/cell';
 
 const MAP_ROWS = 16;
-const MAP_COLS = 22;
+const MAP_COLS = 28;
 
 const buildEmptyGrid = (): Cell[][] => {
   return Array.from({ length: MAP_ROWS }, () =>
@@ -45,11 +45,13 @@ const buildEnemyPath = (): [number, number][] => {
     }
   };
 
-  pushHorizontal(2, 0, 18);
-  pushVertical(18, 2, 8);
-  pushHorizontal(8, 18, 3);
-  pushVertical(3, 8, 14);
-  pushHorizontal(14, 3, MAP_COLS - 1);
+  pushHorizontal(2, 0, 24);
+  pushVertical(24, 2, 13);
+  pushHorizontal(13, 24, 4);
+  pushVertical(4, 13, 5);
+  pushHorizontal(5, 4, 13);
+  pushVertical(13, 5, 10);
+  pushHorizontal(10, 13, MAP_COLS - 1);
 
   return path;
 };
@@ -57,10 +59,6 @@ const buildEnemyPath = (): [number, number][] => {
 const createMapGrid = (): Cell[][] => {
   const grid = buildEmptyGrid();
   const enemyPath = buildEnemyPath();
-
-  for (let row = 0; row < MAP_ROWS; row += 1) {
-    grid[row][10] = { type: CellType.BLOCKED };
-  }
 
   enemyPath.forEach(([col, row], index) => {
     const isSpawn = index === 0;

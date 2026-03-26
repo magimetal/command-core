@@ -1,6 +1,7 @@
 export enum EnemyArchetype {
   STANDARD = 'STANDARD',
-  TANK = 'TANK'
+  TANK = 'TANK',
+  FAST = 'FAST'
 }
 
 interface EnemyDef {
@@ -13,17 +14,24 @@ interface EnemyDef {
 
 export const ENEMY_DEFS: Record<EnemyArchetype, EnemyDef> = {
   [EnemyArchetype.STANDARD]: {
-    symbol: '▸',
+    symbol: '◀',
     maxHp: 10,
     speed: 2,
     reward: 10,
     leakDamage: 1
   },
   [EnemyArchetype.TANK]: {
-    symbol: '◈',
+    symbol: '⬟',
     maxHp: 40,
     speed: 4,
     reward: 25,
     leakDamage: 3
+  },
+  [EnemyArchetype.FAST]: {
+    symbol: '▷',
+    maxHp: 5,
+    speed: 1,
+    reward: 15,
+    leakDamage: 2
   }
 };

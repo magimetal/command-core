@@ -60,7 +60,8 @@ export const placeTower = (
     id: `tower-${state.towers.length + 1}`,
     archetype,
     pos,
-    cooldownRemaining: 0
+    cooldownRemaining: 0,
+    kills: 0
   };
 
   return {

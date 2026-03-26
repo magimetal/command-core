@@ -6,4 +6,5 @@ export interface Tower {
   archetype: TowerArchetype;
   pos: [number, number];
   cooldownRemaining: number;
+  kills: number;
 }

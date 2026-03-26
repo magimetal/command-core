@@ -7,10 +7,31 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Unreleased]
 
 ### Added
-- Seeded project documentation set:
-  - `README.md` (project overview, usage, controls, architecture)
-  - `MVP.md` (process and decision record)
-  - `CHANGELOG.md` (milestone history)
+- Beta-pass gameplay and presentation features:
+  - New tower archetypes: **SNIPER** and **SLOW** (now 4 total)
+  - New enemy archetype: **FAST** (now 3 total)
+  - Tower selling flow (`S`) with sell logging
+  - Cursor placement helpers: ghost tower preview + visible range ring (`◌`)
+  - Cosmetic projectile rendering for active shots
+  - End-state scoring surfaced in ceremony screens
+
+### Changed
+- Map/layout overhaul for the redesign pass:
+  - Grid widened from 22 to 28 columns (16x28 playfield)
+  - Path rebuilt into a denser multi-turn route for tactical placement variety
+- Progression and pacing updates:
+  - Wave plan increased from 3 to 5 waves
+  - HUD/legend text updated for expanded controls and archetypes
+- UX and readability improvements:
+  - Event log expanded to 7 visible lines (newest-first)
+  - Stronger color routing and richer terminal presentation
+  - Cursor details now surface enemy HP bars and tower kill counts
+
+### Tested
+- Expanded automated coverage for redesign and beta-pass mechanics:
+  - rendering checks for path topology, range ring behavior, ghost cursor, projectile glyphs, and frame guardrails
+  - simulation checks for FAST movement cadence, SLOW debuff behavior, sell flow/economy safety, and score calculation
+  - input checks for expanded controls (`1-4`, `S`, title gating, quit precedence)
 
 ## [0.3.0] - 2026-03-21
 

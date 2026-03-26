@@ -9,8 +9,15 @@ export type GridEntityClass =
   | 'BASE'
   | 'RAPID_TOWER'
   | 'CANNON_TOWER'
+  | 'SNIPER_TOWER'
+  | 'SLOW_TOWER'
+  | 'RAPID_PROJ'
+  | 'CANNON_PROJ'
+  | 'SNIPER_PROJ'
+  | 'SLOW_PROJ'
   | 'STANDARD_ENEMY'
   | 'TANK_ENEMY'
+  | 'FAST_ENEMY'
   | 'CURSOR';
 
 type HudValueClass = 'HP' | 'GOLD' | 'WAVE' | 'PHASE';
@@ -29,31 +36,55 @@ export const colorizeGridSymbol = (
   hpRatio?: number
 ): string => {
   if (entityClass === 'PATH') {
-    return chalk.gray(symbol);
+    return chalk.dim.white(symbol);
   }
 
   if (entityClass === 'BUILDABLE') {
-    return chalk.greenBright.dim(symbol);
+    return chalk.dim.green(symbol);
   }
 
   if (entityClass === 'BLOCKED') {
-    return chalk.red(symbol);
+    return chalk.dim.cyan(symbol);
   }
 
   if (entityClass === 'SPAWN') {
-    return chalk.yellowBright(symbol);
+    return chalk.bold.yellowBright(symbol);
   }
 
   if (entityClass === 'BASE') {
-    return chalk.cyanBright(symbol);
+    return chalk.bold.cyanBright(symbol);
   }
 
   if (entityClass === 'RAPID_TOWER') {
-    return chalk.green(symbol);
+    return chalk.bold.greenBright(symbol);
   }
 
   if (entityClass === 'CANNON_TOWER') {
-    return chalk.redBright(symbol);
+    return chalk.bold.red(symbol);
+  }
+
+  if (entityClass === 'SNIPER_TOWER') {
+    return chalk.bold.whiteBright(symbol);
+  }
+
+  if (entityClass === 'SLOW_TOWER') {
+    return chalk.bold.magentaBright(symbol);
+  }
+
+  if (entityClass === 'RAPID_PROJ') {
+    return chalk.bold.greenBright(symbol);
+  }
+
+  if (entityClass === 'CANNON_PROJ') {
+    return chalk.bold.redBright(symbol);
+  }
+
+  if (entityClass === 'SNIPER_PROJ') {
+    return chalk.bold.white(symbol);
+  }
+
+  if (entityClass === 'SLOW_PROJ') {
+    return chalk.bold.magenta(symbol);
   }
 
   if (entityClass === 'STANDARD_ENEMY') {
@@ -67,7 +98,7 @@ export const colorizeGridSymbol = (
       }
     }
 
-    return chalk.yellow(symbol);
+    return chalk.bold.yellow(symbol);
   }
 
   if (entityClass === 'TANK_ENEMY') {
@@ -81,7 +112,15 @@ export const colorizeGridSymbol = (
       }
     }
 
-    return chalk.magentaBright(symbol);
+    return chalk.bold.magenta(symbol);
+  }
+
+  if (entityClass === 'FAST_ENEMY') {
+    if (hpRatio !== undefined && hpRatio < 0.33) {
+      return chalk.bold.red(symbol);
+    }
+
+    return chalk.bold.yellowBright(symbol);
   }
 
   return chalk.bgYellow.black.bold(symbol);

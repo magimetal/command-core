@@ -7,6 +7,13 @@ import { advanceEnemies } from './enemy-movement';
 import { advanceWave } from './wave-controller';
 
 const cleanup = (state: GameState): GameState => {
+  const STREAK_MILESTONES = [5, 10, 20] as const;
+  const STREAK_MESSAGES: Record<(typeof STREAK_MILESTONES)[number], string> = {
+    5: '★ STREAK  5 kills — defense holding',
+    10: '★★ STREAK 10 kills — excellent coverage',
+    20: '★★★ STREAK 20 kills — DOMINATION'
+  };
+
   let reward = 0;
   let kills = 0;
   const killMessages: string[] = [];
@@ -33,6 +40,15 @@ const cleanup = (state: GameState): GameState => {
     nextPhase = 'GAME_OVER';
   }
 
+  const previousTotal = state.enemiesKilled;
+  const newTotal = state.enemiesKilled + kills;
+  const streakMilestone = STREAK_MILESTONES.find(
+    (milestone) => previousTotal < milestone && newTotal >= milestone
+  );
+  if (kills > 0 && streakMilestone !== undefined) {
+    killMessages.push(STREAK_MESSAGES[streakMilestone]);
+  }
+
   const nextEventLog = killMessages.reduce(
     (eventLog, message) => appendEventLog(eventLog, message),
     state.eventLog
@@ -41,6 +57,7 @@ const cleanup = (state: GameState): GameState => {
   return {
     ...state,
     enemies,
+    projectiles: state.projectiles.filter((projectile) => projectile.ttl > 0),
     currency: state.currency + reward,
     phase: nextPhase,
     enemiesKilled: state.enemiesKilled + kills,

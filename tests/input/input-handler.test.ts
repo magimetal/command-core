@@ -1,4 +1,5 @@
 import { describe, expect, test, vi } from 'vitest';
+import { TowerArchetype } from '../../src/const/towers';
 type CapturedHandler = (
   input: string,
   key: { [key: string]: boolean | undefined }
@@ -38,6 +39,7 @@ describe('InputHandler title gating', () => {
       onQuit,
       onMoveCursor: vi.fn(),
       onPlaceTower: vi.fn(),
+      onSellTower: vi.fn(),
       onSelectTower: vi.fn(),
       onSpace: vi.fn()
     });
@@ -57,6 +59,7 @@ describe('InputHandler title gating', () => {
       onQuit,
       onMoveCursor: vi.fn(),
       onPlaceTower: vi.fn(),
+      onSellTower: vi.fn(),
       onSelectTower,
       onSpace: vi.fn()
     });
@@ -66,5 +69,56 @@ describe('InputHandler title gating', () => {
     expect(onAnyKey).toHaveBeenCalledTimes(1);
     expect(onQuit).not.toHaveBeenCalled();
     expect(onSelectTower).not.toHaveBeenCalled();
+  });
+
+  test('selects SNIPER on key 3 when not title-gated', () => {
+    const onSelectTower = vi.fn();
+    const handler = renderAndGetHandler({
+      onAnyKey: vi.fn(() => false),
+      onQuit: vi.fn(),
+      onMoveCursor: vi.fn(),
+      onPlaceTower: vi.fn(),
+      onSellTower: vi.fn(),
+      onSelectTower,
+      onSpace: vi.fn()
+    });
+
+    handler('3', {});
+
+    expect(onSelectTower).toHaveBeenCalledWith(TowerArchetype.SNIPER);
+  });
+
+  test('selects SLOW on key 4 when not title-gated', () => {
+    const onSelectTower = vi.fn();
+    const handler = renderAndGetHandler({
+      onAnyKey: vi.fn(() => false),
+      onQuit: vi.fn(),
+      onMoveCursor: vi.fn(),
+      onPlaceTower: vi.fn(),
+      onSellTower: vi.fn(),
+      onSelectTower,
+      onSpace: vi.fn()
+    });
+
+    handler('4', {});
+
+    expect(onSelectTower).toHaveBeenCalledWith(TowerArchetype.SLOW);
+  });
+
+  test('s key triggers sell callback when not title-gated', () => {
+    const onSellTower = vi.fn();
+    const handler = renderAndGetHandler({
+      onAnyKey: vi.fn(() => false),
+      onQuit: vi.fn(),
+      onMoveCursor: vi.fn(),
+      onPlaceTower: vi.fn(),
+      onSellTower,
+      onSelectTower: vi.fn(),
+      onSpace: vi.fn()
+    });
+
+    handler('s', {});
+
+    expect(onSellTower).toHaveBeenCalledTimes(1);
   });
 });
