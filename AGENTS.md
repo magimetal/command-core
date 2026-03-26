@@ -52,7 +52,7 @@ LSP codemap unavailable in this run; fallback map below.
 ## CONVENTIONS
 - State phases are explicit string unions (`TITLE`, `MODE_SELECT`, `MAP_SELECT`, `PREP`, `WAVE_ACTIVE`, `WAVE_CLEAR`, `VICTORY`, `GAME_OVER`).
 - Simulation functions are pure-state transforms returning full `GameState` objects.
-- Event log is newest-first and hard-capped at 7 lines (`appendEventLog`).
+- Event log is newest-first; in-memory cap is 7 entries (`appendEventLog`). Display cap is 2 lines in gameplay frame.
 - User-facing event prefixes carry semantics: `✕` kill, `!` leak, `>>` wave, `✗` error, `~` hit-threshold.
 - Rendering path strips ANSI for layout math before padding/centering.
 

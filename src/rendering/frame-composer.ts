@@ -15,28 +15,14 @@ interface ComposeFrameOptions {
   terminalRows?: number;
 }
 
+const GAMEPLAY_VISIBLE_EVENT_LOG = 2;
+
 const getMaxInnerWidth = (terminalColumns?: number): number => {
   if (terminalColumns === undefined) {
     return FRAME_INNER_WIDTH_BUDGET;
   }
 
   return Math.max(20, Math.min(FRAME_INNER_WIDTH_BUDGET, terminalColumns - 2));
-};
-
-const getVisibleEventLogCount = (terminalRows?: number): number => {
-  if (terminalRows === undefined) {
-    return 7;
-  }
-
-  if (terminalRows < 28) {
-    return 3;
-  }
-
-  if (terminalRows < 32) {
-    return 5;
-  }
-
-  return 7;
 };
 
 const composeLegendLine = (availableTowerCount: number, maxInnerWidth: number): string => {
@@ -68,9 +54,8 @@ export const composeFrame = (state: GameState, options: ComposeFrameOptions = {}
 
   const gridLines = composeGrid(state);
   const hudLines = composeHud(state).split('\n');
-  const baseVisibleEventLogCount = getVisibleEventLogCount(options.terminalRows);
-  const visibleEventLogCount = Math.max(1, baseVisibleEventLogCount - Math.max(0, hudLines.length - 2));
-  const eventLogLines = composeEventLog(state, visibleEventLogCount);
+  // Event log display is fixed at 2 entries; terminal row count no longer affects visibility.
+  const eventLogLines = composeEventLog(state, GAMEPLAY_VISIBLE_EVENT_LOG);
   const titleBar = composeTitleBar(state);
   const legendLine = composeLegendLine(state.runConfig.availableTowers.length, maxInnerWidth);
 

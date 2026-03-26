@@ -8,79 +8,140 @@ import {
   colorizeEventLogMessage,
   colorizeEventMessage,
   colorizeGridSymbol,
-  colorizeHudValue,
   colorizePhaseLabel,
+  getDisplayWidth,
   truncateDisplay,
   type EventMessageClass
 } from './color-map';
 import { getVisibleEventLog } from '../utils/event-log';
-import { renderHpBar } from './hp-bar';
-import { styleAnomaly, styleEmphasis, stylePrimary, styleSubtle } from './text-styles';
+import { composeWaveDrainBar, getPriorityTarget, getSurgeState } from '../utils/threat-radar';
+import { renderHpBar, renderWideHpBar } from './hp-bar';
+import { styleAnomaly, styleEmphasis, stylePrimary, styleSubtle, styleSurge, styleThreat } from './text-styles';
 
-export const composeHud = (state: GameState): string => {
-  const hpIcon = state.baseHp < 5 ? GLYPH.HP_LOW : GLYPH.HP_FULL;
-  const hpValue = colorizeHudValue(`${state.baseHp}`, 'HP', state.baseHp);
-  const goldValue = colorizeHudValue(`$${state.currency}`, 'GOLD', state.baseHp);
-  const waveValue = colorizeHudValue(
-    `${state.wave}/${state.runConfig.waves.length}`,
-    'WAVE',
-    state.baseHp
-  );
-  const phaseValue = colorizePhaseLabel(state.phase);
-  const waveStartHint =
-    state.phase === 'PREP' ? ` ${colorizeHudValue('(Space: start wave)', 'WAVE', state.baseHp)}` : '';
-  const placementHint =
-    state.phase === 'PREP' && state.towers.length === 0
-      ? styleSubtle('  ░ = build zone  · Move cursor to ░, press Enter to place your first tower')
-      : '';
+const HUD_WIDTH = 76;
 
-  const towerAbbreviation: Record<TowerArchetype, string> = {
-    [TowerArchetype.RAPID]: 'R',
-    [TowerArchetype.CANNON]: 'C',
-    [TowerArchetype.SNIPER]: 'Sn',
-    [TowerArchetype.SLOW]: 'Sl'
-  };
-  const towerClassByArchetype: Record<TowerArchetype, 'RAPID_TOWER' | 'CANNON_TOWER' | 'SNIPER_TOWER' | 'SLOW_TOWER'> = {
-    [TowerArchetype.RAPID]: 'RAPID_TOWER',
-    [TowerArchetype.CANNON]: 'CANNON_TOWER',
-    [TowerArchetype.SNIPER]: 'SNIPER_TOWER',
-    [TowerArchetype.SLOW]: 'SLOW_TOWER'
-  };
-  const selectedTowerLine = state.runConfig.availableTowers
-    .map((archetype, index) => {
-      const towerDef = getTowerDef(archetype);
-      const keyLabel = `${index + 1}`;
-      const full = `[${keyLabel}]${colorizeGridSymbol(towerDef.symbol, towerClassByArchetype[archetype])} ${towerAbbreviation[archetype]}$${towerDef.cost} Dmg${towerDef.damage} Rng${towerDef.range}`;
-      const compact = chalk.dim(`[${keyLabel}] ${towerAbbreviation[archetype]}$${towerDef.cost}`);
+const towerNameByArchetype: Record<TowerArchetype, string> = {
+  [TowerArchetype.RAPID]: 'Rapid',
+  [TowerArchetype.CANNON]: 'Cannon',
+  [TowerArchetype.SNIPER]: 'Sniper',
+  [TowerArchetype.SLOW]: 'Slow'
+};
 
-      if (state.selectedTowerArchetype === archetype) {
-        return chalk.bold(full);
-      }
+const towerClassByArchetype: Record<TowerArchetype, 'RAPID_TOWER' | 'CANNON_TOWER' | 'SNIPER_TOWER' | 'SLOW_TOWER'> = {
+  [TowerArchetype.RAPID]: 'RAPID_TOWER',
+  [TowerArchetype.CANNON]: 'CANNON_TOWER',
+  [TowerArchetype.SNIPER]: 'SNIPER_TOWER',
+  [TowerArchetype.SLOW]: 'SLOW_TOWER'
+};
 
-      return compact;
-    })
+const fitHudLine = (left: string, right: string = '', width: number = HUD_WIDTH): string => {
+  if (right.length === 0) {
+    return truncateDisplay(left, width);
+  }
+
+  const leftWidth = getDisplayWidth(left);
+  const rightWidth = getDisplayWidth(right);
+  const gap = width - leftWidth - rightWidth;
+
+  if (gap >= 2) {
+    return `${left}${' '.repeat(gap)}${right}`;
+  }
+
+  return truncateDisplay(`${left}  ${right}`, width);
+};
+
+const composeIncomingPreview = (state: GameState): string => {
+  const waveDef = state.runConfig.waves[state.wave - 1];
+  if (waveDef === undefined) {
+    return 'none';
+  }
+
+  return waveDef.enemies
+    .map((group) => `${group.count}× ${ENEMY_DEFS[group.archetype].symbol} ${ENEMY_DEFS[group.archetype].displayName}`)
     .join('  ');
+};
 
-  const wavePreviewFragment = (() => {
-    if (isPlacementPhase(state.phase)) {
-      const waveDef = state.runConfig.waves[state.wave - 1];
-      if (waveDef) {
-        const parts = waveDef.enemies.map((group) => `${group.count}× ${ENEMY_DEFS[group.archetype].symbol}`);
-        return `  · Next wave: ${parts.join(' ')}`;
-      }
+const composeHpGoldLine = (state: GameState): string => {
+  const hpTone = state.baseHp < 5 ? chalk.redBright : chalk.greenBright;
+  const hpPrefix = hpTone('❤ HP ');
+  const hpValue = hpTone(`  ${state.baseHp}/${state.runConfig.startingBaseHp}`);
+  const goldSection = chalk.yellow(`✦ GOLD $${state.currency}`);
+  const barWidth = Math.max(
+    20,
+    HUD_WIDTH - getDisplayWidth(hpPrefix) - getDisplayWidth(hpValue) - getDisplayWidth(goldSection) - 2
+  );
+  const hpBar = hpTone(renderWideHpBar(state.baseHp, state.runConfig.startingBaseHp, barWidth));
+  const left = `${hpPrefix}${hpBar}${hpValue}`;
+
+  return fitHudLine(left, goldSection);
+};
+
+const composeWaveActiveTelemetry = (state: GameState): string[] => {
+  const leakedCount = Math.max(0, state.runConfig.startingBaseHp - state.baseHp);
+  const waveLine = fitHudLine(
+    `${chalk.cyan(`≋ WAVE ${state.wave}/${state.runConfig.waves.length}`)}  ${stylePrimary(composeWaveDrainBar(state))} deployed`,
+    `${chalk.greenBright(`✕ ${state.enemiesKilled} KILLED`)}  ${chalk.redBright(`! ${leakedCount} LEAKED`)}`
+  );
+
+  const target = getPriorityTarget(state);
+  const threatLine = (() => {
+    if (target === undefined) {
+      return styleSubtle(`── No threats ──  Incoming: ${composeIncomingPreview(state)}`);
     }
 
-    if (state.phase === 'WAVE_ACTIVE') {
-      return `  · Kills: ${state.enemiesKilled}`;
-    }
+    const def = ENEMY_DEFS[target.archetype];
+    const hpBar = renderHpBar(target.hp, target.maxHp);
+    const pathLength = Math.max(1, state.runConfig.enemyPath.length - 1);
+    const progress = Math.max(0, Math.min(1, target.pathIndex / pathLength));
+    const pctToBase = Math.round(progress * 100);
+    const progressWidth = 8;
+    const progressFilled = Math.max(0, Math.min(progressWidth, Math.round(progress * progressWidth)));
+    const progressBar = `${'━'.repeat(progressFilled)}${' '.repeat(progressWidth - progressFilled)}▸`;
+    const surgeState = getSurgeState(state);
+    const surgeBadge = surgeState.active && surgeState.pulse ? styleSurge('◆ SURGE') : '';
+    const threatPrefix = styleThreat('⚠ THREAT');
+    const threatBody = styleThreat(
+      `${def.symbol} ${def.displayName} [${hpBar}] ${target.hp}/${target.maxHp}  ${progressBar} ${pctToBase}% to base`
+    );
 
-    return '';
+    return fitHudLine(`${threatPrefix} ${threatBody}`, surgeBadge);
   })();
 
-  const statsLine =
-    `${hpIcon} ${hpValue}  ${GLYPH.GOLD} ${goldValue}  ` +
-    `${GLYPH.WAVE} ${waveValue}  ${phaseValue}${waveStartHint}${wavePreviewFragment}`;
+  return [composeHpGoldLine(state), waveLine, threatLine];
+};
 
+const composePrepTelemetry = (state: GameState): string[] => {
+  const waveLine = fitHudLine(
+    `${chalk.cyan(`≋ WAVE ${state.wave}/${state.runConfig.waves.length}`)}  ${styleSubtle(`Incoming: ${composeIncomingPreview(state)}`)}`,
+    styleSubtle('(Space: start wave)')
+  );
+
+  const prepHint =
+    state.towers.length === 0
+      ? styleSubtle('░ = build zone  · Move to ░ and press Enter to place')
+      : styleSubtle(`· Ready · ${state.towers.length} tower(s) placed`);
+
+  return [composeHpGoldLine(state), waveLine, prepHint];
+};
+
+const composeWaveClearTelemetry = (state: GameState): string[] => {
+  const leakedCount = Math.max(0, state.runConfig.startingBaseHp - state.baseHp);
+  const clearedWave = Math.max(1, state.wave - 1);
+
+  const clearLine = fitHudLine(
+    `${chalk.cyan(`≋ WAVE ${state.wave}/${state.runConfig.waves.length}`)}  ${chalk.greenBright(`✓ Wave ${clearedWave} cleared!`)}`,
+    `${chalk.greenBright(`✕ ${state.enemiesKilled} KILLED`)}  ${chalk.redBright(`! ${leakedCount} LEAKED`)}`
+  );
+
+  const guidanceLine = fitHudLine(
+    styleSubtle('· Place or sell towers before next wave'),
+    styleSubtle('(Space: start wave)')
+  );
+
+  return [composeHpGoldLine(state), clearLine, guidanceLine];
+};
+
+const composeArsenalLines = (state: GameState): [string, string] => {
   const [cursorCol, cursorRow] = state.cursor;
   const towerAtCursor = state.towers.find((tower) => {
     return tower.pos[0] === cursorCol && tower.pos[1] === cursorRow;
@@ -96,9 +157,65 @@ export const composeHud = (state: GameState): string => {
     cursorDetail = ` [${renderHpBar(enemyAtCursor.hp, enemyAtCursor.maxHp)} ${enemyAtCursor.hp}/${enemyAtCursor.maxHp}]`;
   }
 
-  const selectedLine = `${selectedTowerLine}  |  Cursor: (${cursorCol},${cursorRow})${cursorDetail}`;
+  const lineFiveTokens = state.runConfig.availableTowers
+    .map((archetype, index) => {
+      const towerDef = getTowerDef(archetype);
+      const keyLabel = `${index + 1}`;
+      const symbol = colorizeGridSymbol(towerDef.symbol, towerClassByArchetype[archetype]);
 
-  return placementHint.length > 0 ? `${statsLine}\n${selectedLine}\n${placementHint}` : `${statsLine}\n${selectedLine}`;
+      if (state.selectedTowerArchetype === archetype) {
+        return chalk.bold(
+          `[${keyLabel}]${symbol} ${towerNameByArchetype[archetype]} $${towerDef.cost} Dmg ${towerDef.damage} Rng ${towerDef.range}`
+        );
+      }
+
+      return chalk.dim(`[${keyLabel}]${symbol} ${towerNameByArchetype[archetype]} $${towerDef.cost}`);
+    })
+    .join('  ');
+
+  const lineFive = truncateDisplay(`▸ ${lineFiveTokens}`, HUD_WIDTH);
+  const selectedDef = getTowerDef(state.selectedTowerArchetype);
+  const selectedSymbol = colorizeGridSymbol(
+    selectedDef.symbol,
+    towerClassByArchetype[state.selectedTowerArchetype]
+  );
+  const detailLeft = chalk.white(
+    `▸ ${selectedSymbol} ${state.selectedTowerArchetype}  Dmg ${selectedDef.damage}  Rng ${selectedDef.range}  Cd ${selectedDef.cooldownTicks}`
+  );
+  const contextualHint = (() => {
+    if (towerAtCursor !== undefined) {
+      return '[S] Sell';
+    }
+
+    if (isPlacementPhase(state.phase)) {
+      return '[Enter] Place';
+    }
+
+    return '[S] Sell  [Q] Quit';
+  })();
+  const detailRight = `${chalk.white(`◎ (${cursorCol},${cursorRow})${cursorDetail}`)}  ${styleSubtle(`· ${contextualHint}`)}`;
+  const lineSix = fitHudLine(detailLeft, detailRight);
+
+  return [lineFive, lineSix];
+};
+
+export const composeHud = (state: GameState): string => {
+  const telemetry = (() => {
+    if (state.phase === 'WAVE_ACTIVE') {
+      return composeWaveActiveTelemetry(state);
+    }
+
+    if (state.phase === 'WAVE_CLEAR') {
+      return composeWaveClearTelemetry(state);
+    }
+
+    return composePrepTelemetry(state);
+  })();
+
+  const arsenal = composeArsenalLines(state);
+  const divider = chalk.dim('╌'.repeat(HUD_WIDTH));
+
+  return [telemetry[0], telemetry[1], telemetry[2], divider, arsenal[0], arsenal[1]].join('\n');
 };
 
 export const composeTitleBar = (state: GameState): string => {
@@ -137,7 +254,9 @@ export const composeEventLog = (state: GameState, visibleCount: number = 7): str
       messageClass = 'ERROR';
     }
 
-    return colorizeEventMessage(eventLine, messageClass);
+    const renderedLine = colorizeEventMessage(eventLine, messageClass);
+
+    return renderedLine;
   });
 
   return [chalk.dim('─── Events ───────────────────────────────────────────'), ...renderedEvents];

@@ -116,14 +116,15 @@ describe('composeFrame', () => {
     expect(frame).toContain('[OPERATIONS]');
     expect(frame).toContain('Crossroads');
     expect(frame).toContain('Wave 1/5  [PREP]');
-    expect(frame).toContain('❤ 16  ✦ $120  ≋ 1/5');
-    expect(frame).toContain('[PREP]');
-    expect(frame).toContain('Next wave: 7× ◀ 1× ▷');
-    expect(frame).toContain('R$50');
-    expect(frame).toContain('C$100');
-    expect(frame).toContain('Sn$150');
-    expect(frame).toContain('Sl$75');
-    expect(frame).toContain('░ = build zone  · Move cursor to ░, press Enter to place your first tower');
+    expect(frame).toContain('❤ HP');
+    expect(frame).toContain('✦ GOLD $120');
+    expect(frame).toContain('≋ WAVE 1/5');
+    expect(frame).toContain('Incoming: 7× ◀ Standard');
+    expect(frame).toContain('Rapid $50');
+    expect(frame).toContain('Cannon $100');
+    expect(frame).toContain('Sniper $150');
+    expect(frame).toContain('[4]⊗');
+    expect(frame).toContain('░ = build zone');
     expect(frame).toContain(
       '[1-4] Tower  [↑↓←→] Move  [Enter] Place  [S] Sell  [Space] Start  [Q] Quit'
     );
@@ -275,7 +276,7 @@ describe('composeFrame', () => {
     expect(getCellSymbol(gridLines[4], 3)).toBe('·');
   });
 
-  test('caps overflow event log to seven entries', () => {
+  test('event log display shows only 2 most recent entries', () => {
     const state = {
       ...createInitialState(),
       phase: 'PREP' as const,
@@ -288,27 +289,15 @@ describe('composeFrame', () => {
           kills: 0
         }
       ],
-      eventLog: [
-        '✓ Tower placed at (4,3)',
-        '✕ Standard destroyed  (+$10)',
-        '✗ Cannot place tower: not buildable',
-        '✗ Cannot place tower: occupied',
-        '~ Tank damaged  [███░░] 24/40',
-        '>> Wave 2 started — 11 enemies incoming',
-        '$ Tower sold at (4,3)',
-        'older event that should be hidden'
-      ]
+      eventLog: ['e1', 'e2', 'e3', 'e4', 'e5', 'e6', 'e7', 'older event that should be hidden']
     };
 
     const frame = stripAnsi(composeFrame(state));
 
-    expect(frame).toContain('✓ Tower placed at (4,3)');
-    expect(frame).toContain('✕ Standard destroyed  (+$10)');
-    expect(frame).toContain('✗ Cannot place tower: not buildable');
-    expect(frame).toContain('✗ Cannot place tower: occupied');
-    expect(frame).toContain('~ Tank damaged  [███░░] 24/40');
-    expect(frame).toContain('>> Wave 2 started — 11 enemies incoming');
-    expect(frame).toContain('$ Tower sold at (4,3)');
+    expect(frame).toContain('e1');
+    expect(frame).toContain('e2');
+    expect(frame).not.toContain('e3');
+    expect(frame).not.toContain('e7');
     expect(frame).not.toContain('older event that should be hidden');
   });
 
@@ -341,7 +330,7 @@ describe('composeFrame', () => {
 
     const frame = stripAnsi(composeFrame(state));
 
-    expect(frame).toContain('Dmg1 Rng3');
+    expect(frame).toContain('Dmg 1  Rng 3');
   });
 
   test('non-selected tower does not show stats in PREP', () => {
@@ -353,7 +342,7 @@ describe('composeFrame', () => {
 
     const frame = stripAnsi(composeFrame(state));
 
-    expect(frame).not.toContain('Dmg5 Rng6');
+    expect(frame).not.toContain('Dmg 5  Rng 6');
   });
 
   test('renders GAME OVER ceremony screen', () => {
@@ -469,7 +458,7 @@ describe('composeFrame', () => {
     expect(frame).toContain('⬟');
   });
 
-  test('renders event log entries latest-first and capped to seven', () => {
+  test('event log display shows 2 most recent entries', () => {
     const state = {
       ...createInitialState(),
       phase: 'PREP' as const,
@@ -488,8 +477,24 @@ describe('composeFrame', () => {
     const frame = stripAnsi(composeFrame(state));
 
     expect(frame).toContain('e1');
-    expect(frame).toContain('e7');
+    expect(frame).toContain('e2');
+    expect(frame).not.toContain('e3');
+    expect(frame).not.toContain('e7');
     expect(frame).not.toContain('older event that should be hidden');
+  });
+
+  test('event log always renders exactly 2 entries in gameplay frame', () => {
+    const state = {
+      ...createInitialState(),
+      phase: 'WAVE_ACTIVE' as const,
+      eventLog: ['e1', 'e2', 'e3', 'e4', 'e5', 'e6', 'e7']
+    };
+
+    const frame = stripAnsi(composeFrame(state));
+
+    expect(frame).toContain('e1');
+    expect(frame).toContain('e2');
+    expect(frame).not.toContain('e3');
   });
 
   test('gameplay frame height stays at ≤ 33 with a full 7-entry event log', () => {
@@ -504,6 +509,159 @@ describe('composeFrame', () => {
     expect(lines.length).toBeLessThanOrEqual(33);
   });
 
+  test('gameplay frame height stays at ≤ 33 with WAVE_ACTIVE Threat Radar HUD', () => {
+    const state = {
+      ...createInitialState(),
+      phase: 'WAVE_ACTIVE' as const,
+      frame: 0,
+      enemies: [
+        {
+          id: 'enemy-standard-1',
+          archetype: EnemyArchetype.STANDARD,
+          pos: [6, 2] as [number, number],
+          pathIndex: 6,
+          hp: 10,
+          maxHp: 10,
+          moveCooldown: 2,
+          dead: false
+        },
+        {
+          id: 'enemy-standard-2',
+          archetype: EnemyArchetype.STANDARD,
+          pos: [7, 2] as [number, number],
+          pathIndex: 7,
+          hp: 10,
+          maxHp: 10,
+          moveCooldown: 2,
+          dead: false
+        },
+        {
+          id: 'enemy-fast-1',
+          archetype: EnemyArchetype.FAST,
+          pos: [8, 2] as [number, number],
+          pathIndex: 8,
+          hp: 5,
+          maxHp: 5,
+          moveCooldown: 1,
+          dead: false
+        },
+        {
+          id: 'enemy-fast-2',
+          archetype: EnemyArchetype.FAST,
+          pos: [9, 2] as [number, number],
+          pathIndex: 9,
+          hp: 5,
+          maxHp: 5,
+          moveCooldown: 1,
+          dead: false
+        },
+        {
+          id: 'enemy-tank-1',
+          archetype: EnemyArchetype.TANK,
+          pos: [10, 2] as [number, number],
+          pathIndex: 10,
+          hp: 40,
+          maxHp: 40,
+          moveCooldown: 4,
+          dead: false
+        },
+        {
+          id: 'enemy-priority',
+          archetype: EnemyArchetype.TANK,
+          pos: [11, 2] as [number, number],
+          pathIndex: 18,
+          hp: 39,
+          maxHp: 40,
+          moveCooldown: 4,
+          dead: false
+        }
+      ],
+      eventLog: ['entry 1', 'entry 2', 'entry 3', 'entry 4', 'entry 5', 'entry 6', 'entry 7']
+    };
+    const frame = composeFrame(state);
+    const lines = stripAnsi(frame).split('\n');
+
+    expect(lines.length).toBeLessThanOrEqual(33);
+  });
+
+  test('WAVE_ACTIVE frame inner lines all within 76 chars', () => {
+    const state = {
+      ...createInitialState(),
+      phase: 'WAVE_ACTIVE' as const,
+      frame: 0,
+      enemies: [
+        {
+          id: 'enemy-standard-1',
+          archetype: EnemyArchetype.STANDARD,
+          pos: [6, 2] as [number, number],
+          pathIndex: 6,
+          hp: 10,
+          maxHp: 10,
+          moveCooldown: 2,
+          dead: false
+        },
+        {
+          id: 'enemy-standard-2',
+          archetype: EnemyArchetype.STANDARD,
+          pos: [7, 2] as [number, number],
+          pathIndex: 7,
+          hp: 10,
+          maxHp: 10,
+          moveCooldown: 2,
+          dead: false
+        },
+        {
+          id: 'enemy-fast-1',
+          archetype: EnemyArchetype.FAST,
+          pos: [8, 2] as [number, number],
+          pathIndex: 8,
+          hp: 5,
+          maxHp: 5,
+          moveCooldown: 1,
+          dead: false
+        },
+        {
+          id: 'enemy-fast-2',
+          archetype: EnemyArchetype.FAST,
+          pos: [9, 2] as [number, number],
+          pathIndex: 9,
+          hp: 5,
+          maxHp: 5,
+          moveCooldown: 1,
+          dead: false
+        },
+        {
+          id: 'enemy-tank-1',
+          archetype: EnemyArchetype.TANK,
+          pos: [10, 2] as [number, number],
+          pathIndex: 10,
+          hp: 40,
+          maxHp: 40,
+          moveCooldown: 4,
+          dead: false
+        },
+        {
+          id: 'enemy-priority',
+          archetype: EnemyArchetype.TANK,
+          pos: [11, 2] as [number, number],
+          pathIndex: 18,
+          hp: 39,
+          maxHp: 40,
+          moveCooldown: 4,
+          dead: false
+        }
+      ],
+      eventLog: ['entry 1', 'entry 2', 'entry 3', 'entry 4', 'entry 5', 'entry 6', 'entry 7']
+    };
+    const frame = stripAnsi(composeFrame(state));
+    const lines = frame.split('\n');
+    const innerLines = lines.slice(1, -1).map((line) => line.slice(1, -1).trimEnd());
+
+    for (const line of innerLines) {
+      expect(getDisplayWidth(line)).toBeLessThanOrEqual(76);
+    }
+  });
+
   test('PREP frame height stays at ≤ 33 with placement hint and full 7-entry event log', () => {
     const state = {
       ...createInitialState(),
@@ -514,59 +672,6 @@ describe('composeFrame', () => {
     const frame = composeFrame(state);
     const lines = stripAnsi(frame).split('\n');
 
-    expect(lines.length).toBeLessThanOrEqual(33);
-  });
-
-  test('terminalRows: 24 reduces event log to 3 rendered entries', () => {
-    const state = {
-      ...createInitialState(),
-      phase: 'PREP' as const,
-      towers: [
-        {
-          id: 'tower-rapid',
-          archetype: TowerArchetype.RAPID,
-          pos: [1, 1] as [number, number],
-          cooldownRemaining: 0,
-          kills: 0
-        }
-      ],
-      eventLog: ['e1', 'e2', 'e3', 'e4', 'e5', 'e6', 'e7']
-    };
-    const frame = stripAnsi(composeFrame(state, { terminalColumns: 78, terminalRows: 24 }));
-    const lines = frame.split('\n');
-
-    expect(frame).toContain('e1');
-    expect(frame).toContain('e2');
-    expect(frame).toContain('e3');
-    expect(frame).not.toContain('e4');
-    expect(lines.length).toBeLessThanOrEqual(29);
-  });
-
-  test('terminalRows: 35 keeps event log at 7 entries', () => {
-    const state = {
-      ...createInitialState(),
-      phase: 'PREP' as const,
-      towers: [
-        {
-          id: 'tower-rapid',
-          archetype: TowerArchetype.RAPID,
-          pos: [1, 1] as [number, number],
-          cooldownRemaining: 0,
-          kills: 0
-        }
-      ],
-      eventLog: ['e1', 'e2', 'e3', 'e4', 'e5', 'e6', 'e7']
-    };
-    const frame = stripAnsi(composeFrame(state, { terminalColumns: 78, terminalRows: 35 }));
-    const lines = frame.split('\n');
-
-    expect(frame).toContain('e1');
-    expect(frame).toContain('e2');
-    expect(frame).toContain('e3');
-    expect(frame).toContain('e4');
-    expect(frame).toContain('e5');
-    expect(frame).toContain('e6');
-    expect(frame).toContain('e7');
     expect(lines.length).toBeLessThanOrEqual(33);
   });
 
@@ -618,7 +723,7 @@ describe('composeFrame', () => {
     const lines = frame.split('\n');
     const innerLines = lines.slice(1, -1).map((line) => line.slice(1, -1));
     const legendLine = innerLines.find((line) => line.includes('[1-4] Tower'));
-    const selectedLine = innerLines.find((line) => line.includes('|  Cursor:'));
+    const selectedLine = innerLines.find((line) => line.includes('◎ ('));
 
     expect(legendLine).toBeDefined();
     expect(selectedLine).toBeDefined();
@@ -646,7 +751,7 @@ describe('composeFrame', () => {
     const frame = stripAnsi(composeFrame(state));
     const lines = frame.split('\n');
     const innerLines = lines.slice(1, -1).map((line) => line.slice(1, -1));
-    const selectedLine = innerLines.find((line) => line.includes('|  Cursor:'));
+    const selectedLine = innerLines.find((line) => line.includes('◎ ('));
 
     expect(selectedLine).toBeDefined();
     expect(getDisplayWidth(selectedLine!.trimEnd())).toBeLessThanOrEqual(76);

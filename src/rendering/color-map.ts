@@ -23,7 +23,7 @@ export type GridEntityClass =
 
 type HudValueClass = 'HP' | 'GOLD' | 'WAVE' | 'PHASE';
 
-export type EventMessageClass = 'KILL' | 'LEAK' | 'WAVE' | 'INFO' | 'ERROR';
+export type EventMessageClass = 'KILL' | 'LEAK' | 'WAVE' | 'INFO' | 'ERROR' | 'THREAT' | 'SURGE';
 
 export const colorizeGridSymbol = (
   symbol: string,
@@ -163,6 +163,14 @@ export const colorizeEventMessage = (
 
   if (messageClass === 'ERROR') {
     return chalk.yellow(message);
+  }
+
+  if (messageClass === 'THREAT') {
+    return chalk.bold.redBright(message);
+  }
+
+  if (messageClass === 'SURGE') {
+    return chalk.bold.yellowBright(message);
   }
 
   return chalk.dim.white(message);

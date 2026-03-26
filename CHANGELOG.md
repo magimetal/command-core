@@ -10,6 +10,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Design context persistence for future sessions:
   - new `.impeccable.md` baseline for users, brand personality, aesthetic direction, and design principles
   - mirrored `## Design Context` section in `AGENTS.md` for agent-wide consistency
+- Threat-radar telemetry foundations:
+  - new `src/utils/threat-radar.ts` helpers for wave-drain composition, surge-state signaling, and priority-target selection
+  - new dedicated HUD behavior suite in `tests/rendering/hud-composer.test.ts`
 - Rendering hardening coverage:
   - new reduced-motion checks and narrow-pane guard tests in `tests/rendering/frame-composer.test.ts`
   - new grapheme/display-width test suite in `tests/rendering/color-map.test.ts`
@@ -23,6 +26,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   - frame composition now accepts terminal column limits and gracefully falls back with a guidance frame when panes are too narrow
   - title bar map identity now truncates safely to prevent overflow from long labels/seeds
   - border padding now uses display-width-aware fitting/truncation for ANSI + Unicode content
+- Gameplay telemetry and event visibility refresh:
+  - HUD now renders a fixed six-line layout with phase-specific telemetry, threat focus details, and contextual cursor controls
+  - gameplay frame event-log visibility is now fixed to the two most recent entries
 - Added reduced-motion behavior via `REDUCED_MOTION=1`:
   - disables title scanline animation
   - disables base pulse alternation
@@ -44,6 +50,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Tested
 - Added coverage for end-state rerun input (`R`) and sell-error mapping in app flow.
 - Expanded rendering assertions for title/mode/map/end-state framing behavior under width and row constraints.
+- Added focused HUD and frame coverage for threat-radar lines, fixed two-entry gameplay event log rendering, and line-width/height guardrails.
 
 ## [2.0.0] - 2026-03-26
 
