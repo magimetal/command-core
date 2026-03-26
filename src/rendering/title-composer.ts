@@ -1,8 +1,10 @@
 import chalk from 'chalk';
 import type { GameState } from '../models/game-state';
 import { isReducedMotionEnabled } from './accessibility';
-import { colorizeEventLogMessage, colorizeHudValue } from './color-map';
+import { colorizeEventLogMessage, getDisplayWidth } from './color-map';
 import { composeBorder, SECTION_BREAK } from './border';
+import { FRAME_INNER_WIDTH_BUDGET } from './frame-composer';
+import { stylePrimary, styleSubtle } from './text-styles';
 
 export const composeTitleFrame = (state: GameState, maxInnerWidth?: number): string => {
   const logoArt = [
@@ -17,19 +19,20 @@ export const composeTitleFrame = (state: GameState, maxInnerWidth?: number): str
     '║      ░         ░     ░░   ░ ░      ░     ║',
     '╚══════════════ COMMAND CORE ═══════════════╝'
   ];
+  const logoArtNaturalWidth = Math.max(...logoArt.map((line) => getDisplayWidth(line)));
 
   const reducedMotion = isReducedMotionEnabled();
   const scanRow = reducedMotion ? -1 : Math.floor(state.frame / 2) % logoArt.length;
 
-  const lineOne = colorizeHudValue(':: COMMAND CORE ONLINE ::', 'PHASE', state.baseHp);
-  const lineTwo = colorizeHudValue('TACTICAL GRID AUTHORITY ACTIVE', 'WAVE', state.baseHp);
-  const lineThree = colorizeHudValue('Press any key to enter mode select', 'GOLD', state.baseHp);
-  const lineFour = colorizeEventLogMessage('Any key → MODE SELECT   |   Q: Quit');
+  const lineOne = stylePrimary(':: COMMAND CORE ONLINE ::');
+  const lineTwo = styleSubtle('Defend the base through escalating waves');
+  const lineThree = chalk.white('Any key: Choose mode');
+  const lineFour = colorizeEventLogMessage('Q: Quit');
 
   return composeBorder(
     [
       ...logoArt.map((line, index) => {
-        const colorized = colorizeHudValue(line, 'GOLD', state.baseHp);
+        const colorized = chalk.yellow(line);
         return index === scanRow ? chalk.dim(colorized) : colorized;
       }),
       SECTION_BREAK,
@@ -39,6 +42,13 @@ export const composeTitleFrame = (state: GameState, maxInnerWidth?: number): str
       SECTION_BREAK,
       lineFour
     ],
-    { minInnerWidth: 76, maxInnerWidth, align: 'center' }
+    {
+      minInnerWidth: Math.max(
+        logoArtNaturalWidth,
+        Math.min(FRAME_INNER_WIDTH_BUDGET, maxInnerWidth ?? FRAME_INNER_WIDTH_BUDGET)
+      ),
+      maxInnerWidth,
+      align: 'center'
+    }
   );
 };

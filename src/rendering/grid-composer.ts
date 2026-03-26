@@ -8,7 +8,7 @@ import { colorizeGridSymbol, type GridEntityClass } from './color-map';
 const CELL_SYMBOLS: Record<CellType, string> = {
   [CellType.PATH]: '─',
   [CellType.BUILDABLE]: '░',
-  [CellType.BLOCKED]: '╠',
+  [CellType.BLOCKED]: '▪',
   [CellType.SPAWN]: '⟹',
   [CellType.BASE]: '⬡'
 };
@@ -37,14 +37,16 @@ const isPathLikeCell = (cellType: CellType): boolean => {
   return cellType === CellType.PATH || cellType === CellType.SPAWN || cellType === CellType.BASE;
 };
 
-const getPathSymbol = (state: GameState, rowIndex: number, colIndex: number): string => {
-  const hasNorth = rowIndex > 0 && isPathLikeCell(state.grid[rowIndex - 1][colIndex].type);
+const pathSymbolCacheByGrid = new WeakMap<GameState['grid'], Map<string, string>>();
+
+const getPathSymbolForGrid = (grid: GameState['grid'], rowIndex: number, colIndex: number): string => {
+  const hasNorth = rowIndex > 0 && isPathLikeCell(grid[rowIndex - 1][colIndex].type);
   const hasSouth =
-    rowIndex < state.grid.length - 1 && isPathLikeCell(state.grid[rowIndex + 1][colIndex].type);
-  const hasWest = colIndex > 0 && isPathLikeCell(state.grid[rowIndex][colIndex - 1].type);
+    rowIndex < grid.length - 1 && isPathLikeCell(grid[rowIndex + 1][colIndex].type);
+  const hasWest = colIndex > 0 && isPathLikeCell(grid[rowIndex][colIndex - 1].type);
   const hasEast =
-    colIndex < state.grid[rowIndex].length - 1 &&
-    isPathLikeCell(state.grid[rowIndex][colIndex + 1].type);
+    colIndex < grid[rowIndex].length - 1 &&
+    isPathLikeCell(grid[rowIndex][colIndex + 1].type);
 
   if (hasNorth && hasSouth && hasEast && hasWest) return '┼';
   if (hasNorth && hasSouth && hasEast) return '├';
@@ -59,6 +61,33 @@ const getPathSymbol = (state: GameState, rowIndex: number, colIndex: number): st
   if (hasNorth && hasWest) return '┘';
 
   return '─';
+};
+
+const buildPathSymbolCache = (grid: GameState['grid']): Map<string, string> => {
+  const cache = new Map<string, string>();
+
+  for (let rowIndex = 0; rowIndex < grid.length; rowIndex += 1) {
+    for (let colIndex = 0; colIndex < grid[rowIndex].length; colIndex += 1) {
+      if (grid[rowIndex][colIndex].type !== CellType.PATH) {
+        continue;
+      }
+
+      cache.set(`${colIndex},${rowIndex}`, getPathSymbolForGrid(grid, rowIndex, colIndex));
+    }
+  }
+
+  return cache;
+};
+
+const getPathSymbolCache = (grid: GameState['grid']): Map<string, string> => {
+  const cached = pathSymbolCacheByGrid.get(grid);
+  if (cached !== undefined) {
+    return cached;
+  }
+
+  const nextCache = buildPathSymbolCache(grid);
+  pathSymbolCacheByGrid.set(grid, nextCache);
+  return nextCache;
 };
 
 const getTowerLookup = (state: GameState): Map<string, TowerArchetype> => {
@@ -122,6 +151,71 @@ const buildRangePreviewKeys = (state: GameState): Set<string> => {
   return keys;
 };
 
+type GridRenderToken = {
+  symbol: string;
+  entityClass: GridEntityClass;
+  hpRatio?: number;
+  singleton?: boolean;
+};
+
+const getHpBucket = (hpRatio?: number): 'low' | 'mid' | 'high' | 'none' => {
+  if (hpRatio === undefined) {
+    return 'none';
+  }
+
+  if (hpRatio < 0.33) {
+    return 'low';
+  }
+
+  if (hpRatio <= 0.66) {
+    return 'mid';
+  }
+
+  return 'high';
+};
+
+const buildColorRun = (tokens: GridRenderToken[]): string => {
+  const segments: string[] = [];
+  let index = 0;
+
+  while (index < tokens.length) {
+    const token = tokens[index];
+
+    if (token.singleton) {
+      segments.push(colorizeGridSymbol(token.symbol, token.entityClass, token.hpRatio));
+      index += 1;
+      continue;
+    }
+
+    const runSymbols: string[] = [token.symbol];
+    const runClass = token.entityClass;
+    const runHpBucket = getHpBucket(token.hpRatio);
+    let cursor = index + 1;
+
+    while (cursor < tokens.length) {
+      const nextToken = tokens[cursor];
+      if (nextToken.singleton) {
+        break;
+      }
+
+      if (
+        nextToken.entityClass !== runClass ||
+        getHpBucket(nextToken.hpRatio) !== runHpBucket
+      ) {
+        break;
+      }
+
+      runSymbols.push(nextToken.symbol);
+      cursor += 1;
+    }
+
+    segments.push(colorizeGridSymbol(runSymbols.join(' '), runClass, token.hpRatio));
+    index = cursor;
+  }
+
+  return segments.join(' ');
+};
+
 export const composeGrid = (state: GameState): string[] => {
   const reducedMotion = isReducedMotionEnabled();
   const enemyLookup = getEnemyLookup(state);
@@ -132,22 +226,26 @@ export const composeGrid = (state: GameState): string[] => {
   const cursorKey = `${state.cursor[0]},${state.cursor[1]}`;
   const rangePreviewKeys = buildRangePreviewKeys(state);
   const placementPhase = isPlacementPhase(state.phase);
+  const pathSymbolCache = getPathSymbolCache(state.grid);
 
-  return state.grid.map((row, rowIndex) =>
-    row
-      .map((cell, colIndex) => {
+  return state.grid.map((row, rowIndex) => {
+    const tokens: GridRenderToken[] = row.map((cell, colIndex): GridRenderToken => {
         const key = `${colIndex},${rowIndex}`;
 
         const enemy = enemyLookup.get(key);
         if (enemy !== undefined) {
           const enemySymbol = ENEMY_DEFS[enemy.archetype].symbol;
           if (key === cursorKey) {
-            return colorizeGridSymbol(enemySymbol, 'CURSOR');
+            return { symbol: enemySymbol, entityClass: 'CURSOR', singleton: true };
           }
 
           const hpRatio = enemy.hp / enemy.maxHp;
 
-          return colorizeGridSymbol(enemySymbol, ENEMY_CLASS_MAP[enemy.archetype], hpRatio);
+          return {
+            symbol: enemySymbol,
+            entityClass: ENEMY_CLASS_MAP[enemy.archetype],
+            hpRatio
+          };
         }
 
         const towerArchetype = towerLookup.get(key);
@@ -156,33 +254,36 @@ export const composeGrid = (state: GameState): string[] => {
         if (towerArchetype !== undefined) {
           const towerSymbol = getTowerDef(towerArchetype).symbol;
           if (key === cursorKey) {
-            return colorizeGridSymbol(towerSymbol, 'CURSOR');
+            return { symbol: towerSymbol, entityClass: 'CURSOR', singleton: true };
           }
 
-          return colorizeGridSymbol(towerSymbol, TOWER_CLASS_MAP[towerArchetype]);
+          return { symbol: towerSymbol, entityClass: TOWER_CLASS_MAP[towerArchetype] };
         }
 
         if (projectile !== undefined) {
           if (key === cursorKey) {
-            return colorizeGridSymbol(projectile.symbol, 'CURSOR');
+            return { symbol: projectile.symbol, entityClass: 'CURSOR', singleton: true };
           }
 
-          return colorizeGridSymbol(projectile.symbol, PROJECTILE_CLASS_MAP[projectile.archetype]);
+          return {
+            symbol: projectile.symbol,
+            entityClass: PROJECTILE_CLASS_MAP[projectile.archetype]
+          };
         }
 
         if (rangePreviewKeys.has(key) && key !== cursorKey) {
           if (cell.type === CellType.PATH) {
-            return colorizeGridSymbol('•', 'PATH');
+            return { symbol: '•', entityClass: 'PATH' };
           }
 
           if (cell.type === CellType.BUILDABLE && cell.tower === undefined) {
-            return colorizeGridSymbol('◌', 'BUILDABLE');
+            return { symbol: '◌', entityClass: 'BUILDABLE' };
           }
         }
 
         const cellSymbol =
           cell.type === CellType.PATH
-            ? getPathSymbol(state, rowIndex, colIndex)
+            ? (pathSymbolCache.get(key) ?? '─')
             : cell.type === CellType.BASE
               ? reducedMotion || state.frame % 4 < 2
                 ? '⬡'
@@ -192,14 +293,15 @@ export const composeGrid = (state: GameState): string[] => {
         if (key === cursorKey) {
           if (placementPhase && cell.type === CellType.BUILDABLE) {
             const ghostSymbol = getTowerDef(state.selectedTowerArchetype).symbol;
-            return colorizeGridSymbol(ghostSymbol, 'CURSOR');
+            return { symbol: ghostSymbol, entityClass: 'CURSOR', singleton: true };
           }
 
-          return colorizeGridSymbol(cellSymbol, 'CURSOR');
+          return { symbol: cellSymbol, entityClass: 'CURSOR', singleton: true };
         }
 
-        return colorizeGridSymbol(cellSymbol, getCellClass(cell.type));
-      })
-      .join(' ')
-  );
+        return { symbol: cellSymbol, entityClass: getCellClass(cell.type) };
+      });
+
+    return buildColorRun(tokens);
+  });
 };

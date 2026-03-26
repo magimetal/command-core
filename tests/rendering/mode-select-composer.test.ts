@@ -15,6 +15,7 @@ describe('composeModeSelectFrame', () => {
 
     expect(frame).toContain('[1] OPERATIONS');
     expect(frame).toContain('[2] ANOMALY');
+    expect(frame).toContain('Newcomer? Start with OPERATIONS · Veteran? Try ANOMALY for chaos');
     expect(frame).toContain('↑↓ Navigate   Enter: Confirm   Q: Quit');
 
     const lines = frame.split('\n');

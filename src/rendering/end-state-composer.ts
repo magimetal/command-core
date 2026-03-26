@@ -4,6 +4,7 @@ import { calculateScore } from '../simulation/score';
 import { isReducedMotionEnabled } from './accessibility';
 import { colorizeHudValue } from './color-map';
 import { composeBorder, SECTION_BREAK } from './border';
+import { styleEmphasis } from './text-styles';
 
 export const composeEndStateFrame = (state: GameState, maxInnerWidth?: number): string => {
   const isVictory = state.phase === 'VICTORY';
@@ -31,8 +32,8 @@ export const composeEndStateFrame = (state: GameState, maxInnerWidth?: number): 
   });
 
   const titleLine = isVictory
-    ? colorizeHudValue('All waves survived. The base stands.', 'PHASE', state.baseHp)
-    : colorizeHudValue('The base has fallen. The run ends here.', 'PHASE', 0);
+    ? colorizeHudValue('All waves cleared. Base secured.', 'PHASE', state.baseHp)
+    : colorizeHudValue('Base destroyed. Mission failed.', 'PHASE', 0);
   const modeLine =
     state.runConfig.mode === 'ANOMALY'
       ? `Anomaly ${state.runConfig.mapLabel.match(/#\d+/)?.[0] ?? state.runConfig.mapLabel}`
@@ -43,11 +44,11 @@ export const composeEndStateFrame = (state: GameState, maxInnerWidth?: number): 
   const score = calculateScore(state);
   const scoreLine = `Score: ${colorizeHudValue(`${score}`, 'GOLD', state.baseHp)}`;
   const blinkPrompt = isReducedMotionEnabled()
-    ? chalk.bold.white('Press Q to quit')
-    : `${chalk.bold.white('Press Q to quit')} \u001b[5m▌\u001b[0m`;
+    ? styleEmphasis('R: New Run   Q: Quit')
+    : `${styleEmphasis('R: New Run   Q: Quit')} \u001b[5m▌\u001b[0m`;
 
   return composeBorder(
     [...colorizedBanner, SECTION_BREAK, titleLine, modeLine, statLine, scoreLine, SECTION_BREAK, blinkPrompt],
-    { maxInnerWidth }
+    { maxInnerWidth, align: 'center' }
   );
 };

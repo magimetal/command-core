@@ -34,6 +34,7 @@ terminal-tower-defense/  # Current repository directory name (product name: Comm
 | Tower placement errors/messages | `src/simulation/tower-placement.ts`, `src/app.tsx` | Error strings converted to user-facing `✗` messages |
 | Grid/map geometry | `src/const/operations-maps.ts` | 16x34 grids; map geometry and paths are defined per operations map |
 | Frame output and width behavior | `src/rendering/frame-composer.ts` | One bordered frame string; grid centered to non-grid width |
+| Shared rendering tokens/utilities | `src/rendering/text-utils.ts`, `src/rendering/text-styles.ts`, `src/rendering/hp-bar.ts` | Centralized ANSI width helpers, semantic text styles, and reusable HP bar text |
 | Input gates | `src/input/input-handler.ts` | `Q` preempts title any-key gate |
 | Rendering guardrails | `tests/rendering/frame-composer.test.ts` | Width <= 78, height <= 33 |
 

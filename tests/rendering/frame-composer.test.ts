@@ -3,6 +3,7 @@ import { EnemyArchetype } from '../../src/const/enemies';
 import { TowerArchetype } from '../../src/const/towers';
 import { colorizeGridSymbol, stripAnsi } from '../../src/rendering/color-map';
 import { composeFrame } from '../../src/rendering/frame-composer';
+import { getDisplayWidth } from '../../src/rendering/text-utils';
 import { createInitialState } from '../../src/simulation/create-initial-state';
 import { generateAnomalyRunConfig } from '../../src/simulation/anomaly-gen';
 import chalk from 'chalk';
@@ -45,7 +46,8 @@ describe('composeFrame', () => {
     const frame = stripAnsi(composeFrame(state));
 
     expect(frame).toContain('COMMAND CORE');
-    expect(frame).toContain('Any key → MODE SELECT   |   Q: Quit');
+    expect(frame).toContain('Any key: Choose mode');
+    expect(frame).toContain('Q: Quit');
     expect(frame).toContain('▄▄▄█████▓▓█████  ██▀███');
   });
 
@@ -114,18 +116,19 @@ describe('composeFrame', () => {
     expect(frame).toContain('[OPERATIONS]');
     expect(frame).toContain('Crossroads');
     expect(frame).toContain('Wave 1/5  [PREP]');
-    expect(frame).toContain('❤ 16  ✦ $120  ≋ 1/5 waves');
+    expect(frame).toContain('❤ 16  ✦ $120  ≋ 1/5');
     expect(frame).toContain('[PREP]');
-    expect(frame).toContain('Next: 7× ◀ 1× ▷');
+    expect(frame).toContain('Next wave: 7× ◀ 1× ▷');
     expect(frame).toContain('R$50');
     expect(frame).toContain('C$100');
     expect(frame).toContain('Sn$150');
     expect(frame).toContain('Sl$75');
+    expect(frame).toContain('░ = build zone  · Move cursor to ░, press Enter to place your first tower');
     expect(frame).toContain(
       '[1-4] Tower  [↑↓←→] Move  [Enter] Place  [S] Sell  [Space] Start  [Q] Quit'
     );
     expect(frame).toContain('─── Events');
-    expect(frame).toContain('! No recent events');
+    expect(frame).toContain('· No events yet');
   });
 
   test('renders new 7-segment path in grid', () => {
@@ -276,12 +279,21 @@ describe('composeFrame', () => {
     const state = {
       ...createInitialState(),
       phase: 'PREP' as const,
+      towers: [
+        {
+          id: 'tower-rapid',
+          archetype: TowerArchetype.RAPID,
+          pos: [1, 1] as [number, number],
+          cooldownRemaining: 0,
+          kills: 0
+        }
+      ],
       eventLog: [
         '✓ Tower placed at (4,3)',
-        '✕ STANDARD destroyed  (+$10)',
+        '✕ Standard destroyed  (+$10)',
         '✗ Cannot place tower: not buildable',
         '✗ Cannot place tower: occupied',
-        '~ TANK hit  [███░░] 24/40',
+        '~ Tank damaged  [███░░] 24/40',
         '>> Wave 2 started — 11 enemies incoming',
         '$ Tower sold at (4,3)',
         'older event that should be hidden'
@@ -291,13 +303,57 @@ describe('composeFrame', () => {
     const frame = stripAnsi(composeFrame(state));
 
     expect(frame).toContain('✓ Tower placed at (4,3)');
-    expect(frame).toContain('✕ STANDARD destroyed  (+$10)');
+    expect(frame).toContain('✕ Standard destroyed  (+$10)');
     expect(frame).toContain('✗ Cannot place tower: not buildable');
     expect(frame).toContain('✗ Cannot place tower: occupied');
-    expect(frame).toContain('~ TANK hit  [███░░] 24/40');
+    expect(frame).toContain('~ Tank damaged  [███░░] 24/40');
     expect(frame).toContain('>> Wave 2 started — 11 enemies incoming');
     expect(frame).toContain('$ Tower sold at (4,3)');
     expect(frame).not.toContain('older event that should be hidden');
+  });
+
+  test('does not render PREP placement hint when towers are present', () => {
+    const state = {
+      ...createInitialState(),
+      phase: 'PREP' as const,
+      towers: [
+        {
+          id: 'tower-rapid',
+          archetype: TowerArchetype.RAPID,
+          pos: [1, 1] as [number, number],
+          cooldownRemaining: 0,
+          kills: 0
+        }
+      ]
+    };
+
+    const frame = stripAnsi(composeFrame(state));
+
+    expect(frame).not.toContain('░ = build zone');
+  });
+
+  test('renders selected tower stat tokens in PREP', () => {
+    const state = {
+      ...createInitialState(),
+      phase: 'PREP' as const,
+      selectedTowerArchetype: TowerArchetype.RAPID
+    };
+
+    const frame = stripAnsi(composeFrame(state));
+
+    expect(frame).toContain('Dmg1 Rng3');
+  });
+
+  test('non-selected tower does not show stats in PREP', () => {
+    const state = {
+      ...createInitialState(),
+      phase: 'PREP' as const,
+      selectedTowerArchetype: TowerArchetype.RAPID
+    };
+
+    const frame = stripAnsi(composeFrame(state));
+
+    expect(frame).not.toContain('Dmg5 Rng6');
   });
 
   test('renders GAME OVER ceremony screen', () => {
@@ -311,11 +367,12 @@ describe('composeFrame', () => {
     const frame = stripAnsi(composeFrame(state));
 
     expect(frame).toContain('╔═╗╔═╗╔╦╗╔═╗   ╔═╗╦  ╦╔═╗╦═╗');
-    expect(frame).toContain('The base has fallen. The run ends here.');
+    expect(frame).toContain('Base destroyed. Mission failed.');
     expect(frame).toContain('Enemies killed: 7');
     expect(frame).toContain('Gold remaining: 220');
     expect(frame).toContain('Score: 304');
-    expect(frame).toContain('Press Q to quit');
+    expect(frame).toContain('R: New Run');
+    expect(frame).toContain('Q: Quit');
     expect(frame).toContain('┌');
   });
 
@@ -350,11 +407,12 @@ describe('composeFrame', () => {
     const frame = stripAnsi(composeFrame(state));
 
     expect(frame).toContain('╦  ╦╦╔═╗╔╦╗╔═╗╦═╗╦ ╦');
-    expect(frame).toContain('All waves survived. The base stands.');
+    expect(frame).toContain('All waves cleared. Base secured.');
     expect(frame).toContain('Enemies killed: 18');
     expect(frame).toContain('Gold remaining: 305');
     expect(frame).toContain('Score: 1021');
-    expect(frame).toContain('Press Q to quit');
+    expect(frame).toContain('R: New Run');
+    expect(frame).toContain('Q: Quit');
     expect(frame).toContain('┌');
   });
 
@@ -415,6 +473,15 @@ describe('composeFrame', () => {
     const state = {
       ...createInitialState(),
       phase: 'PREP' as const,
+      towers: [
+        {
+          id: 'tower-rapid',
+          archetype: TowerArchetype.RAPID,
+          pos: [1, 1] as [number, number],
+          cooldownRemaining: 0,
+          kills: 0
+        }
+      ],
       eventLog: ['e1', 'e2', 'e3', 'e4', 'e5', 'e6', 'e7', 'older event that should be hidden']
     };
 
@@ -437,6 +504,114 @@ describe('composeFrame', () => {
     expect(lines.length).toBeLessThanOrEqual(33);
   });
 
+  test('PREP frame height stays at ≤ 33 with placement hint and full 7-entry event log', () => {
+    const state = {
+      ...createInitialState(),
+      phase: 'PREP' as const,
+      towers: [],
+      eventLog: ['entry 1', 'entry 2', 'entry 3', 'entry 4', 'entry 5', 'entry 6', 'entry 7']
+    };
+    const frame = composeFrame(state);
+    const lines = stripAnsi(frame).split('\n');
+
+    expect(lines.length).toBeLessThanOrEqual(33);
+  });
+
+  test('terminalRows: 24 reduces event log to 3 rendered entries', () => {
+    const state = {
+      ...createInitialState(),
+      phase: 'PREP' as const,
+      towers: [
+        {
+          id: 'tower-rapid',
+          archetype: TowerArchetype.RAPID,
+          pos: [1, 1] as [number, number],
+          cooldownRemaining: 0,
+          kills: 0
+        }
+      ],
+      eventLog: ['e1', 'e2', 'e3', 'e4', 'e5', 'e6', 'e7']
+    };
+    const frame = stripAnsi(composeFrame(state, { terminalColumns: 78, terminalRows: 24 }));
+    const lines = frame.split('\n');
+
+    expect(frame).toContain('e1');
+    expect(frame).toContain('e2');
+    expect(frame).toContain('e3');
+    expect(frame).not.toContain('e4');
+    expect(lines.length).toBeLessThanOrEqual(29);
+  });
+
+  test('terminalRows: 35 keeps event log at 7 entries', () => {
+    const state = {
+      ...createInitialState(),
+      phase: 'PREP' as const,
+      towers: [
+        {
+          id: 'tower-rapid',
+          archetype: TowerArchetype.RAPID,
+          pos: [1, 1] as [number, number],
+          cooldownRemaining: 0,
+          kills: 0
+        }
+      ],
+      eventLog: ['e1', 'e2', 'e3', 'e4', 'e5', 'e6', 'e7']
+    };
+    const frame = stripAnsi(composeFrame(state, { terminalColumns: 78, terminalRows: 35 }));
+    const lines = frame.split('\n');
+
+    expect(frame).toContain('e1');
+    expect(frame).toContain('e2');
+    expect(frame).toContain('e3');
+    expect(frame).toContain('e4');
+    expect(frame).toContain('e5');
+    expect(frame).toContain('e6');
+    expect(frame).toContain('e7');
+    expect(lines.length).toBeLessThanOrEqual(33);
+  });
+
+  test('renders compact legend at terminalColumns: 70', () => {
+    const state = { ...createInitialState(), phase: 'PREP' as const };
+    const frame = stripAnsi(composeFrame(state, { terminalColumns: 70 }));
+    const lines = frame.split('\n');
+    const width = Math.max(...lines.map((line) => line.length));
+
+    expect(frame).toContain('[↵]Place');
+    expect(frame).toContain('[Spc]Start');
+    expect(width).toBeLessThanOrEqual(72);
+  });
+
+  test('wide legend remains unchanged at terminalColumns: 78', () => {
+    const state = { ...createInitialState(), phase: 'PREP' as const };
+    const frame = stripAnsi(composeFrame(state, { terminalColumns: 78 }));
+
+    expect(frame).toContain('[Enter] Place');
+    expect(frame).toContain('[Space] Start');
+    expect(frame).not.toContain('[↵]Place');
+    expect(frame).not.toContain('[Spc]Start');
+  });
+
+  test('title screen renders at terminalColumns: 64', () => {
+    const frame = stripAnsi(composeFrame(createInitialState(), { terminalColumns: 64 }));
+    const lines = frame.split('\n');
+    const width = Math.max(...lines.map((line) => line.length));
+
+    expect(width).toBeLessThanOrEqual(66);
+    expect(frame).toContain('COMMAND CORE');
+    expect(frame).toContain('Any key: Choose mode');
+  });
+
+  test('mode-select renders at terminalColumns: 64', () => {
+    const state = { ...createInitialState(), phase: 'MODE_SELECT' as const };
+    const frame = stripAnsi(composeFrame(state, { terminalColumns: 64 }));
+    const lines = frame.split('\n');
+    const width = Math.max(...lines.map((line) => line.length));
+
+    expect(width).toBeLessThanOrEqual(66);
+    expect(frame).toContain('OPERATIONS');
+    expect(frame).toContain('ANOMALY');
+  });
+
   test('legendLine and selectedLine stay within 76-char inner budget', () => {
     const state = { ...createInitialState(), phase: 'PREP' as const };
     const frame = stripAnsi(composeFrame(state));
@@ -449,6 +624,32 @@ describe('composeFrame', () => {
     expect(selectedLine).toBeDefined();
     expect(legendLine!.trimEnd().length).toBeLessThanOrEqual(76);
     expect(selectedLine!.trimEnd().length).toBeLessThanOrEqual(76);
+  });
+
+  test('selectedLine with stat tokens stays within 76-char inner budget', () => {
+    const base = createInitialState();
+    const state = {
+      ...base,
+      phase: 'PREP' as const,
+      selectedTowerArchetype: TowerArchetype.RAPID,
+      cursor: [33, 15] as [number, number],
+      towers: [
+        {
+          id: 'tower-rapid',
+          archetype: TowerArchetype.RAPID,
+          pos: [1, 1] as [number, number],
+          cooldownRemaining: 0,
+          kills: 0
+        }
+      ]
+    };
+    const frame = stripAnsi(composeFrame(state));
+    const lines = frame.split('\n');
+    const innerLines = lines.slice(1, -1).map((line) => line.slice(1, -1));
+    const selectedLine = innerLines.find((line) => line.includes('|  Cursor:'));
+
+    expect(selectedLine).toBeDefined();
+    expect(getDisplayWidth(selectedLine!.trimEnd())).toBeLessThanOrEqual(76);
   });
 
   test('anomaly HUD legend uses dynamic 3-tower key range', () => {
@@ -491,9 +692,8 @@ describe('composeFrame', () => {
 
     const frame = stripAnsi(composeFrame(state, { terminalColumns: 48 }));
 
-    expect(frame).toContain('Terminal pane too narrow for battlefield view.');
-    expect(frame).toContain('Need at least 69 columns; current pane is 48.');
-    expect(frame).toContain('Widen pane or reduce terminal font size, then');
+    expect(frame).toContain('⚠  Battlefield is wider than this pane: need');
+    expect(frame).toContain('Widen pane (tmux drag or C-b + ←→), or reduce');
   });
 
   test('keeps right border aligned when enemies occupy a single row', () => {

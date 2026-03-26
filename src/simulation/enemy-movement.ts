@@ -1,4 +1,5 @@
-import { ENEMY_DEFS } from '../const/enemies';
+import { EVENT_PREFIX } from '../const/event-prefixes';
+import { ENEMY_DEFS, getEnemyDisplayName } from '../const/enemies';
 import type { Enemy } from '../models/enemy';
 import type { GameState } from '../models/game-state';
 import { appendEventLog } from '../utils/event-log';
@@ -40,7 +41,9 @@ export const advanceEnemies = (state: GameState): GameState => {
     if (reachedBase) {
       const leakDamage = ENEMY_DEFS[movedEnemy.archetype].leakDamage;
       leakedDamage += leakDamage;
-      leakMessages.push(`! ${movedEnemy.archetype} leaked  (-${leakDamage} HP)`);
+      leakMessages.push(
+        `${EVENT_PREFIX.LEAK} ${getEnemyDisplayName(movedEnemy.archetype)} reached the base  (-${leakDamage} HP)`
+      );
       return accumulator;
     }
 

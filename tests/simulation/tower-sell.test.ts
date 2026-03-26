@@ -28,7 +28,7 @@ describe('sellTower', () => {
   test('returns error when no tower at cursor', () => {
     const state = { ...createInitialState(), phase: 'PREP' as const };
     const result = sellTower(state, [1, 1]);
-    expect(result).toEqual({ error: 'No tower to sell' });
+    expect(result).toEqual({ error: 'No tower at cursor to sell' });
   });
 
   test('returns error outside placement phase', () => {
@@ -40,7 +40,7 @@ describe('sellTower', () => {
 
     const activeState = { ...placed, phase: 'WAVE_ACTIVE' as const };
     const result = sellTower(activeState, [1, 1]);
-    expect(result).toEqual({ error: 'Cannot sell outside of placement phase' });
+    expect(result).toEqual({ error: 'You can only sell towers between waves' });
   });
 
   test('sell then rebuy does not create currency exploit', () => {

@@ -9,6 +9,8 @@ src/const/
 ├── game.ts      # Start HP/gold + frame interval
 ├── map.ts       # 16x28 grid, blocked lane, generated S-curve path
 ├── enemies.ts   # Enemy archetypes, stats, symbols, rewards, leak damage
+├── event-prefixes.ts # Canonical log/event prefix glyph tokens
+├── glyphs.ts    # Shared HUD/menu glyph tokens (HP/gold/wave/menu indicators)
 ├── towers.ts    # Tower archetypes, costs, damage/range/cooldown
 └── waves.ts     # 3-wave spawn recipes and per-group spawn intervals
 ```
@@ -20,6 +22,8 @@ src/const/
 | Tune pacing | `waves.ts`, `game.ts`, `enemies.ts` | Spawn intervals + speed + frame interval interact |
 | Change pathing/map constraints | `map.ts` | Path waypoints are generated, not hardcoded as full matrix |
 | Change visuals by archetype | `towers.ts`, `enemies.ts` | Symbols consumed directly by renderer |
+| Change event-log semantic prefixes | `event-prefixes.ts` | Shared prefixes (`✕`, `!`, `>>`, `✗`, `~`) used by simulation/rendering |
+| Change HUD/menu glyph affordances | `glyphs.ts` | Canonical glyphs for HP, wave, separators, and menu arrow |
 
 ## CONVENTIONS (CONST-SPECIFIC)
 - Keep archetype keys aligned with enum values (`RAPID`, `CANNON`, `STANDARD`, `TANK`).

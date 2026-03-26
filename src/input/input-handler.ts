@@ -16,6 +16,7 @@ export interface InputHandlerProps {
   onMenuDirectSelect: (index: number) => void;
   onQuit: () => void;
   onSpace: () => void;
+  onNewRun?: () => void;
 }
 
 export const InputHandler = ({
@@ -31,7 +32,8 @@ export const InputHandler = ({
   onMenuBack,
   onMenuDirectSelect,
   onQuit,
-  onSpace
+  onSpace,
+  onNewRun
 }: InputHandlerProps): null => {
   useInput((input, key) => {
     if (input.toLowerCase() === 'q') {
@@ -68,6 +70,11 @@ export const InputHandler = ({
         onMenuBack();
       }
 
+      return;
+    }
+
+    if (input.toLowerCase() === 'r' && (phase === 'GAME_OVER' || phase === 'VICTORY')) {
+      onNewRun?.();
       return;
     }
 

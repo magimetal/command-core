@@ -35,7 +35,7 @@ describe('combat damage and effects', () => {
 
     const result = resolveCombat(state);
 
-    expect(result.eventLog[0]).toBe('~ TANK hit  [██░░░] 16/40');
+    expect(result.eventLog[0]).toBe('~ Tank damaged  [██░░░] 16/40');
   });
 
   test('does not emit hit event when no HP threshold is crossed', () => {

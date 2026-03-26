@@ -1,11 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Text, useApp } from 'ink';
+import { EVENT_PREFIX } from './const/event-prefixes';
 import { FRAME_INTERVAL_MS } from './const/game';
 import { TowerArchetype } from './const/towers';
 import { InputHandler } from './input/input-handler';
 import { isMenuPhase, type GamePhase } from './models/game-state';
 import { appendEventLog } from './utils/event-log';
 import { composeFrame } from './rendering/frame-composer';
+import { isReducedMotionEnabled } from './rendering/accessibility';
 import { createInitialState } from './simulation/create-initial-state';
 import {
   advanceFromTitleState,
@@ -22,18 +24,24 @@ import { sellTower } from './simulation/tower-sell';
 const toPlacementFailureMessage = (code: PlacementErrorCode): string => {
   switch (code) {
     case PlacementErrorCode.NOT_BUILDABLE:
-      return '✗ Cannot place tower: not buildable';
+      return `${EVENT_PREFIX.ERROR} Cannot place tower: not buildable`;
     case PlacementErrorCode.OCCUPIED:
-      return '✗ Cannot place tower: occupied';
+      return `${EVENT_PREFIX.ERROR} Cannot place tower: occupied`;
     case PlacementErrorCode.INSUFFICIENT_CURRENCY:
-      return '✗ Cannot place tower: insufficient gold';
+      return `${EVENT_PREFIX.ERROR} Cannot place tower: insufficient gold`;
     case PlacementErrorCode.OUT_OF_BOUNDS:
-      return '✗ Cannot place tower: out of bounds';
+      return `${EVENT_PREFIX.ERROR} Cannot place tower: out of bounds`;
     default: {
       const _exhaustive: never = code;
-      return `✗ Cannot place tower: ${_exhaustive}`;
+      return `${EVENT_PREFIX.ERROR} Cannot place tower: ${_exhaustive}`;
     }
   }
+};
+
+export const toSellFailureMessage = (error: string): string => {
+  return error === 'No tower at cursor to sell'
+    ? `${EVENT_PREFIX.ERROR} No tower here to sell`
+    : `${EVENT_PREFIX.ERROR} ${error}`;
 };
 
 export const App = () => {
@@ -41,6 +49,8 @@ export const App = () => {
   const [state, setState] = useState(createInitialState);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const phaseRef = useRef<GamePhase>(state.phase);
+  const lastRenderedFrameKeyRef = useRef<string | null>(null);
+  const frameStringRef = useRef<string>('');
 
   useEffect(() => {
     phaseRef.current = state.phase;
@@ -53,7 +63,7 @@ export const App = () => {
     }
   };
 
-  useEffect(() => {
+  const startLoop = () => {
     intervalRef.current = setInterval(() => {
       setState((previousState) => {
         if (previousState.phase === 'GAME_OVER' || previousState.phase === 'VICTORY') {
@@ -73,7 +83,7 @@ export const App = () => {
         };
 
         if (advancedState.phase === 'WAVE_CLEAR' && previousState.phase !== 'WAVE_CLEAR') {
-          const message = `>> Wave ${previousState.wave} cleared!`;
+          const message = `${EVENT_PREFIX.WAVE} Wave ${previousState.wave} cleared!`;
           result = {
             ...result,
             eventLog: appendEventLog(result.eventLog, message)
@@ -83,6 +93,10 @@ export const App = () => {
         return result;
       });
     }, FRAME_INTERVAL_MS);
+  };
+
+  useEffect(() => {
+    startLoop();
 
     return () => {
       stopLoop();
@@ -144,7 +158,7 @@ export const App = () => {
       }
 
       const [col, row] = previousState.cursor;
-      const message = `✓ Tower placed at (${col},${row})`;
+      const message = `${EVENT_PREFIX.PLACED} Tower placed at (${col},${row})`;
 
       return {
         ...nextState,
@@ -161,10 +175,7 @@ export const App = () => {
 
       const nextState = sellTower(previousState, previousState.cursor);
       if ('error' in nextState) {
-        const message =
-          nextState.error === 'No tower to sell'
-            ? '✗ No tower here to sell'
-            : `✗ ${nextState.error}`;
+        const message = toSellFailureMessage(nextState.error);
         return {
           ...previousState,
           eventLog: appendEventLog(previousState.eventLog, message)
@@ -172,7 +183,7 @@ export const App = () => {
       }
 
       const [col, row] = previousState.cursor;
-      const message = `$ Tower sold at (${col},${row})`;
+      const message = `${EVENT_PREFIX.SOLD} Tower sold at (${col},${row})`;
       return {
         ...nextState,
         eventLog: appendEventLog(nextState.eventLog, message)
@@ -184,6 +195,12 @@ export const App = () => {
     stopLoop();
     exit();
     process.exit(0);
+  };
+
+  const handleNewRun = () => {
+    stopLoop();
+    setState(() => createInitialState());
+    startLoop();
   };
 
   const advanceFromTitle = (): boolean => {
@@ -202,7 +219,22 @@ export const App = () => {
     return true;
   };
 
-  const frame = composeFrame(state, { terminalColumns: process.stdout.columns });
+  const titleRenderKey = isReducedMotionEnabled()
+    ? 'TITLE-STATIC'
+    : // Keep "10" in sync with logoArt.length in src/rendering/title-composer.ts.
+      `TITLE-${Math.floor(state.frame / 2) % 10}`;
+  const renderKey =
+    state.phase === 'TITLE' ? titleRenderKey : `${state.phase}-${state.frame}`;
+
+  if (renderKey !== lastRenderedFrameKeyRef.current) {
+    lastRenderedFrameKeyRef.current = renderKey;
+    frameStringRef.current = composeFrame(state, {
+      terminalColumns: process.stdout.columns,
+      terminalRows: process.stdout.rows
+    });
+  }
+
+  const frame = frameStringRef.current;
 
   const handleMenuNavigate = (delta: number) => {
     setState((previousState) => navigateMenuState(previousState, delta));
@@ -244,6 +276,7 @@ export const App = () => {
         onMenuConfirm={handleMenuConfirm}
         onMenuBack={handleMenuBack}
         onMenuDirectSelect={handleMenuDirectSelect}
+        onNewRun={handleNewRun}
         onSpace={() =>
           setState((previousState) => {
             const nextState = startWave(previousState);
@@ -257,7 +290,7 @@ export const App = () => {
             }
 
             const totalEnemies = waveDef.enemies.reduce((sum, group) => sum + group.count, 0);
-            const message = `>> Wave ${previousState.wave} started — ${totalEnemies} enemies incoming`;
+            const message = `${EVENT_PREFIX.WAVE} Wave ${previousState.wave} started — ${totalEnemies} enemies incoming`;
 
             return {
               ...nextState,

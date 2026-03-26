@@ -1,7 +1,10 @@
+import { EVENT_PREFIX } from '../const/event-prefixes';
+import { getEnemyDisplayName } from '../const/enemies';
 import { getTowerDef } from '../const/towers';
 import type { Enemy } from '../models/enemy';
 import type { GameState } from '../models/game-state';
 import type { Projectile } from '../models/projectile';
+import { renderHpBar } from '../rendering/hp-bar';
 import { appendEventLog } from '../utils/event-log';
 
 const distanceSquared = (a: [number, number], b: [number, number]): number => {
@@ -116,10 +119,7 @@ export const resolveCombat = (state: GameState): GameState => {
       const nextHitMessages = crossedThreshold
         ? [
             ...accumulator.hitMessages,
-            `~ ${updatedTarget.archetype} hit  [` +
-              `${'█'.repeat(Math.max(0, Math.min(5, Math.round(pctAfter * 5))))}` +
-              `${'░'.repeat(5 - Math.max(0, Math.min(5, Math.round(pctAfter * 5))))}` +
-              `] ${updatedTarget.hp}/${updatedTarget.maxHp}`
+            `${EVENT_PREFIX.HIT} ${getEnemyDisplayName(updatedTarget.archetype)} damaged  [${renderHpBar(updatedTarget.hp, updatedTarget.maxHp)}] ${updatedTarget.hp}/${updatedTarget.maxHp}`
           ]
         : accumulator.hitMessages;
 

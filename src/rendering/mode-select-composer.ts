@@ -1,10 +1,11 @@
-import chalk from 'chalk';
 import type { GameState } from '../models/game-state';
+import { GLYPH } from '../const/glyphs';
 import { composeBorder, SECTION_BREAK } from './border';
+import { stylePrimary, styleSubtle } from './text-styles';
 
 const composeModeCard = (label: string, description: string, selected: boolean): string => {
   const base = `${label}  ${description}`;
-  return selected ? chalk.bold.cyanBright(`▶ ${base}`) : `  ${base}`;
+  return selected ? stylePrimary(`${GLYPH.MENU_ARROW} ${base}`) : `  ${base}`;
 };
 
 export const composeModeSelectFrame = (state: GameState, maxInnerWidth?: number): string => {
@@ -13,14 +14,15 @@ export const composeModeSelectFrame = (state: GameState, maxInnerWidth?: number)
 
   return composeBorder(
     [
-      chalk.bold.white('COMMAND CORE'),
-      chalk.dim('Select operation mode'),
+      stylePrimary('COMMAND CORE'),
+      styleSubtle('Choose a run type'),
+      styleSubtle('Newcomer? Start with OPERATIONS · Veteran? Try ANOMALY for chaos'),
       SECTION_BREAK,
-      composeModeCard('[1] OPERATIONS', 'Authored maps, curated challenge', operationsSelected),
-      composeModeCard('[2] ANOMALY', 'Procedural run, rogue-like pressure (ANOMALY #seed)', anomalySelected),
+      composeModeCard('[1] OPERATIONS', 'Hand-crafted maps with fixed waves', operationsSelected),
+      composeModeCard('[2] ANOMALY', 'Procedural map and randomized waves', anomalySelected),
       SECTION_BREAK,
-      chalk.dim('↑↓ Navigate   Enter: Confirm   Q: Quit')
+      styleSubtle('↑↓ Navigate   Enter: Confirm   Q: Quit')
     ],
-    { minInnerWidth: 76, maxInnerWidth, align: 'center' }
+    { minInnerWidth: Math.min(76, maxInnerWidth ?? 76), maxInnerWidth, align: 'center' }
   );
 };

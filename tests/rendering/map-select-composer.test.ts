@@ -15,6 +15,8 @@ describe('composeMapSelectFrame', () => {
 
     expect(frame).toContain('[1] Crossroads');
     expect(frame).toContain('[2] The Gauntlet');
+    expect(frame).toContain('[★ Beginner]');
+    expect(frame).toContain('[★★ Intermediate]');
     expect(frame).toContain('↑↓ Select   Enter: Confirm   Esc/B: Back');
 
     const lines = frame.split('\n');

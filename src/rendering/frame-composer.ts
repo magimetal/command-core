@@ -8,10 +8,11 @@ import { composeMapSelectFrame } from './map-select-composer';
 import { composeModeSelectFrame } from './mode-select-composer';
 import { composeTitleFrame } from './title-composer';
 
-const FRAME_INNER_WIDTH_BUDGET = 76;
+export const FRAME_INNER_WIDTH_BUDGET = 76;
 
 interface ComposeFrameOptions {
   terminalColumns?: number;
+  terminalRows?: number;
 }
 
 const getMaxInnerWidth = (terminalColumns?: number): number => {
@@ -20,6 +21,30 @@ const getMaxInnerWidth = (terminalColumns?: number): number => {
   }
 
   return Math.max(20, Math.min(FRAME_INNER_WIDTH_BUDGET, terminalColumns - 2));
+};
+
+const getVisibleEventLogCount = (terminalRows?: number): number => {
+  if (terminalRows === undefined) {
+    return 7;
+  }
+
+  if (terminalRows < 28) {
+    return 3;
+  }
+
+  if (terminalRows < 32) {
+    return 5;
+  }
+
+  return 7;
+};
+
+const composeLegendLine = (availableTowerCount: number, maxInnerWidth: number): string => {
+  if (maxInnerWidth < 70) {
+    return `[1-${availableTowerCount}]Tower [↑↓←→]Move [↵]Place [S]Sell [Spc]Start [Q]Quit`;
+  }
+
+  return `[1-${availableTowerCount}] Tower  [↑↓←→] Move  [Enter] Place  [S] Sell  [Space] Start  [Q] Quit`;
 };
 
 export const composeFrame = (state: GameState, options: ComposeFrameOptions = {}): string => {
@@ -43,21 +68,27 @@ export const composeFrame = (state: GameState, options: ComposeFrameOptions = {}
 
   const gridLines = composeGrid(state);
   const hudLines = composeHud(state).split('\n');
-  const eventLogLines = composeEventLog(state);
+  const baseVisibleEventLogCount = getVisibleEventLogCount(options.terminalRows);
+  const visibleEventLogCount = Math.max(1, baseVisibleEventLogCount - Math.max(0, hudLines.length - 2));
+  const eventLogLines = composeEventLog(state, visibleEventLogCount);
   const titleBar = composeTitleBar(state);
-  const legendLine =
-    `[1-${state.runConfig.availableTowers.length}] Tower  [↑↓←→] Move  [Enter] Place  [S] Sell  [Space] Start  [Q] Quit`;
+  const legendLine = composeLegendLine(state.runConfig.availableTowers.length, maxInnerWidth);
 
   const gridVisibleWidth = Math.max(...gridLines.map((line) => getDisplayWidth(line)));
 
   if (maxInnerWidth < gridVisibleWidth) {
+    const narrowPaneMessageOne = `⚠  Battlefield is wider than this pane: need ${gridVisibleWidth + 2} cols, have ${maxInnerWidth + 2}.`;
+    const narrowPaneMessageTwo = 'Widen pane (tmux drag or C-b + ←→), or reduce font.';
+
     return composeBorder(
-      [
-        'Terminal pane too narrow for battlefield view.',
-        `Need at least ${gridVisibleWidth + 2} columns; current pane is ${maxInnerWidth + 2}.`,
-        'Widen pane or reduce terminal font size, then continue.'
-      ],
-      { maxInnerWidth }
+      [narrowPaneMessageOne, narrowPaneMessageTwo],
+      {
+        maxInnerWidth,
+        contentWidth: Math.max(
+          getDisplayWidth(narrowPaneMessageOne),
+          getDisplayWidth(narrowPaneMessageTwo)
+        )
+      }
     );
   }
 
@@ -79,5 +110,8 @@ export const composeFrame = (state: GameState, options: ComposeFrameOptions = {}
     legendLine,
     SECTION_BREAK,
     ...eventLogLines
-  ], { maxInnerWidth });
+  ], {
+    maxInnerWidth,
+    contentWidth: Math.max(gridVisibleWidth, nonGridVisibleWidth)
+  });
 };

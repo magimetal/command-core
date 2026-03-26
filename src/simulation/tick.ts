@@ -1,4 +1,5 @@
-import { ENEMY_DEFS } from '../const/enemies';
+import { EVENT_PREFIX } from '../const/event-prefixes';
+import { ENEMY_DEFS, getEnemyDisplayName } from '../const/enemies';
 import type { Enemy } from '../models/enemy';
 import type { GameState } from '../models/game-state';
 import { appendEventLog } from '../utils/event-log';
@@ -9,9 +10,9 @@ import { advanceWave } from './wave-controller';
 const cleanup = (state: GameState): GameState => {
   const STREAK_MILESTONES = [5, 10, 20] as const;
   const STREAK_MESSAGES: Record<(typeof STREAK_MILESTONES)[number], string> = {
-    5: '★ STREAK  5 kills — defense holding',
-    10: '★★ STREAK 10 kills — excellent coverage',
-    20: '★★★ STREAK 20 kills — DOMINATION'
+    5: `${EVENT_PREFIX.STREAK} STREAK  5 kills — defense holding`,
+    10: `${EVENT_PREFIX.STREAK.repeat(2)} STREAK 10 kills — excellent coverage`,
+    20: `${EVENT_PREFIX.STREAK.repeat(3)} STREAK 20 kills — DOMINATION`
   };
 
   let reward = 0;
@@ -24,7 +25,7 @@ const cleanup = (state: GameState): GameState => {
       const enemyReward = ENEMY_DEFS[enemy.archetype].reward;
       reward += enemyReward;
       kills += 1;
-      killMessages.push(`✕ ${enemy.archetype} destroyed  (+$${enemyReward})`);
+      killMessages.push(`${EVENT_PREFIX.KILL} ${getEnemyDisplayName(enemy.archetype)} destroyed  (+$${enemyReward})`);
       continue;
     }
 

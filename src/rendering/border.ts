@@ -26,11 +26,17 @@ export const padCenteredVisibleLine = (line: string, width: number): string => {
 
 export const composeBorder = (
   lines: string[],
-  options: { minInnerWidth?: number; maxInnerWidth?: number; align?: 'left' | 'center' } = {}
+  options: {
+    minInnerWidth?: number;
+    maxInnerWidth?: number;
+    align?: 'left' | 'center';
+    contentWidth?: number;
+  } = {}
 ): string => {
-  const { minInnerWidth = 0, maxInnerWidth, align = 'left' } = options;
-  const contentWidth = Math.max(...lines.map((line) => getDisplayWidth(line)));
-  const desiredInnerWidth = Math.max(contentWidth, minInnerWidth);
+  const { minInnerWidth = 0, maxInnerWidth, align = 'left', contentWidth } = options;
+  const measuredContentWidth =
+    contentWidth === undefined ? Math.max(...lines.map((line) => getDisplayWidth(line))) : contentWidth;
+  const desiredInnerWidth = Math.max(measuredContentWidth, minInnerWidth);
   const innerWidth =
     maxInnerWidth === undefined ? desiredInnerWidth : Math.max(1, Math.min(desiredInnerWidth, maxInnerWidth));
   const horizontal = '─'.repeat(innerWidth);

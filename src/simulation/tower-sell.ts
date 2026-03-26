@@ -7,18 +7,18 @@ export const sellTower = (
   pos: [number, number]
 ): GameState | OperationError => {
   if (!isPlacementPhase(state.phase)) {
-    return { error: 'Cannot sell outside of placement phase' };
+    return { error: 'You can only sell towers between waves' };
   }
 
   const [col, row] = pos;
   const cell = state.grid[row]?.[col];
   if (!cell || cell.tower === undefined) {
-    return { error: 'No tower to sell' };
+    return { error: 'No tower at cursor to sell' };
   }
 
   const tower = state.towers.find((entry) => entry.id === cell.tower);
   if (!tower) {
-    return { error: 'No tower to sell' };
+    return { error: 'No tower at cursor to sell' };
   }
 
   const refund = Math.floor(getTowerDef(tower.archetype).cost / 2);

@@ -13,6 +13,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Rendering hardening coverage:
   - new reduced-motion checks and narrow-pane guard tests in `tests/rendering/frame-composer.test.ts`
   - new grapheme/display-width test suite in `tests/rendering/color-map.test.ts`
+- Shared rendering primitives and constants:
+  - new `text-utils`, `text-styles`, and `hp-bar` modules for display-width safety, semantic styling, and reusable HP bars
+  - new canonical glyph and event-prefix constants in `src/const/glyphs.ts` and `src/const/event-prefixes.ts`
+- New end-state restart control (`R`) with input coverage for `GAME_OVER` and `VICTORY`.
 
 ### Changed
 - Hardened frame rendering against real-world terminal inputs:
@@ -24,9 +28,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   - disables base pulse alternation
   - removes blinking end-state cursor prompt
 - Fixed right-border drift when enemies were present on the same row by correcting glyph width classification for gameplay symbols.
+- Refined gameplay/HUD copy and event semantics:
+  - wave start/clear, placement, sell, kill, leak, and threshold-hit messages now use shared semantic prefixes and clearer enemy display names
+  - sell validation messaging now clarifies phase restrictions and empty-cursor behavior
+  - HUD metadata and menu/map-select copy now provide more direct onboarding cues
+- Improved frame responsiveness and render stability:
+  - frame composer now adapts visible event-log rows by terminal height
+  - app-level frame memoization prevents unnecessary re-composition between equivalent render keys
+  - grid path symbol derivation and color run generation now use caching/grouping for cleaner output and lower per-frame overhead
 
 ### Documentation
 - Documented accessibility hardening flag in `README.md`.
+- Updated internal agent docs (`AGENTS.md`, `src/AGENTS.md`, `src/const/AGENTS.md`) to point to shared rendering utilities and new constant modules.
+
+### Tested
+- Added coverage for end-state rerun input (`R`) and sell-error mapping in app flow.
+- Expanded rendering assertions for title/mode/map/end-state framing behavior under width and row constraints.
 
 ## [2.0.0] - 2026-03-26
 

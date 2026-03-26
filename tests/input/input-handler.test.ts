@@ -40,6 +40,7 @@ const defaultInputProps = (overrides: Partial<InputHandlerProps> = {}): InputHan
     onMenuDirectSelect: vi.fn(),
     onQuit: vi.fn(),
     onSpace: vi.fn(),
+    onNewRun: vi.fn(),
     ...overrides
   };
 };
@@ -149,5 +150,41 @@ describe('InputHandler title gating', () => {
     handler('4', {});
 
     expect(onSelectTower).not.toHaveBeenCalled();
+  });
+
+  test('R key triggers new run in GAME_OVER phase', () => {
+    const onNewRun = vi.fn();
+    const handler = renderAndGetHandler(defaultInputProps({
+      phase: 'GAME_OVER',
+      onNewRun
+    }));
+
+    handler('r', {});
+
+    expect(onNewRun).toHaveBeenCalledTimes(1);
+  });
+
+  test('R key triggers new run in VICTORY phase', () => {
+    const onNewRun = vi.fn();
+    const handler = renderAndGetHandler(defaultInputProps({
+      phase: 'VICTORY',
+      onNewRun
+    }));
+
+    handler('R', {});
+
+    expect(onNewRun).toHaveBeenCalledTimes(1);
+  });
+
+  test('R key does not trigger new run in PREP phase', () => {
+    const onNewRun = vi.fn();
+    const handler = renderAndGetHandler(defaultInputProps({
+      phase: 'PREP',
+      onNewRun
+    }));
+
+    handler('r', {});
+
+    expect(onNewRun).not.toHaveBeenCalled();
   });
 });
