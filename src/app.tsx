@@ -2,12 +2,18 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Text, useApp } from 'ink';
 import { FRAME_INTERVAL_MS } from './const/game';
 import { TowerArchetype } from './const/towers';
-import { WAVES } from './const/waves';
 import { InputHandler } from './input/input-handler';
-import type { GamePhase } from './models/game-state';
+import { isMenuPhase, type GamePhase } from './models/game-state';
 import { appendEventLog } from './utils/event-log';
 import { composeFrame } from './rendering/frame-composer';
 import { createInitialState } from './simulation/create-initial-state';
+import {
+  advanceFromTitleState,
+  backFromMenuState,
+  confirmMenuState,
+  navigateMenuState,
+  setMenuCursorState
+} from './simulation/menu-flow';
 import { startWave } from './simulation/start-wave';
 import { tick } from './simulation/tick';
 import { placeTower, PlacementErrorCode } from './simulation/tower-placement';
@@ -85,7 +91,7 @@ export const App = () => {
 
   const moveCursor = (dx: number, dy: number) => {
     setState((previousState) => {
-      if (previousState.phase === 'TITLE') {
+      if (previousState.phase === 'TITLE' || isMenuPhase(previousState.phase)) {
         return previousState;
       }
 
@@ -105,7 +111,7 @@ export const App = () => {
 
   const selectTower = (archetype: TowerArchetype) => {
     setState((previousState) => {
-      if (previousState.phase === 'TITLE') {
+      if (previousState.phase === 'TITLE' || isMenuPhase(previousState.phase)) {
         return previousState;
       }
 
@@ -118,7 +124,7 @@ export const App = () => {
 
   const tryPlaceTower = () => {
     setState((previousState) => {
-      if (previousState.phase === 'TITLE') {
+      if (previousState.phase === 'TITLE' || isMenuPhase(previousState.phase)) {
         return previousState;
       }
 
@@ -149,7 +155,7 @@ export const App = () => {
 
   const trySellTower = () => {
     setState((previousState) => {
-      if (previousState.phase === 'TITLE') {
+      if (previousState.phase === 'TITLE' || isMenuPhase(previousState.phase)) {
         return previousState;
       }
 
@@ -190,16 +196,38 @@ export const App = () => {
         return previousState;
       }
 
-      return {
-        ...previousState,
-        phase: 'PREP'
-      };
+      return advanceFromTitleState(previousState);
     });
 
     return true;
   };
 
   const frame = composeFrame(state);
+
+  const handleMenuNavigate = (delta: number) => {
+    setState((previousState) => navigateMenuState(previousState, delta));
+  };
+
+  const handleMenuDirectSelect = (index: number) => {
+    setState((previousState) => setMenuCursorState(previousState, index));
+  };
+
+  const handleMenuConfirm = () => {
+    setState((previousState) => {
+      if (previousState.phase === 'MODE_SELECT' && previousState.menuCursor === 1) {
+        const envSeed = Number(process.env.ANOMALY_SEED);
+        const anomalySeed = Number.isInteger(envSeed) ? envSeed : Date.now() % 65536;
+
+        return confirmMenuState(previousState, { anomalySeed });
+      }
+
+      return confirmMenuState(previousState);
+    });
+  };
+
+  const handleMenuBack = () => {
+    setState((previousState) => backFromMenuState(previousState));
+  };
 
   return (
     <>
@@ -209,7 +237,13 @@ export const App = () => {
         onPlaceTower={tryPlaceTower}
         onSellTower={trySellTower}
         onSelectTower={selectTower}
+        availableTowers={state.runConfig.availableTowers}
+        phase={state.phase}
         onQuit={quitGame}
+        onMenuNavigate={handleMenuNavigate}
+        onMenuConfirm={handleMenuConfirm}
+        onMenuBack={handleMenuBack}
+        onMenuDirectSelect={handleMenuDirectSelect}
         onSpace={() =>
           setState((previousState) => {
             const nextState = startWave(previousState);
@@ -217,7 +251,11 @@ export const App = () => {
               return previousState;
             }
 
-            const waveDef = WAVES[previousState.wave - 1];
+            const waveDef = previousState.runConfig.waves[previousState.wave - 1];
+            if (waveDef === undefined) {
+              return nextState;
+            }
+
             const totalEnemies = waveDef.enemies.reduce((sum, group) => sum + group.count, 0);
             const message = `>> Wave ${previousState.wave} started — ${totalEnemies} enemies incoming`;
 

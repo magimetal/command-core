@@ -1,11 +1,11 @@
 import { describe, expect, test } from 'vitest';
 import { EnemyArchetype } from '../../src/const/enemies';
-import { ENEMY_PATH } from '../../src/const/map';
 import { createInitialState } from '../../src/simulation/create-initial-state';
 import { tick } from '../../src/simulation/tick';
 
 describe('end-state handling', () => {
   test('transitions to GAME_OVER when base HP drops to 0 or below', () => {
+    const enemyPath = createInitialState().runConfig.enemyPath;
     const state = {
       ...createInitialState(),
       phase: 'WAVE_ACTIVE' as const,
@@ -15,8 +15,8 @@ describe('end-state handling', () => {
         {
           id: 'enemy-leak',
           archetype: EnemyArchetype.STANDARD,
-          pos: ENEMY_PATH[ENEMY_PATH.length - 2],
-          pathIndex: ENEMY_PATH.length - 2,
+          pos: enemyPath[enemyPath.length - 2],
+          pathIndex: enemyPath.length - 2,
           hp: 10,
           maxHp: 10,
           moveCooldown: 1,

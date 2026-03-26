@@ -1,4 +1,4 @@
-# Terminal Tower Defense
+# Command Core
 
 Terminal-native tower defense built with **Node.js + TypeScript + Ink**.
 

@@ -1,22 +1,35 @@
 import { useInput } from 'ink';
 import { TowerArchetype } from '../const/towers';
+import { isMenuPhase, type GamePhase } from '../models/game-state';
 
 export interface InputHandlerProps {
   onAnyKey: () => boolean;
+  phase: GamePhase;
+  availableTowers: TowerArchetype[];
   onMoveCursor: (dx: number, dy: number) => void;
   onPlaceTower: () => void;
   onSellTower: () => void;
   onSelectTower: (archetype: TowerArchetype) => void;
+  onMenuNavigate: (delta: number) => void;
+  onMenuConfirm: () => void;
+  onMenuBack: () => void;
+  onMenuDirectSelect: (index: number) => void;
   onQuit: () => void;
   onSpace: () => void;
 }
 
 export const InputHandler = ({
   onAnyKey,
+  phase,
+  availableTowers,
   onMoveCursor,
   onPlaceTower,
   onSellTower,
   onSelectTower,
+  onMenuNavigate,
+  onMenuConfirm,
+  onMenuBack,
+  onMenuDirectSelect,
   onQuit,
   onSpace
 }: InputHandlerProps): null => {
@@ -30,24 +43,39 @@ export const InputHandler = ({
       return;
     }
 
-    if (input === '1') {
-      onSelectTower(TowerArchetype.RAPID);
+    if (isMenuPhase(phase)) {
+      if (input === '1' || input === '2' || input === '3' || input === '4') {
+        onMenuDirectSelect(Number(input) - 1);
+        return;
+      }
+
+      if (key.upArrow) {
+        onMenuNavigate(-1);
+        return;
+      }
+
+      if (key.downArrow) {
+        onMenuNavigate(1);
+        return;
+      }
+
+      if (key.return) {
+        onMenuConfirm();
+        return;
+      }
+
+      if (key.escape || input.toLowerCase() === 'b') {
+        onMenuBack();
+      }
+
       return;
     }
 
-    if (input === '2') {
-      onSelectTower(TowerArchetype.CANNON);
-      return;
-    }
-
-    if (input === '3') {
-      onSelectTower(TowerArchetype.SNIPER);
-      return;
-    }
-
-    if (input === '4') {
-      onSelectTower(TowerArchetype.SLOW);
-      return;
+    for (let index = 0; index < availableTowers.length; index += 1) {
+      if (input === `${index + 1}`) {
+        onSelectTower(availableTowers[index]);
+        return;
+      }
     }
 
     if (input.toLowerCase() === 's') {

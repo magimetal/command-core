@@ -4,6 +4,7 @@ import { TowerArchetype } from '../../src/const/towers';
 import { colorizeGridSymbol, stripAnsi } from '../../src/rendering/color-map';
 import { composeFrame } from '../../src/rendering/frame-composer';
 import { createInitialState } from '../../src/simulation/create-initial-state';
+import { generateAnomalyRunConfig } from '../../src/simulation/anomaly-gen';
 import chalk from 'chalk';
 
 const getGridLines = (frame: string): string[] => {
@@ -21,12 +22,14 @@ const getCellSymbol = (gridLine: string, col: number): string => {
 describe('composeFrame', () => {
   test('keeps title, gameplay, and end-state frames in terminal guardrails', () => {
     const titleState = createInitialState();
+    const modeSelectState = { ...createInitialState(), phase: 'MODE_SELECT' as const };
+    const mapSelectState = { ...createInitialState(), phase: 'MAP_SELECT' as const };
     const prepState = { ...createInitialState(), phase: 'PREP' as const };
     const waveActiveState = { ...createInitialState(), phase: 'WAVE_ACTIVE' as const };
     const gameOverState = { ...createInitialState(), phase: 'GAME_OVER' as const };
     const victoryState = { ...createInitialState(), phase: 'VICTORY' as const };
 
-    for (const state of [titleState, prepState, waveActiveState, gameOverState, victoryState]) {
+    for (const state of [titleState, modeSelectState, mapSelectState, prepState, waveActiveState, gameOverState, victoryState]) {
       const frame = stripAnsi(composeFrame(state));
       const lines = frame.split('\n');
       const width = Math.max(...lines.map((line) => line.length));
@@ -41,18 +44,30 @@ describe('composeFrame', () => {
     const state = createInitialState();
     const frame = stripAnsi(composeFrame(state));
 
-    expect(frame).toContain('TERMINAL TOWER DEFENSE');
-    expect(frame).toContain('Any key: deploy to PREP   |   Q: quit');
-    expect(frame).toContain('████████╗████████╗██████╗');
+    expect(frame).toContain('COMMAND CORE');
+    expect(frame).toContain('Any key → MODE SELECT   |   Q: Quit');
+    expect(frame).toContain('▄▄▄█████▓▓█████  ██▀███');
   });
 
-  test('renders full four-row animated TDD title art including bottom row', () => {
+  test('title scanline animation changes output between frame 0 and frame 3', () => {
+    const previousLevel = chalk.level;
+    chalk.level = 3;
+
+    const base = createInitialState();
+    const frameZero = composeFrame({ ...base, frame: 0 });
+    const frameThree = composeFrame({ ...base, frame: 3 });
+
+    chalk.level = previousLevel;
+
+    expect(frameZero).not.toBe(frameThree);
+  });
+
+  test('renders cohesive title logo block with framed top and bottom rows', () => {
     const frame = stripAnsi(composeFrame(createInitialState()));
 
-    expect(frame).toContain('████████╗████████╗██████╗');
-    expect(frame).toContain('╚══██╔══╝╚══██╔══╝██╔══██╗');
-    expect(frame).toContain('   ██║      ██║   ██║  ██║');
-    expect(frame).toContain('   ╚═╝      ╚═╝   ╚═╝  ╚═╝');
+    expect(frame).toContain('╔══════════════════════════════════════════╗');
+    expect(frame).toContain('▄▄▄█████▓▓█████  ██▀███');
+    expect(frame).toContain('╚══════════════ COMMAND CORE ═══════════════╝');
   });
 
   test('title screen uses full frame width budget and keeps title art visible', () => {
@@ -60,12 +75,12 @@ describe('composeFrame', () => {
     const lines = frame.split('\n');
     const width = Math.max(...lines.map((line) => line.length));
     const innerLines = lines.slice(1, -1).map((line) => line.slice(1, -1));
-    const titleArtLine = innerLines.find((line) => line.includes('████████╗████████╗██████╗'));
+    const titleArtLine = innerLines.find((line) => line.includes('╚') && line.includes('COMMAND CORE'));
 
     expect(width).toBe(78);
     expect(titleArtLine).toBeDefined();
     expect(titleArtLine!.startsWith(' ')).toBe(true);
-    expect(titleArtLine!.trimEnd().endsWith('██████╗')).toBe(true);
+    expect(titleArtLine!.trimEnd().endsWith('╝')).toBe(true);
   });
 
   test('renders framed dashboard sections', () => {
@@ -76,18 +91,20 @@ describe('composeFrame', () => {
     const frame = stripAnsi(composeFrame(state));
 
     expect(frame).toContain('┌');
-    expect(frame).toContain('TERMINAL TOWER DEFENSE');
-    expect(frame).toContain('TERMINAL TOWER DEFENSE  ║  Wave 1/5  [PREP]');
-    expect(frame).toContain('❤ 20  ✦ $150  ≋ 1/5 waves');
+    expect(frame).toContain('[OPERATIONS]');
+    expect(frame).toContain('Crossroads');
+    expect(frame).toContain('Wave 1/5  [PREP]');
+    expect(frame).toContain('❤ 16  ✦ $120  ≋ 1/5 waves');
     expect(frame).toContain('[PREP]');
-    expect(frame).toContain('Next: 5×');
-    expect(frame).toContain('RAPID $50');
-    expect(frame).toContain('C $100');
-    expect(frame).toContain('Sn $150');
-    expect(frame).toContain('Sl $75');
+    expect(frame).toContain('Next: 7× ◀ 1× ▷');
+    expect(frame).toContain('R$50');
+    expect(frame).toContain('C$100');
+    expect(frame).toContain('Sn$150');
+    expect(frame).toContain('Sl$75');
     expect(frame).toContain(
       '[1-4] Tower  [↑↓←→] Move  [Enter] Place  [S] Sell  [Space] Start  [Q] Quit'
     );
+    expect(frame).toContain('─── Events');
     expect(frame).toContain('! No recent events');
   });
 
@@ -107,7 +124,7 @@ describe('composeFrame', () => {
     expect(getCellSymbol(gridLines[5], 4)).toBe('┌');
     expect(getCellSymbol(gridLines[5], 13)).toBe('┐');
     expect(getCellSymbol(gridLines[10], 13)).toBe('└');
-    expect(getCellSymbol(gridLines[10], 27)).toBe('⬡');
+    expect(getCellSymbol(gridLines[10], 33)).toBe('⬡');
     expect(getCellSymbol(gridLines[0], 1)).toBe('░');
     expect(getCellSymbol(gridLines[7], 1)).toBe('░');
   });
@@ -392,6 +409,18 @@ describe('composeFrame', () => {
     expect(selectedLine).toBeDefined();
     expect(legendLine!.trimEnd().length).toBeLessThanOrEqual(76);
     expect(selectedLine!.trimEnd().length).toBeLessThanOrEqual(76);
+  });
+
+  test('anomaly HUD legend uses dynamic 3-tower key range', () => {
+    const anomalyConfig = generateAnomalyRunConfig(12);
+    const state = {
+      ...createInitialState(anomalyConfig),
+      phase: 'PREP' as const
+    };
+    const frame = stripAnsi(composeFrame(state));
+
+    expect(frame).toContain('[1-3] Tower');
+    expect(frame).not.toContain('[1-4] Tower');
   });
 
   test('SNIPER_TOWER color class is distinct from RAPID_TOWER', () => {

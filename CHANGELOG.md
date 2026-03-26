@@ -6,6 +6,29 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-03-26
+
+### Added
+- Procedural **Anomaly** mode with seeded generation:
+  - seeded random-walk path generation on the 16x28 grid
+  - generated 3-of-4 tower pools and 4-6 generated waves per run
+  - anomaly seed surfaced as `Anomaly #<seed>` in run identity
+- New simulation test suites for v2 coverage:
+  - anomaly structural validation across 50 fixed seeds
+  - run-config routing tests for Operations/Anomaly progression and scoring multipliers
+  - anomaly balance guardrails for starting economy and tower pool viability
+
+### Changed
+- HUD and frame layout redesign within existing guardrails:
+  - title bar now shows mode badge + map identity + wave/phase context
+  - event log now includes a styled header and updated section spacing
+  - tower panel formatting tightened for dynamic 1-N tower pools
+- Title screen refinements:
+  - scanline animation cadence adjusted to frame-driven 3-frame rotation
+  - updated startup messaging for mode selection flow
+- End-state ceremony screens now include run identity (`Operations · <map>` or `Anomaly #<seed>`)
+- Score model now applies `runConfig.modeMultiplier` (1.0 Operations, 1.5 Anomaly)
+
 ### Added
 - Beta-pass gameplay and presentation features:
   - New tower archetypes: **SNIPER** and **SLOW** (now 4 total)

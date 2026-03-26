@@ -1,6 +1,5 @@
 import { describe, expect, test } from 'vitest';
 import { EnemyArchetype } from '../../src/const/enemies';
-import { ENEMY_PATH } from '../../src/const/map';
 import { createInitialState } from '../../src/simulation/create-initial-state';
 import { tick } from '../../src/simulation/tick';
 
@@ -31,6 +30,7 @@ describe('economy', () => {
   });
 
   test('TANK leak with leakDamage=3 reduces base HP by 3', () => {
+    const enemyPath = createInitialState().runConfig.enemyPath;
     const state = {
       ...createInitialState(),
       phase: 'WAVE_ACTIVE' as const,
@@ -39,8 +39,8 @@ describe('economy', () => {
         {
           id: 'enemy-tank',
           archetype: EnemyArchetype.TANK,
-          pos: ENEMY_PATH[ENEMY_PATH.length - 2],
-          pathIndex: ENEMY_PATH.length - 2,
+          pos: enemyPath[enemyPath.length - 2],
+          pathIndex: enemyPath.length - 2,
           hp: 40,
           maxHp: 40,
           moveCooldown: 1,

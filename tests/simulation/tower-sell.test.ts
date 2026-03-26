@@ -45,7 +45,7 @@ describe('sellTower', () => {
 
   test('sell then rebuy does not create currency exploit', () => {
     const initial = { ...createInitialState(), phase: 'PREP' as const };
-    const placed = placeTower(initial, [1, 1], TowerArchetype.CANNON);
+    const placed = placeTower(initial, [1, 1], TowerArchetype.RAPID);
     if ('error' in placed) {
       throw new Error('unexpected placement error');
     }
@@ -55,12 +55,16 @@ describe('sellTower', () => {
       throw new Error('unexpected sell error');
     }
 
-    const rebought = placeTower(sold, [1, 1], TowerArchetype.CANNON);
+    const rebought = placeTower(sold, [1, 1], TowerArchetype.RAPID);
     if ('error' in rebought) {
       throw new Error('unexpected rebuy placement error');
     }
 
-    expect(rebought.currency).toBe(0);
+    expect(rebought.currency).toBe(
+      initial.currency - TOWER_DEFS[TowerArchetype.RAPID].cost +
+        Math.floor(TOWER_DEFS[TowerArchetype.RAPID].cost / 2) -
+        TOWER_DEFS[TowerArchetype.RAPID].cost
+    );
     expect(rebought.towers).toHaveLength(1);
     expect(rebought.grid[1][1].tower).toBe(rebought.towers[0].id);
   });

@@ -32,6 +32,10 @@ export const composeEndStateFrame = (state: GameState): string => {
   const titleLine = isVictory
     ? colorizeHudValue('All waves survived. The base stands.', 'PHASE', state.baseHp)
     : colorizeHudValue('The base has fallen. The run ends here.', 'PHASE', 0);
+  const modeLine =
+    state.runConfig.mode === 'ANOMALY'
+      ? `Anomaly ${state.runConfig.mapLabel.match(/#\d+/)?.[0] ?? state.runConfig.mapLabel}`
+      : `Operations · ${state.runConfig.mapLabel}`;
   const statLine =
     `Enemies killed: ${colorizeHudValue(`${state.enemiesKilled}`, 'GOLD', state.baseHp)}  ` +
     `Gold remaining: ${colorizeHudValue(`${state.currency}`, 'GOLD', state.baseHp)}`;
@@ -43,6 +47,7 @@ export const composeEndStateFrame = (state: GameState): string => {
     ...colorizedBanner,
     SECTION_BREAK,
     titleLine,
+    modeLine,
     statLine,
     scoreLine,
     SECTION_BREAK,

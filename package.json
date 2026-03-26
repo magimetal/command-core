@@ -1,7 +1,7 @@
 {
-  "name": "terminal-tower-defense",
+  "name": "command-core",
   "version": "1.0.0",
-  "description": "Terminal-native tower defense MVP",
+  "description": "Command Core terminal-native defense game",
   "main": "dist/main.js",
   "scripts": {
     "start": "tsx src/main.ts",

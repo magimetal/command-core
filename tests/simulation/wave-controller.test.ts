@@ -1,11 +1,9 @@
 import { describe, expect, test } from 'vitest';
 import { EnemyArchetype } from '../../src/const/enemies';
-import { WAVES } from '../../src/const/waves';
 import { createInitialState } from '../../src/simulation/create-initial-state';
 import { startWave } from '../../src/simulation/start-wave';
 import { tick } from '../../src/simulation/tick';
 import { advanceWave } from '../../src/simulation/wave-controller';
-import { ENEMY_PATH } from '../../src/const/map';
 import { createEnemy } from '../helpers/builders';
 
 describe('wave controller', () => {
@@ -63,9 +61,10 @@ describe('wave controller', () => {
   });
 
   test('WAVE_CLEAR on final wave transitions to VICTORY', () => {
+    const stateBase = createInitialState();
     const state = {
-      ...createInitialState(),
-      wave: WAVES.length,
+      ...stateBase,
+      wave: stateBase.runConfig.waves.length,
       phase: 'WAVE_CLEAR' as const
     };
 
@@ -80,12 +79,17 @@ describe('wave controller', () => {
       phase: 'PREP' as const
     };
     const result = startWave(state);
+    const expectedQueueSize = state.runConfig.waves[0].enemies.reduce(
+      (sum, group) => sum + group.count,
+      0
+    );
 
     expect(result.phase).toBe('WAVE_ACTIVE');
-    expect(result.spawnQueue.length).toBe(5);
+    expect(result.spawnQueue.length).toBe(expectedQueueSize);
   });
 
   test('multiple leaks in one tick reduce base HP cumulatively', () => {
+    const enemyPath = createInitialState().runConfig.enemyPath;
     const state = {
       ...createInitialState(),
       phase: 'WAVE_ACTIVE' as const,
@@ -94,15 +98,15 @@ describe('wave controller', () => {
         createEnemy({
           id: 'enemy-standard',
           archetype: EnemyArchetype.STANDARD,
-          pathIndex: ENEMY_PATH.length - 2,
-          pos: ENEMY_PATH[ENEMY_PATH.length - 2],
+          pathIndex: enemyPath.length - 2,
+          pos: enemyPath[enemyPath.length - 2],
           moveCooldown: 1
         }),
         createEnemy({
           id: 'enemy-tank',
           archetype: EnemyArchetype.TANK,
-          pathIndex: ENEMY_PATH.length - 2,
-          pos: ENEMY_PATH[ENEMY_PATH.length - 2],
+          pathIndex: enemyPath.length - 2,
+          pos: enemyPath[enemyPath.length - 2],
           moveCooldown: 1
         })
       ]

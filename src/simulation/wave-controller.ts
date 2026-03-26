@@ -1,6 +1,4 @@
 import { ENEMY_DEFS } from '../const/enemies';
-import { ENEMY_PATH } from '../const/map';
-import { WAVES } from '../const/waves';
 import type { Enemy } from '../models/enemy';
 import type { GameState } from '../models/game-state';
 
@@ -12,10 +10,11 @@ const spawnEnemy = (state: GameState): GameState => {
   }
 
   const enemyDef = ENEMY_DEFS[nextSpawn.archetype];
+  const enemyPath = state.runConfig.enemyPath;
   const enemy: Enemy = {
     id: `enemy-${state.frame}-${state.enemies.length + 1}-${nextSpawn.archetype}`,
     archetype: nextSpawn.archetype,
-    pos: ENEMY_PATH[0],
+    pos: enemyPath[0],
     pathIndex: 0,
     hp: enemyDef.maxHp,
     maxHp: enemyDef.maxHp,
@@ -32,8 +31,10 @@ const spawnEnemy = (state: GameState): GameState => {
 };
 
 export const advanceWave = (state: GameState): GameState => {
+  const waveCount = state.runConfig.waves.length;
+
   if (state.phase === 'WAVE_CLEAR') {
-    if (state.wave >= WAVES.length) {
+    if (state.wave >= waveCount) {
       return {
         ...state,
         phase: 'VICTORY'

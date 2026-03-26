@@ -1,5 +1,6 @@
 import { describe, expect, test, vi } from 'vitest';
 import { TowerArchetype } from '../../src/const/towers';
+import type { GamePhase } from '../../src/models/game-state';
 type CapturedHandler = (
   input: string,
   key: { [key: string]: boolean | undefined }
@@ -19,6 +20,30 @@ vi.mock('ink', () => {
 
 import { InputHandler, type InputHandlerProps } from '../../src/input/input-handler';
 
+const defaultInputProps = (overrides: Partial<InputHandlerProps> = {}): InputHandlerProps => {
+  return {
+    onAnyKey: vi.fn(() => false),
+    phase: 'PREP' as GamePhase,
+    availableTowers: [
+      TowerArchetype.RAPID,
+      TowerArchetype.CANNON,
+      TowerArchetype.SNIPER,
+      TowerArchetype.SLOW
+    ],
+    onMoveCursor: vi.fn(),
+    onPlaceTower: vi.fn(),
+    onSellTower: vi.fn(),
+    onSelectTower: vi.fn(),
+    onMenuNavigate: vi.fn(),
+    onMenuConfirm: vi.fn(),
+    onMenuBack: vi.fn(),
+    onMenuDirectSelect: vi.fn(),
+    onQuit: vi.fn(),
+    onSpace: vi.fn(),
+    ...overrides
+  };
+};
+
 const renderAndGetHandler = (props: InputHandlerProps): CapturedHandler => {
   capturedInputHandler = null;
   InputHandler(props);
@@ -34,15 +59,10 @@ describe('InputHandler title gating', () => {
   test('Q quits before any-key title interception', () => {
     const onQuit = vi.fn();
     const onAnyKey = vi.fn(() => true);
-    const handler = renderAndGetHandler({
+    const handler = renderAndGetHandler(defaultInputProps({
       onAnyKey,
       onQuit,
-      onMoveCursor: vi.fn(),
-      onPlaceTower: vi.fn(),
-      onSellTower: vi.fn(),
-      onSelectTower: vi.fn(),
-      onSpace: vi.fn()
-    });
+    }));
 
     handler('q', {});
 
@@ -54,15 +74,11 @@ describe('InputHandler title gating', () => {
     const onQuit = vi.fn();
     const onAnyKey = vi.fn(() => true);
     const onSelectTower = vi.fn();
-    const handler = renderAndGetHandler({
+    const handler = renderAndGetHandler(defaultInputProps({
       onAnyKey,
       onQuit,
-      onMoveCursor: vi.fn(),
-      onPlaceTower: vi.fn(),
-      onSellTower: vi.fn(),
       onSelectTower,
-      onSpace: vi.fn()
-    });
+    }));
 
     handler('1', {});
 
@@ -73,15 +89,9 @@ describe('InputHandler title gating', () => {
 
   test('selects SNIPER on key 3 when not title-gated', () => {
     const onSelectTower = vi.fn();
-    const handler = renderAndGetHandler({
-      onAnyKey: vi.fn(() => false),
-      onQuit: vi.fn(),
-      onMoveCursor: vi.fn(),
-      onPlaceTower: vi.fn(),
-      onSellTower: vi.fn(),
+    const handler = renderAndGetHandler(defaultInputProps({
       onSelectTower,
-      onSpace: vi.fn()
-    });
+    }));
 
     handler('3', {});
 
@@ -90,15 +100,9 @@ describe('InputHandler title gating', () => {
 
   test('selects SLOW on key 4 when not title-gated', () => {
     const onSelectTower = vi.fn();
-    const handler = renderAndGetHandler({
-      onAnyKey: vi.fn(() => false),
-      onQuit: vi.fn(),
-      onMoveCursor: vi.fn(),
-      onPlaceTower: vi.fn(),
-      onSellTower: vi.fn(),
+    const handler = renderAndGetHandler(defaultInputProps({
       onSelectTower,
-      onSpace: vi.fn()
-    });
+    }));
 
     handler('4', {});
 
@@ -107,18 +111,43 @@ describe('InputHandler title gating', () => {
 
   test('s key triggers sell callback when not title-gated', () => {
     const onSellTower = vi.fn();
-    const handler = renderAndGetHandler({
-      onAnyKey: vi.fn(() => false),
-      onQuit: vi.fn(),
-      onMoveCursor: vi.fn(),
-      onPlaceTower: vi.fn(),
+    const handler = renderAndGetHandler(defaultInputProps({
       onSellTower,
-      onSelectTower: vi.fn(),
-      onSpace: vi.fn()
-    });
+    }));
 
     handler('s', {});
 
     expect(onSellTower).toHaveBeenCalledTimes(1);
+  });
+
+  test('in menu phase, numeric key routes to menu cursor selection', () => {
+    const onMenuDirectSelect = vi.fn();
+    const onSelectTower = vi.fn();
+    const handler = renderAndGetHandler(
+      defaultInputProps({
+        phase: 'MODE_SELECT',
+        onMenuDirectSelect,
+        onSelectTower
+      })
+    );
+
+    handler('2', {});
+
+    expect(onMenuDirectSelect).toHaveBeenCalledWith(1);
+    expect(onSelectTower).not.toHaveBeenCalled();
+  });
+
+  test('ignores unavailable numeric tower key when only three towers are available', () => {
+    const onSelectTower = vi.fn();
+    const handler = renderAndGetHandler(
+      defaultInputProps({
+        availableTowers: [TowerArchetype.RAPID, TowerArchetype.CANNON, TowerArchetype.SNIPER],
+        onSelectTower
+      })
+    );
+
+    handler('4', {});
+
+    expect(onSelectTower).not.toHaveBeenCalled();
   });
 });

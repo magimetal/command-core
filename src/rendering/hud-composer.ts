@@ -1,6 +1,5 @@
 import { getTowerDef, TowerArchetype } from '../const/towers';
 import { ENEMY_DEFS } from '../const/enemies';
-import { WAVES } from '../const/waves';
 import { isPlacementPhase, type GameState } from '../models/game-state';
 import chalk from 'chalk';
 import {
@@ -18,45 +17,43 @@ export const composeHud = (state: GameState): string => {
   const hpValue = colorizeHudValue(`${state.baseHp}`, 'HP', state.baseHp);
   const goldValue = colorizeHudValue(`$${state.currency}`, 'GOLD', state.baseHp);
   const waveValue = colorizeHudValue(
-    `${state.wave}/${WAVES.length}`,
+    `${state.wave}/${state.runConfig.waves.length}`,
     'WAVE',
     state.baseHp
   );
   const phaseValue = colorizePhaseLabel(state.phase);
   const prepHint = state.phase === 'PREP' ? ` ${colorizeHudValue('(press Space)', 'WAVE', state.baseHp)}` : '';
 
-  const rapidTower = getTowerDef(TowerArchetype.RAPID);
-  const cannonTower = getTowerDef(TowerArchetype.CANNON);
-  const sniperTower = getTowerDef(TowerArchetype.SNIPER);
-  const slowTower = getTowerDef(TowerArchetype.SLOW);
-  const rapidFull = `${colorizeGridSymbol(rapidTower.symbol, 'RAPID_TOWER')}  RAPID $${rapidTower.cost}`;
-  const cannonFull = `${colorizeGridSymbol(cannonTower.symbol, 'CANNON_TOWER')} CANNON $${cannonTower.cost}`;
-  const sniperFull = `${colorizeGridSymbol(sniperTower.symbol, 'SNIPER_TOWER')} SNIPER $${sniperTower.cost}`;
-  const slowFull = `${colorizeGridSymbol(slowTower.symbol, 'SLOW_TOWER')}  SLOW $${slowTower.cost}`;
-  const rapidAbb = chalk.dim(`R $${rapidTower.cost}`);
-  const cannonAbb = chalk.dim(`C $${cannonTower.cost}`);
-  const sniperAbb = chalk.dim(`Sn $${sniperTower.cost}`);
-  const slowAbb = chalk.dim(`Sl $${slowTower.cost}`);
-  const selectedRapid =
-    state.selectedTowerArchetype === TowerArchetype.RAPID
-      ? chalk.bold(`[${rapidFull}]`)
-      : rapidAbb;
-  const selectedCannon =
-    state.selectedTowerArchetype === TowerArchetype.CANNON
-      ? chalk.bold(`[${cannonFull}]`)
-      : cannonAbb;
-  const selectedSniper =
-    state.selectedTowerArchetype === TowerArchetype.SNIPER
-      ? chalk.bold(`[${sniperFull}]`)
-      : sniperAbb;
-  const selectedSlow =
-    state.selectedTowerArchetype === TowerArchetype.SLOW
-      ? chalk.bold(`[${slowFull}]`)
-      : slowAbb;
+  const towerAbbreviation: Record<TowerArchetype, string> = {
+    [TowerArchetype.RAPID]: 'R',
+    [TowerArchetype.CANNON]: 'C',
+    [TowerArchetype.SNIPER]: 'Sn',
+    [TowerArchetype.SLOW]: 'Sl'
+  };
+  const towerClassByArchetype: Record<TowerArchetype, 'RAPID_TOWER' | 'CANNON_TOWER' | 'SNIPER_TOWER' | 'SLOW_TOWER'> = {
+    [TowerArchetype.RAPID]: 'RAPID_TOWER',
+    [TowerArchetype.CANNON]: 'CANNON_TOWER',
+    [TowerArchetype.SNIPER]: 'SNIPER_TOWER',
+    [TowerArchetype.SLOW]: 'SLOW_TOWER'
+  };
+  const selectedTowerLine = state.runConfig.availableTowers
+    .map((archetype, index) => {
+      const towerDef = getTowerDef(archetype);
+      const keyLabel = `${index + 1}`;
+      const full = `[${keyLabel}]${colorizeGridSymbol(towerDef.symbol, towerClassByArchetype[archetype])} ${towerAbbreviation[archetype]}$${towerDef.cost}`;
+      const compact = chalk.dim(`[${keyLabel}] ${towerAbbreviation[archetype]}$${towerDef.cost}`);
+
+      if (state.selectedTowerArchetype === archetype) {
+        return chalk.bold(full);
+      }
+
+      return compact;
+    })
+    .join('  ');
 
   const wavePreviewFragment = (() => {
     if (isPlacementPhase(state.phase)) {
-      const waveDef = WAVES[state.wave - 1];
+      const waveDef = state.runConfig.waves[state.wave - 1];
       if (waveDef) {
         const parts = waveDef.enemies.map((group) => `${group.count}× ${ENEMY_DEFS[group.archetype].symbol}`);
         return `  · Next: ${parts.join(' ')}`;
@@ -92,25 +89,31 @@ export const composeHud = (state: GameState): string => {
     cursorDetail = ` [${bar} ${enemyAtCursor.hp}/${enemyAtCursor.maxHp}]`;
   }
 
-  const selectedLine =
-    `${selectedRapid}  ${selectedCannon}  ${selectedSniper}  ${selectedSlow}  |  Cursor: (${cursorCol},${cursorRow})${cursorDetail}`;
+  const selectedLine = `${selectedTowerLine}  |  Cursor: (${cursorCol},${cursorRow})${cursorDetail}`;
 
   return `${statsLine}\n${selectedLine}`;
 };
 
 export const composeTitleBar = (state: GameState): string => {
-  const title = chalk.bold.white('TERMINAL TOWER DEFENSE');
-  const divider = chalk.dim('  ║  ');
-  const wave = chalk.cyan(`Wave ${state.wave}/${WAVES.length}`);
+  const mapLabel =
+    state.runConfig.mode === 'ANOMALY'
+      ? (state.runConfig.mapLabel.match(/#\d+/)?.[0] ?? state.runConfig.mapLabel)
+      : state.runConfig.mapLabel;
+  const modeBadge =
+    state.runConfig.mode === 'ANOMALY'
+      ? chalk.bold.magentaBright('[ANOMALY]')
+      : chalk.bold.cyanBright('[OPERATIONS]');
+  const mapIdentity = chalk.bold.white(mapLabel);
+  const wave = chalk.cyan(`Wave ${state.wave}/${state.runConfig.waves.length}`);
   const phase = colorizePhaseLabel(state.phase);
 
-  return `${title}${divider}${wave}  ${phase}`;
+  return `◈ ${modeBadge} ${mapIdentity}  ⟫  ${wave}  ${phase}`;
 };
 
 export const composeEventLog = (state: GameState): string[] => {
   const eventLines = getVisibleEventLog(state.eventLog);
 
-  return eventLines.map((eventLine, index) => {
+  const renderedEvents = eventLines.map((eventLine, index) => {
     if (eventLine.length === 0) {
       return index === 0 ? colorizeEventLogMessage('! No recent events') : chalk.dim('  ─');
     }
@@ -128,4 +131,6 @@ export const composeEventLog = (state: GameState): string[] => {
 
     return colorizeEventMessage(eventLine, messageClass);
   });
+
+  return [chalk.dim('─── Events ───────────────────────────────────────────'), ...renderedEvents];
 };

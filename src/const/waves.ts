@@ -10,35 +10,38 @@ export interface WaveDefinition {
   enemies: WaveEnemyGroup[];
 }
 
-export const WAVES: WaveDefinition[] = [
-  {
-    enemies: [{ archetype: EnemyArchetype.STANDARD, count: 5, spawnIntervalTicks: 15 }]
-  },
+export const CROSSROADS_WAVES: WaveDefinition[] = [
   {
     enemies: [
-      { archetype: EnemyArchetype.STANDARD, count: 8, spawnIntervalTicks: 12 },
-      { archetype: EnemyArchetype.FAST, count: 3, spawnIntervalTicks: 10 }
+      { archetype: EnemyArchetype.STANDARD, count: 7, spawnIntervalTicks: 13 },
+      { archetype: EnemyArchetype.FAST, count: 1, spawnIntervalTicks: 12 }
     ]
   },
   {
     enemies: [
-      { archetype: EnemyArchetype.STANDARD, count: 6, spawnIntervalTicks: 10 },
-      { archetype: EnemyArchetype.TANK, count: 2, spawnIntervalTicks: 20 },
-      { archetype: EnemyArchetype.FAST, count: 5, spawnIntervalTicks: 8 }
+      { archetype: EnemyArchetype.STANDARD, count: 9, spawnIntervalTicks: 10 },
+      { archetype: EnemyArchetype.FAST, count: 5, spawnIntervalTicks: 9 }
     ]
   },
   {
     enemies: [
-      { archetype: EnemyArchetype.STANDARD, count: 10, spawnIntervalTicks: 8 },
-      { archetype: EnemyArchetype.TANK, count: 4, spawnIntervalTicks: 18 },
+      { archetype: EnemyArchetype.STANDARD, count: 7, spawnIntervalTicks: 9 },
+      { archetype: EnemyArchetype.TANK, count: 3, spawnIntervalTicks: 17 },
       { archetype: EnemyArchetype.FAST, count: 6, spawnIntervalTicks: 7 }
     ]
   },
   {
     enemies: [
-      { archetype: EnemyArchetype.STANDARD, count: 8, spawnIntervalTicks: 6 },
-      { archetype: EnemyArchetype.TANK, count: 6, spawnIntervalTicks: 15 },
-      { archetype: EnemyArchetype.FAST, count: 10, spawnIntervalTicks: 5 }
+      { archetype: EnemyArchetype.STANDARD, count: 11, spawnIntervalTicks: 7 },
+      { archetype: EnemyArchetype.TANK, count: 5, spawnIntervalTicks: 15 },
+      { archetype: EnemyArchetype.FAST, count: 7, spawnIntervalTicks: 6 }
+    ]
+  },
+  {
+    enemies: [
+      { archetype: EnemyArchetype.STANDARD, count: 10, spawnIntervalTicks: 5 },
+      { archetype: EnemyArchetype.TANK, count: 7, spawnIntervalTicks: 13 },
+      { archetype: EnemyArchetype.FAST, count: 11, spawnIntervalTicks: 4 }
     ]
   }
 ];

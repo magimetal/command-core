@@ -1,4 +1,3 @@
-import { WAVES } from '../const/waves';
 import type { GameState } from '../models/game-state';
 
 export const startWave = (state: GameState): GameState => {
@@ -6,7 +5,7 @@ export const startWave = (state: GameState): GameState => {
     return state;
   }
 
-  const waveDefinition = WAVES[state.wave - 1];
+  const waveDefinition = state.runConfig.waves[state.wave - 1];
 
   if (waveDefinition === undefined) {
     return {

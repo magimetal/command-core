@@ -5,12 +5,12 @@
 **Branch:** n/a (workspace is not a git repo)
 
 ## OVERVIEW
-Terminal-native tower defense MVP in Node.js + TypeScript + Ink.
+Command Core is a terminal-native tower defense MVP in Node.js + TypeScript + Ink.
 Single-process game loop: input -> state update -> frame string composition -> terminal render.
 
 ## STRUCTURE
 ```text
-terminal-tower-defense/
+terminal-tower-defense/  # Current repository directory name (product name: Command Core)
 ├── src/                # Runtime code (state, simulation, rendering, input)
 │   ├── const/          # Canonical gameplay and map constants
 │   ├── models/         # Shared type contracts
@@ -20,8 +20,8 @@ terminal-tower-defense/
 │   ├── app.tsx         # Main loop, phase transitions, action wiring
 │   └── main.ts         # CLI entrypoint
 ├── tests/              # Guardrails for simulation, rendering, input
-├── SPEC.md             # Locked product/MVP contract
-├── MVP.md              # Milestone/decision history
+├── README.md           # Quickstart and project overview
+├── AGENTS.md           # Project knowledge base for agents
 └── CHANGELOG.md        # Release history
 ```
 
@@ -32,7 +32,7 @@ terminal-tower-defense/
 | Tick ordering contract | `src/simulation/tick.ts` | Order is locked: wave -> movement -> combat -> cleanup |
 | Wave spawning and victory transition | `src/simulation/wave-controller.ts`, `src/simulation/start-wave.ts` | `WAVE_CLEAR` advances wave or enters `VICTORY` |
 | Tower placement errors/messages | `src/simulation/tower-placement.ts`, `src/app.tsx` | Error strings converted to user-facing `✗` messages |
-| Grid/map geometry | `src/const/map.ts` | 16x28 grid; fixed S-curve path; blocked vertical lane |
+| Grid/map geometry | `src/const/operations-maps.ts` | 16x34 grids; map geometry and paths are defined per operations map |
 | Frame output and width behavior | `src/rendering/frame-composer.ts` | One bordered frame string; grid centered to non-grid width |
 | Input gates | `src/input/input-handler.ts` | `Q` preempts title any-key gate |
 | Rendering guardrails | `tests/rendering/frame-composer.test.ts` | Width <= 78, height <= 33 |
@@ -49,15 +49,15 @@ LSP codemap unavailable in this run; fallback map below.
 | `composeFrame` | renderer | `src/rendering/frame-composer.ts` | Builds TITLE/PREP/WAVE/END screens into one string block |
 
 ## CONVENTIONS
-- State phases are explicit string unions (`TITLE`, `PREP`, `WAVE_ACTIVE`, `WAVE_CLEAR`, `VICTORY`, `GAME_OVER`).
+- State phases are explicit string unions (`TITLE`, `MODE_SELECT`, `MAP_SELECT`, `PREP`, `WAVE_ACTIVE`, `WAVE_CLEAR`, `VICTORY`, `GAME_OVER`).
 - Simulation functions are pure-state transforms returning full `GameState` objects.
-- Event log is newest-first and hard-capped at 5 lines (`appendEventLog`).
+- Event log is newest-first and hard-capped at 7 lines (`appendEventLog`).
 - User-facing event prefixes carry semantics: `✕` kill, `!` leak, `>>` wave, `✗` error, `~` hit-threshold.
 - Rendering path strips ANSI for layout math before padding/centering.
 
 ## ANTI-PATTERNS (THIS PROJECT)
 - Do not reorder tick pipeline steps; tests assert movement-before-combat behavior.
-- Do not mutate `MAP_GRID` directly; initial state clones it.
+- Do not mutate `runConfig.grid` directly; `createInitialState` clones map-derived grid data.
 - Do not bypass phase gates (title intercept, PREP-only wave start).
 - Do not grow event-log capacity without updating frame and tests.
 - Do not add browser/UI abstractions; product scope is terminal-native Ink.
