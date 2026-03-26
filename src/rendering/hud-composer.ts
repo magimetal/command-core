@@ -1,9 +1,17 @@
 import { getTowerDef, TowerArchetype } from '../const/towers';
 import { ENEMY_DEFS } from '../const/enemies';
 import { WAVES } from '../const/waves';
-import type { GameState } from '../models/game-state';
+import { isPlacementPhase, type GameState } from '../models/game-state';
 import chalk from 'chalk';
-import { colorizeGridSymbol, colorizeHudValue, colorizePhaseLabel } from './color-map';
+import {
+  colorizeEventLogMessage,
+  colorizeEventMessage,
+  colorizeGridSymbol,
+  colorizeHudValue,
+  colorizePhaseLabel,
+  type EventMessageClass
+} from './color-map';
+import { getVisibleEventLog } from '../utils/event-log';
 
 export const composeHud = (state: GameState): string => {
   const hpIcon = state.baseHp < 5 ? '♡' : '❤';
@@ -47,7 +55,7 @@ export const composeHud = (state: GameState): string => {
       : slowAbb;
 
   const wavePreviewFragment = (() => {
-    if (state.phase === 'PREP' || state.phase === 'WAVE_CLEAR') {
+    if (isPlacementPhase(state.phase)) {
       const waveDef = WAVES[state.wave - 1];
       if (waveDef) {
         const parts = waveDef.enemies.map((group) => `${group.count}× ${ENEMY_DEFS[group.archetype].symbol}`);
@@ -88,4 +96,36 @@ export const composeHud = (state: GameState): string => {
     `${selectedRapid}  ${selectedCannon}  ${selectedSniper}  ${selectedSlow}  |  Cursor: (${cursorCol},${cursorRow})${cursorDetail}`;
 
   return `${statsLine}\n${selectedLine}`;
+};
+
+export const composeTitleBar = (state: GameState): string => {
+  const title = chalk.bold.white('TERMINAL TOWER DEFENSE');
+  const divider = chalk.dim('  ║  ');
+  const wave = chalk.cyan(`Wave ${state.wave}/${WAVES.length}`);
+  const phase = colorizePhaseLabel(state.phase);
+
+  return `${title}${divider}${wave}  ${phase}`;
+};
+
+export const composeEventLog = (state: GameState): string[] => {
+  const eventLines = getVisibleEventLog(state.eventLog);
+
+  return eventLines.map((eventLine, index) => {
+    if (eventLine.length === 0) {
+      return index === 0 ? colorizeEventLogMessage('! No recent events') : chalk.dim('  ─');
+    }
+
+    let messageClass: EventMessageClass = 'INFO';
+    if (eventLine.startsWith('✕')) {
+      messageClass = 'KILL';
+    } else if (eventLine.startsWith('!')) {
+      messageClass = 'LEAK';
+    } else if (eventLine.startsWith('>>')) {
+      messageClass = 'WAVE';
+    } else if (eventLine.startsWith('✗')) {
+      messageClass = 'ERROR';
+    }
+
+    return colorizeEventMessage(eventLine, messageClass);
+  });
 };

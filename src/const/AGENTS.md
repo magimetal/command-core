@@ -7,7 +7,7 @@
 ```text
 src/const/
 ├── game.ts      # Start HP/gold + frame interval
-├── map.ts       # 16x22 grid, blocked lane, generated S-curve path
+├── map.ts       # 16x28 grid, blocked lane, generated S-curve path
 ├── enemies.ts   # Enemy archetypes, stats, symbols, rewards, leak damage
 ├── towers.ts    # Tower archetypes, costs, damage/range/cooldown
 └── waves.ts     # 3-wave spawn recipes and per-group spawn intervals

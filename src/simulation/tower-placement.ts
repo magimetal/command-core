@@ -1,10 +1,14 @@
 import { getTowerDef, type TowerArchetype } from '../const/towers';
 import { CellType } from '../models/cell';
 import type { GameState } from '../models/game-state';
+import type { OperationError } from '../models/operation-error';
 import type { Tower } from '../models/tower';
 
-interface PlacementError {
-  error: string;
+export enum PlacementErrorCode {
+  OUT_OF_BOUNDS = 'OUT_OF_BOUNDS',
+  NOT_BUILDABLE = 'NOT_BUILDABLE',
+  OCCUPIED = 'OCCUPIED',
+  INSUFFICIENT_CURRENCY = 'INSUFFICIENT_CURRENCY'
 }
 
 const isInBounds = (state: GameState, pos: [number, number]): boolean => {
@@ -17,26 +21,26 @@ export const placeTower = (
   state: GameState,
   pos: [number, number],
   archetype: TowerArchetype
-): GameState | PlacementError => {
+): GameState | OperationError<PlacementErrorCode> => {
   if (!isInBounds(state, pos)) {
-    return { error: 'Out of bounds' };
+    return { error: PlacementErrorCode.OUT_OF_BOUNDS };
   }
 
   const [col, row] = pos;
   const cell = state.grid[row][col];
 
   if (cell.type !== CellType.BUILDABLE) {
-    return { error: 'Cell is not buildable' };
+    return { error: PlacementErrorCode.NOT_BUILDABLE };
   }
 
   if (cell.tower !== undefined) {
-    return { error: 'Cell already occupied' };
+    return { error: PlacementErrorCode.OCCUPIED };
   }
 
   const towerDef = getTowerDef(archetype);
 
   if (state.currency < towerDef.cost) {
-    return { error: 'Insufficient currency' };
+    return { error: PlacementErrorCode.INSUFFICIENT_CURRENCY };
   }
 
   const nextGrid = state.grid.map((gridRow, rowIndex) => {

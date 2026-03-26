@@ -2,7 +2,7 @@ import { getTowerDef } from '../const/towers';
 import type { Enemy } from '../models/enemy';
 import type { GameState } from '../models/game-state';
 import type { Projectile } from '../models/projectile';
-import { appendEventLog } from '../rendering/event-log';
+import { appendEventLog } from '../utils/event-log';
 
 const distanceSquared = (a: [number, number], b: [number, number]): number => {
   const dx = a[0] - b[0];
@@ -37,93 +37,116 @@ const advanceProjectile = (projectile: Projectile): Projectile => {
 };
 
 export const resolveCombat = (state: GameState): GameState => {
-  const enemiesById = new Map(state.enemies.map((enemy) => [enemy.id, { ...enemy }]));
-  const hitMessages: string[] = [];
+  const initialEnemiesById = new Map(state.enemies.map((enemy) => [enemy.id, enemy]));
   const advancedProjectiles = state.projectiles
     .map((projectile) => advanceProjectile(projectile))
     .filter((projectile) => projectile.ttl > 0);
-  const newProjectiles: Projectile[] = [];
+  const resolved = state.towers.reduce<{
+    towers: typeof state.towers;
+    enemiesById: Map<string, Enemy>;
+    newProjectiles: Projectile[];
+    hitMessages: string[];
+  }>(
+    (accumulator, tower) => {
+      if (tower.cooldownRemaining > 0) {
+        return {
+          ...accumulator,
+          towers: [...accumulator.towers, { ...tower, cooldownRemaining: tower.cooldownRemaining - 1 }]
+        };
+      }
 
-  const towers = state.towers.map((tower) => {
-    if (tower.cooldownRemaining > 0) {
-      return {
-        ...tower,
-        cooldownRemaining: tower.cooldownRemaining - 1
-      };
-    }
-
-    const towerDef = getTowerDef(tower.archetype);
-    const currentEnemies = Array.from(enemiesById.values());
-    const target = getNearestEnemyInRange(currentEnemies, tower.pos, towerDef.range);
-
-    if (target === undefined) {
-      return tower;
-    }
-
-    const updatedTarget = enemiesById.get(target.id);
-
-    if (updatedTarget === undefined) {
-      return tower;
-    }
-
-    const hpBefore = updatedTarget.hp;
-    updatedTarget.hp -= towerDef.damage;
-
-    if (towerDef.slowDurationTicks > 0) {
-      updatedTarget.moveCooldown = Math.max(updatedTarget.moveCooldown, towerDef.slowDurationTicks);
-    }
-
-    newProjectiles.push({
-      id: `proj-${tower.id}-${state.frame}`,
-      pos: tower.pos,
-      targetPos: target.pos,
-      archetype: tower.archetype,
-      symbol: towerDef.projectileSymbol,
-      ttl: 2
-    });
-
-    if (updatedTarget.hp <= 0) {
-      updatedTarget.dead = true;
-      enemiesById.set(updatedTarget.id, updatedTarget);
-
-      return {
-        ...tower,
-        cooldownRemaining: towerDef.cooldownTicks,
-        kills: tower.kills + 1
-      };
-    }
-
-    const pctBefore = hpBefore / updatedTarget.maxHp;
-    const pctAfter = updatedTarget.hp / updatedTarget.maxHp;
-    const crossedThreshold =
-      (pctBefore > 0.5 && pctAfter <= 0.5) ||
-      (pctBefore > 0.25 && pctAfter <= 0.25);
-
-    if (crossedThreshold) {
-      const filled = Math.max(0, Math.min(5, Math.round(pctAfter * 5)));
-      const bar = '█'.repeat(filled) + '░'.repeat(5 - filled);
-      hitMessages.push(
-        `~ ${updatedTarget.archetype} hit  [${bar}] ${updatedTarget.hp}/${updatedTarget.maxHp}`
+      const towerDef = getTowerDef(tower.archetype);
+      const target = getNearestEnemyInRange(
+        Array.from(accumulator.enemiesById.values()),
+        tower.pos,
+        towerDef.range
       );
+
+      if (target === undefined) {
+        return {
+          ...accumulator,
+          towers: [...accumulator.towers, tower]
+        };
+      }
+
+      const hpBefore = target.hp;
+      const hpAfter = target.hp - towerDef.damage;
+      const nextMoveCooldown =
+        towerDef.slowDurationTicks > 0
+          ? Math.max(target.moveCooldown, towerDef.slowDurationTicks)
+          : target.moveCooldown;
+      const updatedTarget: Enemy = {
+        ...target,
+        hp: hpAfter,
+        moveCooldown: nextMoveCooldown,
+        dead: hpAfter <= 0 ? true : target.dead
+      };
+
+      const nextEnemiesById = new Map(accumulator.enemiesById);
+      nextEnemiesById.set(updatedTarget.id, updatedTarget);
+
+      const nextProjectiles = [
+        ...accumulator.newProjectiles,
+        {
+          id: `proj-${tower.id}-${state.frame}`,
+          pos: tower.pos,
+          targetPos: target.pos,
+          archetype: tower.archetype,
+          symbol: towerDef.projectileSymbol,
+          ttl: 2
+        }
+      ];
+
+      if (updatedTarget.dead) {
+        return {
+          towers: [
+            ...accumulator.towers,
+            { ...tower, cooldownRemaining: towerDef.cooldownTicks, kills: tower.kills + 1 }
+          ],
+          enemiesById: nextEnemiesById,
+          newProjectiles: nextProjectiles,
+          hitMessages: accumulator.hitMessages
+        };
+      }
+
+      const pctBefore = hpBefore / updatedTarget.maxHp;
+      const pctAfter = updatedTarget.hp / updatedTarget.maxHp;
+      const crossedThreshold =
+        (pctBefore > 0.5 && pctAfter <= 0.5) || (pctBefore > 0.25 && pctAfter <= 0.25);
+      const nextHitMessages = crossedThreshold
+        ? [
+            ...accumulator.hitMessages,
+            `~ ${updatedTarget.archetype} hit  [` +
+              `${'█'.repeat(Math.max(0, Math.min(5, Math.round(pctAfter * 5))))}` +
+              `${'░'.repeat(5 - Math.max(0, Math.min(5, Math.round(pctAfter * 5))))}` +
+              `] ${updatedTarget.hp}/${updatedTarget.maxHp}`
+          ]
+        : accumulator.hitMessages;
+
+      return {
+        towers: [...accumulator.towers, { ...tower, cooldownRemaining: towerDef.cooldownTicks }],
+        enemiesById: nextEnemiesById,
+        newProjectiles: nextProjectiles,
+        hitMessages: nextHitMessages
+      };
+    },
+    {
+      towers: [],
+      enemiesById: initialEnemiesById,
+      newProjectiles: [],
+      hitMessages: []
     }
+  );
 
-    enemiesById.set(updatedTarget.id, updatedTarget);
-
-    return {
-      ...tower,
-      cooldownRemaining: towerDef.cooldownTicks
-    };
-  });
-
-  const nextEventLog = hitMessages.reduce((log, message) => {
+  const nextEventLog = resolved.hitMessages.reduce((log, message) => {
     return appendEventLog(log, message);
   }, state.eventLog);
 
   return {
     ...state,
-    towers,
-    projectiles: [...advancedProjectiles, ...newProjectiles],
-    enemies: Array.from(enemiesById.values()),
+    towers: resolved.towers,
+    projectiles: [...advancedProjectiles, ...resolved.newProjectiles],
+    enemies: Array.from(resolved.enemiesById.values()),
     eventLog: nextEventLog
   };
 };

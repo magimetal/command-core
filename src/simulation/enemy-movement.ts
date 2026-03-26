@@ -2,7 +2,7 @@ import { ENEMY_DEFS } from '../const/enemies';
 import { ENEMY_PATH } from '../const/map';
 import type { Enemy } from '../models/enemy';
 import type { GameState } from '../models/game-state';
-import { appendEventLog } from '../rendering/event-log';
+import { appendEventLog } from '../utils/event-log';
 
 const moveEnemy = (enemy: Enemy): Enemy => {
   const { speed } = ENEMY_DEFS[enemy.archetype];

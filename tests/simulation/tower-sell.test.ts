@@ -64,4 +64,22 @@ describe('sellTower', () => {
     expect(rebought.towers).toHaveLength(1);
     expect(rebought.grid[1][1].tower).toBe(rebought.towers[0].id);
   });
+
+  test('allows sell during WAVE_CLEAR phase', () => {
+    const initial = { ...createInitialState(), phase: 'PREP' as const };
+    const placed = placeTower(initial, [1, 1], TowerArchetype.RAPID);
+    if ('error' in placed) {
+      throw new Error('unexpected placement error');
+    }
+
+    const waveClearState = { ...placed, phase: 'WAVE_CLEAR' as const };
+    const result = sellTower(waveClearState, [1, 1]);
+
+    if ('error' in result) {
+      throw new Error('unexpected sell error in WAVE_CLEAR');
+    }
+
+    expect(result.towers).toHaveLength(0);
+    expect(result.grid[1][1].tower).toBeUndefined();
+  });
 });

@@ -1,7 +1,7 @@
 import { ENEMY_DEFS } from '../const/enemies';
 import type { Enemy } from '../models/enemy';
 import type { GameState } from '../models/game-state';
-import { appendEventLog } from '../rendering/event-log';
+import { appendEventLog } from '../utils/event-log';
 import { resolveCombat } from './combat';
 import { advanceEnemies } from './enemy-movement';
 import { advanceWave } from './wave-controller';

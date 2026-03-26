@@ -32,7 +32,7 @@ terminal-tower-defense/
 | Tick ordering contract | `src/simulation/tick.ts` | Order is locked: wave -> movement -> combat -> cleanup |
 | Wave spawning and victory transition | `src/simulation/wave-controller.ts`, `src/simulation/start-wave.ts` | `WAVE_CLEAR` advances wave or enters `VICTORY` |
 | Tower placement errors/messages | `src/simulation/tower-placement.ts`, `src/app.tsx` | Error strings converted to user-facing `✗` messages |
-| Grid/map geometry | `src/const/map.ts` | 16x22 grid; fixed S-curve path; blocked vertical lane |
+| Grid/map geometry | `src/const/map.ts` | 16x28 grid; fixed S-curve path; blocked vertical lane |
 | Frame output and width behavior | `src/rendering/frame-composer.ts` | One bordered frame string; grid centered to non-grid width |
 | Input gates | `src/input/input-handler.ts` | `Q` preempts title any-key gate |
 | Rendering guardrails | `tests/rendering/frame-composer.test.ts` | Width <= 78, height <= 33 |

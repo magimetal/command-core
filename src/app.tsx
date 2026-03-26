@@ -4,38 +4,41 @@ import { FRAME_INTERVAL_MS } from './const/game';
 import { TowerArchetype } from './const/towers';
 import { WAVES } from './const/waves';
 import { InputHandler } from './input/input-handler';
-import { appendEventLog } from './rendering/event-log';
+import type { GamePhase } from './models/game-state';
+import { appendEventLog } from './utils/event-log';
 import { composeFrame } from './rendering/frame-composer';
 import { createInitialState } from './simulation/create-initial-state';
 import { startWave } from './simulation/start-wave';
 import { tick } from './simulation/tick';
-import { placeTower } from './simulation/tower-placement';
+import { placeTower, PlacementErrorCode } from './simulation/tower-placement';
 import { sellTower } from './simulation/tower-sell';
 
-const toPlacementFailureMessage = (error: string): string => {
-  if (error === 'Cell is not buildable') {
-    return '✗ Cannot place tower: not buildable';
+const toPlacementFailureMessage = (code: PlacementErrorCode): string => {
+  switch (code) {
+    case PlacementErrorCode.NOT_BUILDABLE:
+      return '✗ Cannot place tower: not buildable';
+    case PlacementErrorCode.OCCUPIED:
+      return '✗ Cannot place tower: occupied';
+    case PlacementErrorCode.INSUFFICIENT_CURRENCY:
+      return '✗ Cannot place tower: insufficient gold';
+    case PlacementErrorCode.OUT_OF_BOUNDS:
+      return '✗ Cannot place tower: out of bounds';
+    default: {
+      const _exhaustive: never = code;
+      return `✗ Cannot place tower: ${_exhaustive}`;
+    }
   }
-
-  if (error === 'Cell already occupied') {
-    return '✗ Cannot place tower: occupied';
-  }
-
-  if (error === 'Insufficient currency') {
-    return '✗ Cannot place tower: insufficient gold';
-  }
-
-  if (error === 'Out of bounds') {
-    return '✗ Cannot place tower: out of bounds';
-  }
-
-  return `✗ Cannot place tower: ${error.toLowerCase()}`;
 };
 
 export const App = () => {
   const { exit } = useApp();
   const [state, setState] = useState(createInitialState);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const phaseRef = useRef<GamePhase>(state.phase);
+
+  useEffect(() => {
+    phaseRef.current = state.phase;
+  }, [state.phase]);
 
   const stopLoop = () => {
     if (intervalRef.current !== null) {
@@ -130,8 +133,7 @@ export const App = () => {
 
         return {
           ...previousState,
-          eventLog: appendEventLog(previousState.eventLog, message),
-          lastEventMessage: message
+          eventLog: appendEventLog(previousState.eventLog, message)
         };
       }
 
@@ -140,8 +142,7 @@ export const App = () => {
 
       return {
         ...nextState,
-        eventLog: appendEventLog(previousState.eventLog, message),
-        lastEventMessage: message
+        eventLog: appendEventLog(previousState.eventLog, message)
       };
     });
   };
@@ -160,8 +161,7 @@ export const App = () => {
             : `✗ ${nextState.error}`;
         return {
           ...previousState,
-          eventLog: appendEventLog(previousState.eventLog, message),
-          lastEventMessage: message
+          eventLog: appendEventLog(previousState.eventLog, message)
         };
       }
 
@@ -169,8 +169,7 @@ export const App = () => {
       const message = `$ Tower sold at (${col},${row})`;
       return {
         ...nextState,
-        eventLog: appendEventLog(nextState.eventLog, message),
-        lastEventMessage: message
+        eventLog: appendEventLog(nextState.eventLog, message)
       };
     });
   };
@@ -182,7 +181,7 @@ export const App = () => {
   };
 
   const advanceFromTitle = (): boolean => {
-    if (state.phase !== 'TITLE') {
+    if (phaseRef.current !== 'TITLE') {
       return false;
     }
 

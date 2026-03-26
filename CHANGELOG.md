@@ -14,6 +14,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   - Cursor placement helpers: ghost tower preview + visible range ring (`◌`)
   - Cosmetic projectile rendering for active shots
   - End-state scoring surfaced in ceremony screens
+- Architecture hardening and module extraction:
+  - Shared `OperationError` model for typed simulation failures
+  - New rendering modules for border, title screen, end-state screen, and grid composition
+  - Split combat coverage into focused test files for damage, targeting, and projectile behavior
 
 ### Changed
 - Map/layout overhaul for the redesign pass:
@@ -26,12 +30,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   - Event log expanded to 7 visible lines (newest-first)
   - Stronger color routing and richer terminal presentation
   - Cursor details now surface enemy HP bars and tower kill counts
+- Runtime and rendering behavior refinements:
+  - Event-log helpers moved into shared utilities and `lastEventMessage` state removed
+  - Placement/sell phase checks centralized via `isPlacementPhase`
+  - Placement failures now use explicit error codes instead of free-form strings
+  - Range preview now marks path tiles inside tower range with `•`
+  - Title-to-prep transition now reads phase via ref to avoid stale phase checks
 
 ### Tested
 - Expanded automated coverage for redesign and beta-pass mechanics:
   - rendering checks for path topology, range ring behavior, ghost cursor, projectile glyphs, and frame guardrails
   - simulation checks for FAST movement cadence, SLOW debuff behavior, sell flow/economy safety, and score calculation
   - input checks for expanded controls (`1-4`, `S`, title gating, quit precedence)
+  - dedicated combat test suites for damage resolution, targeting rules, and projectile lifecycle
 
 ## [0.3.0] - 2026-03-21
 

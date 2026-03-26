@@ -13,6 +13,10 @@ export type GamePhase =
   | 'VICTORY'
   | 'GAME_OVER';
 
+export const isPlacementPhase = (phase: GamePhase): boolean => {
+  return phase === 'PREP' || phase === 'WAVE_CLEAR';
+};
+
 export interface GameState {
   grid: Cell[][];
   enemies: Enemy[];
@@ -32,5 +36,4 @@ export interface GameState {
   spawnTimerTicks: number;
   enemiesKilled: number;
   eventLog: string[];
-  lastEventMessage?: string;
 }

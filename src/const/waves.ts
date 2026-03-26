@@ -6,7 +6,7 @@ interface WaveEnemyGroup {
   spawnIntervalTicks: number;
 }
 
-interface WaveDefinition {
+export interface WaveDefinition {
   enemies: WaveEnemyGroup[];
 }
 

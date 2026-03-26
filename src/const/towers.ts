@@ -55,17 +55,5 @@ export const TOWER_DEFS: Record<TowerArchetype, TowerDef> = {
 };
 
 export const getTowerDef = (archetype: TowerArchetype): TowerDef => {
-  if (archetype === TowerArchetype.RAPID) {
-    return TOWER_DEFS[TowerArchetype.RAPID];
-  }
-
-  if (archetype === TowerArchetype.SNIPER) {
-    return TOWER_DEFS[TowerArchetype.SNIPER];
-  }
-
-  if (archetype === TowerArchetype.SLOW) {
-    return TOWER_DEFS[TowerArchetype.SLOW];
-  }
-
-  return TOWER_DEFS[TowerArchetype.CANNON];
+  return TOWER_DEFS[archetype];
 };

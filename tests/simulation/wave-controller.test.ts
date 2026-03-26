@@ -5,6 +5,8 @@ import { createInitialState } from '../../src/simulation/create-initial-state';
 import { startWave } from '../../src/simulation/start-wave';
 import { tick } from '../../src/simulation/tick';
 import { advanceWave } from '../../src/simulation/wave-controller';
+import { ENEMY_PATH } from '../../src/const/map';
+import { createEnemy } from '../helpers/builders';
 
 describe('wave controller', () => {
   test('in PREP phase, advanceWave returns unchanged state', () => {
@@ -81,5 +83,34 @@ describe('wave controller', () => {
 
     expect(result.phase).toBe('WAVE_ACTIVE');
     expect(result.spawnQueue.length).toBe(5);
+  });
+
+  test('multiple leaks in one tick reduce base HP cumulatively', () => {
+    const state = {
+      ...createInitialState(),
+      phase: 'WAVE_ACTIVE' as const,
+      spawnQueue: [],
+      enemies: [
+        createEnemy({
+          id: 'enemy-standard',
+          archetype: EnemyArchetype.STANDARD,
+          pathIndex: ENEMY_PATH.length - 2,
+          pos: ENEMY_PATH[ENEMY_PATH.length - 2],
+          moveCooldown: 1
+        }),
+        createEnemy({
+          id: 'enemy-tank',
+          archetype: EnemyArchetype.TANK,
+          pathIndex: ENEMY_PATH.length - 2,
+          pos: ENEMY_PATH[ENEMY_PATH.length - 2],
+          moveCooldown: 1
+        })
+      ]
+    };
+
+    const result = tick(state);
+
+    expect(result.baseHp).toBe(state.baseHp - 4);
+    expect(result.enemies).toHaveLength(0);
   });
 });

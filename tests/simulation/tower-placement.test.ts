@@ -1,11 +1,11 @@
 import { describe, expect, test } from 'vitest';
 import { TowerArchetype, TOWER_DEFS } from '../../src/const/towers';
-import { placeTower } from '../../src/simulation/tower-placement';
-import { createInitialState } from '../../src/simulation/create-initial-state';
+import { placeTower, PlacementErrorCode } from '../../src/simulation/tower-placement';
+import { createState } from '../helpers/builders';
 
 describe('placeTower', () => {
   test('places on BUILDABLE with sufficient currency and deducts cost', () => {
-    const initial = createInitialState();
+    const initial = createState();
     const result = placeTower(initial, [1, 1], TowerArchetype.RAPID);
 
     expect('error' in result).toBe(false);
@@ -20,25 +20,25 @@ describe('placeTower', () => {
   });
 
   test('rejects placement on PATH', () => {
-    const initial = createInitialState();
+    const initial = createState();
     const result = placeTower(initial, [1, 2], TowerArchetype.RAPID);
 
-    expect(result).toEqual({ error: 'Cell is not buildable' });
+    expect(result).toEqual({ error: PlacementErrorCode.NOT_BUILDABLE });
   });
 
   test('rejects placement with insufficient currency', () => {
-    const initial = createInitialState();
+    const initial = createState();
     const state = {
       ...initial,
       currency: 0
     };
     const result = placeTower(state, [1, 1], TowerArchetype.CANNON);
 
-    expect(result).toEqual({ error: 'Insufficient currency' });
+    expect(result).toEqual({ error: PlacementErrorCode.INSUFFICIENT_CURRENCY });
   });
 
   test('rejects placement on occupied cell', () => {
-    const initial = createInitialState();
+    const initial = createState();
     const firstPlacement = placeTower(initial, [1, 1], TowerArchetype.RAPID);
 
     expect('error' in firstPlacement).toBe(false);
@@ -49,6 +49,6 @@ describe('placeTower', () => {
 
     const secondPlacement = placeTower(firstPlacement, [1, 1], TowerArchetype.RAPID);
 
-    expect(secondPlacement).toEqual({ error: 'Cell already occupied' });
+    expect(secondPlacement).toEqual({ error: PlacementErrorCode.OCCUPIED });
   });
 });

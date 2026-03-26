@@ -57,4 +57,14 @@ describe('calculateScore', () => {
 
     expect(score).toBe(7 * 12 + 3 * 100 + 220);
   });
+
+  test('wave 0 state does not produce NaN score', () => {
+    const score = calculateScore({
+      ...createInitialState(),
+      phase: 'GAME_OVER',
+      wave: 0
+    });
+
+    expect(Number.isNaN(score)).toBe(false);
+  });
 });

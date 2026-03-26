@@ -124,6 +124,19 @@ describe('composeFrame', () => {
     expect(frame).toContain('◌');
   });
 
+  test('renders PATH range preview marker in PREP when cursor is buildable', () => {
+    const state = {
+      ...createInitialState(),
+      phase: 'PREP' as const,
+      cursor: [1, 0] as [number, number],
+      selectedTowerArchetype: TowerArchetype.RAPID
+    };
+    const frame = stripAnsi(composeFrame(state));
+    const gridLines = getGridLines(frame);
+
+    expect(getCellSymbol(gridLines[2], 1)).toBe('•');
+  });
+
   test('renders range ring ◌ in WAVE_CLEAR when cursor on BUILDABLE', () => {
     const state = {
       ...createInitialState(),
@@ -146,6 +159,7 @@ describe('composeFrame', () => {
     const frame = stripAnsi(composeFrame(state));
 
     expect(frame).not.toContain('◌');
+    expect(frame).not.toContain('•');
   });
 
   test('does not render range ring when cursor is on PATH cell', () => {

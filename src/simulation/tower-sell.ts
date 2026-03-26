@@ -1,16 +1,12 @@
 import { getTowerDef } from '../const/towers';
-import type { GameState } from '../models/game-state';
-
-interface SellError {
-  error: string;
-}
+import { isPlacementPhase, type GameState } from '../models/game-state';
+import type { OperationError } from '../models/operation-error';
 
 export const sellTower = (
   state: GameState,
   pos: [number, number]
-): GameState | SellError => {
-  const placementPhase = state.phase === 'PREP' || state.phase === 'WAVE_CLEAR';
-  if (!placementPhase) {
+): GameState | OperationError => {
+  if (!isPlacementPhase(state.phase)) {
     return { error: 'Cannot sell outside of placement phase' };
   }
 

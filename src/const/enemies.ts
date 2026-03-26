@@ -4,7 +4,7 @@ export enum EnemyArchetype {
   FAST = 'FAST'
 }
 
-interface EnemyDef {
+export interface EnemyDef {
   symbol: string;
   maxHp: number;
   speed: number;

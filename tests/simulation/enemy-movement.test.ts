@@ -119,4 +119,12 @@ describe('advanceEnemies', () => {
     expect(advanced.enemies[0].pos).toEqual(ENEMY_PATH[3]);
     expect(advanced.baseHp).toBe(state.baseHp);
   });
+
+  test('returns unchanged state when there are no enemies', () => {
+    const state = createInitialState();
+
+    const result = advanceEnemies(state);
+
+    expect(result).toEqual(state);
+  });
 });
