@@ -23,6 +23,8 @@ import { sellTower } from './simulation/tower-sell';
 
 const toPlacementFailureMessage = (code: PlacementErrorCode): string => {
   switch (code) {
+    case PlacementErrorCode.OBSTACLE:
+      return `${EVENT_PREFIX.ERROR} Cannot place tower: blocked by obstacle`;
     case PlacementErrorCode.NOT_BUILDABLE:
       return `${EVENT_PREFIX.ERROR} Cannot place tower: not buildable`;
     case PlacementErrorCode.OCCUPIED:

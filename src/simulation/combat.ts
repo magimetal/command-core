@@ -3,6 +3,7 @@ import { getEnemyDisplayName } from '../const/enemies';
 import { getTowerDef } from '../const/towers';
 import type { Enemy } from '../models/enemy';
 import type { GameState } from '../models/game-state';
+import { CellType } from '../models/cell';
 import type { Projectile } from '../models/projectile';
 import { renderHpBar } from '../rendering/hp-bar';
 import { appendEventLog } from '../utils/event-log';
@@ -14,10 +15,62 @@ const distanceSquared = (a: [number, number], b: [number, number]): number => {
   return dx * dx + dy * dy;
 };
 
+const hasLineOfSight = (
+  grid: GameState['grid'],
+  from: [number, number],
+  to: [number, number]
+): boolean => {
+  const [fromCol, fromRow] = from;
+  const [toCol, toRow] = to;
+
+  const dx = Math.abs(toCol - fromCol);
+  const dy = Math.abs(toRow - fromRow);
+  const sx = fromCol < toCol ? 1 : -1;
+  const sy = fromRow < toRow ? 1 : -1;
+
+  let err = dx - dy;
+  let col = fromCol;
+  let row = fromRow;
+
+  while (true) {
+    const isStart = col === fromCol && row === fromRow;
+    const isEnd = col === toCol && row === toRow;
+
+    if (!isStart && !isEnd) {
+      if (row < 0 || row >= grid.length || col < 0 || col >= grid[row].length) {
+        return true;
+      }
+
+      if (grid[row][col].type === CellType.BLOCKED) {
+        return false;
+      }
+    }
+
+    if (isEnd) {
+      break;
+    }
+
+    const e2 = err * 2;
+
+    if (e2 > -dy) {
+      err -= dy;
+      col += sx;
+    }
+
+    if (e2 < dx) {
+      err += dx;
+      row += sy;
+    }
+  }
+
+  return true;
+};
+
 const getNearestEnemyInRange = (
   enemies: Enemy[],
   towerPos: [number, number],
-  range: number
+  range: number,
+  grid: GameState['grid']
 ): Enemy | undefined => {
   const rangeSquared = range * range;
 
@@ -25,6 +78,7 @@ const getNearestEnemyInRange = (
     .filter((enemy) => !enemy.dead)
     .map((enemy) => ({ enemy, distance: distanceSquared(enemy.pos, towerPos) }))
     .filter((entry) => entry.distance <= rangeSquared)
+    .filter((entry) => hasLineOfSight(grid, towerPos, entry.enemy.pos))
     .sort((a, b) => a.distance - b.distance || a.enemy.id.localeCompare(b.enemy.id))[0]?.enemy;
 };
 
@@ -62,7 +116,8 @@ export const resolveCombat = (state: GameState): GameState => {
       const target = getNearestEnemyInRange(
         Array.from(accumulator.enemiesById.values()),
         tower.pos,
-        towerDef.range
+        towerDef.range,
+        state.grid
       );
 
       if (target === undefined) {

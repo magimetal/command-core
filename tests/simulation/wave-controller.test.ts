@@ -4,7 +4,7 @@ import { createInitialState } from '../../src/simulation/create-initial-state';
 import { startWave } from '../../src/simulation/start-wave';
 import { tick } from '../../src/simulation/tick';
 import { advanceWave } from '../../src/simulation/wave-controller';
-import { createEnemy } from '../helpers/builders';
+import { createEnemy, createState } from '../helpers/builders';
 
 describe('wave controller', () => {
   test('in PREP phase, advanceWave returns unchanged state', () => {
@@ -86,6 +86,57 @@ describe('wave controller', () => {
 
     expect(result.phase).toBe('WAVE_ACTIVE');
     expect(result.spawnQueue.length).toBe(expectedQueueSize);
+  });
+
+  test('startWave interleaves archetypes from multi-group wave', () => {
+    const baseState = createInitialState();
+    const state = createState({
+      phase: 'PREP',
+      wave: 1,
+      runConfig: {
+        ...baseState.runConfig,
+        waves: [
+          {
+            enemies: [
+              { archetype: EnemyArchetype.STANDARD, count: 3, spawnIntervalTicks: 10 },
+              { archetype: EnemyArchetype.FAST, count: 3, spawnIntervalTicks: 5 }
+            ]
+          }
+        ]
+      }
+    });
+
+    const result = startWave(state);
+
+    expect(result.spawnQueue).toHaveLength(6);
+    expect(result.spawnQueue.map((entry) => entry.archetype)).toEqual([
+      EnemyArchetype.STANDARD,
+      EnemyArchetype.FAST,
+      EnemyArchetype.STANDARD,
+      EnemyArchetype.FAST,
+      EnemyArchetype.STANDARD,
+      EnemyArchetype.FAST
+    ]);
+    expect(result.spawnQueue.map((entry) => entry.spawnIntervalTicks)).toEqual([10, 5, 10, 5, 10, 5]);
+  });
+
+  test('startWave total queue count is unchanged after interleaving', () => {
+    const baseState = createInitialState();
+
+    for (const waveIndex of [0, 4]) {
+      const state = {
+        ...baseState,
+        phase: 'PREP' as const,
+        wave: waveIndex + 1
+      };
+      const result = startWave(state);
+      const expectedQueueSize = baseState.runConfig.waves[waveIndex].enemies.reduce(
+        (sum, group) => sum + group.count,
+        0
+      );
+
+      expect(result.spawnQueue.length).toBe(expectedQueueSize);
+    }
   });
 
   test('multiple leaks in one tick reduce base HP cumulatively', () => {

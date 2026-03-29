@@ -119,7 +119,7 @@ describe('threat radar hud', () => {
     };
     const line = stripAnsi(composeHud(state)).split('\n')[1];
 
-    expect(line).toContain('≋ WAVE 1/5');
+    expect(line).toContain('≋ WAVE 1/15');
     expect(line).toContain('████████░░ 6/8');
     expect(line).toContain('✕ 5 KILLED');
     expect(line).toContain('! 2 LEAKED');
@@ -178,7 +178,7 @@ describe('threat radar hud', () => {
     const state = { ...createInitialState(), phase: 'PREP' as const };
     const line = stripAnsi(composeHud(state)).split('\n')[1];
 
-    expect(line).toContain('≋ WAVE 1/5');
+    expect(line).toContain('≋ WAVE 1/15');
     expect(line).toContain('Incoming:');
     expect(line).toContain('◀ Standard');
   });
@@ -237,7 +237,7 @@ describe('threat radar hud', () => {
     const state = { ...createInitialState(), phase: 'PREP' as const, selectedTowerArchetype: TowerArchetype.RAPID };
     const line = stripAnsi(composeHud(state)).split('\n')[4];
 
-    expect(line).toContain('Rapid $50 Dmg 1 Rng 3');
+    expect(line).toContain('Rapid $60 Dmg 1 Rng 3');
     expect(line).toContain('Cannon $100');
     expect(line).not.toContain('Cannon $100 Dmg');
   });

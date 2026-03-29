@@ -46,8 +46,9 @@ export const InputHandler = ({
     }
 
     if (isMenuPhase(phase)) {
-      if (input === '1' || input === '2' || input === '3' || input === '4') {
-        onMenuDirectSelect(Number(input) - 1);
+      if (/^[1-9]$/.test(input) || input === '0') {
+        const directIndex = input === '0' ? 9 : Number(input) - 1;
+        onMenuDirectSelect(directIndex);
         return;
       }
 

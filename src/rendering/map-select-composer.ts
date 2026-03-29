@@ -7,8 +7,16 @@ import { getDisplayWidth, truncateDisplay } from './text-utils';
 
 export const composeMapSelectFrame = (state: GameState, maxInnerWidth?: number): string => {
   const difficultyTags: Record<string, string> = {
-    'map-01': '[★ Beginner]',
-    'map-02': '[★★ Intermediate]'
+    'map-01': '[★★ Intermediate]',
+    'map-02': '[★★ Intermediate]',
+    'map-03': '[★★ Intermediate]',
+    'map-04': '[★★ Intermediate]',
+    'map-05': '[★★★ Advanced]',
+    'map-06': '[★★★ Advanced]',
+    'map-07': '[★★★ Advanced]',
+    'map-08': '[★★★ Advanced]',
+    'map-09': '[★★★★ Expert]',
+    'map-10': '[★★★★ Expert]'
   };
 
   const mapLines = OPERATIONS_MAP_DEFS.map((mapDef, index) => {

@@ -7,6 +7,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Unreleased]
 
 ### Added
+- Operations content expansion for long-form runs:
+  - added eight new Operations maps (Perimeter, Zigzag, The Coil, Reverse Run, Labyrinth, The Crucible, Blitz, Ouroboros) for a total of 10 map options
+  - added map obstacle stamping support (`CellType.BLOCKED`) so each map can define non-buildable obstacle pockets without mutating path/spawn/base cells
+- Enemy roster expansion with new late-wave archetypes:
+  - added **BRUTE** (`◈`) and **COLOSSUS** (`⬠`) enemy definitions with higher HP/leak pressure profiles for extended-wave scaling
 - Design context persistence for future sessions:
   - new `.impeccable.md` baseline for users, brand personality, aesthetic direction, and design principles
   - mirrored `## Design Context` section in `AGENTS.md` for agent-wide consistency
@@ -22,6 +27,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - New end-state restart control (`R`) with input coverage for `GAME_OVER` and `VICTORY`.
 
 ### Changed
+- Operations progression now uses map-specific extended wave tables:
+  - moved Gauntlet wave definitions into shared `waves.ts`
+  - expanded Crossroads and Gauntlet to 15-wave progression
+  - added dedicated wave definitions for all newly introduced Operations maps
+- Economy balance pass: increased RAPID tower cost from 50 to 60 and reduced FAST enemy reward from 6 to 4 to reduce mid/late-game snowball.
+- Updated map/path geometry for Crossroads and The Gauntlet and refreshed map-select descriptions to match new route identities.
+- Placement validation now surfaces obstacle-specific placement failures (`blocked by obstacle`) in app event messaging.
 - Hardened frame rendering against real-world terminal inputs:
   - frame composition now accepts terminal column limits and gracefully falls back with a guidance frame when panes are too narrow
   - title bar map identity now truncates safely to prevent overflow from long labels/seeds
@@ -48,6 +60,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Updated internal agent docs (`AGENTS.md`, `src/AGENTS.md`, `src/const/AGENTS.md`) to point to shared rendering utilities and new constant modules.
 
 ### Tested
+- Added new focused test suites:
+  - `tests/simulation/combat.los.test.ts` for projectile/combat line-of-sight behavior
+  - `tests/rendering/text-utils.test.ts` for grapheme/display-width helpers
+- Expanded simulation/rendering/input coverage for map expansion and obstacle behavior:
+  - updated map definition and wave-controller tests for the 10-map Operations roster and extended wave progression
+  - updated placement/economy/input/frame/hud test assertions to cover obstacle placement failures and revised balance values
 - Added coverage for end-state rerun input (`R`) and sell-error mapping in app flow.
 - Expanded rendering assertions for title/mode/map/end-state framing behavior under width and row constraints.
 - Added focused HUD and frame coverage for threat-radar lines, fixed two-entry gameplay event log rendering, and line-width/height guardrails.

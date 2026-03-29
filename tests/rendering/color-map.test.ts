@@ -12,6 +12,8 @@ describe('color-map text metrics hardening', () => {
     expect(getDisplayWidth('◀')).toBe(1);
     expect(getDisplayWidth('▷')).toBe(1);
     expect(getDisplayWidth('⬟')).toBe(1);
+    expect(getDisplayWidth('◈')).toBe(1);
+    expect(getDisplayWidth('⬠')).toBe(1);
   });
 
   test('truncates by visible display width with ellipsis', () => {

@@ -1,7 +1,9 @@
 export enum EnemyArchetype {
   STANDARD = 'STANDARD',
   TANK = 'TANK',
-  FAST = 'FAST'
+  FAST = 'FAST',
+  BRUTE = 'BRUTE',
+  COLOSSUS = 'COLOSSUS'
 }
 
 export interface EnemyDef {
@@ -35,8 +37,24 @@ export const ENEMY_DEFS: Record<EnemyArchetype, EnemyDef> = {
     symbol: '▷',
     maxHp: 5,
     speed: 1,
-    reward: 15,
+    reward: 4,
     leakDamage: 2
+  },
+  [EnemyArchetype.BRUTE]: {
+    displayName: 'Brute',
+    symbol: '◈',
+    maxHp: 80,
+    speed: 5,
+    reward: 28,
+    leakDamage: 5
+  },
+  [EnemyArchetype.COLOSSUS]: {
+    displayName: 'Colossus',
+    symbol: '⬠',
+    maxHp: 150,
+    speed: 7,
+    reward: 40,
+    leakDamage: 8
   }
 };
 

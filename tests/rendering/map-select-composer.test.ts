@@ -15,8 +15,17 @@ describe('composeMapSelectFrame', () => {
 
     expect(frame).toContain('[1] Crossroads');
     expect(frame).toContain('[2] The Gauntlet');
-    expect(frame).toContain('[★ Beginner]');
+    expect(frame).toContain('[3] Perimeter');
+    expect(frame).toContain('[4] Zigzag');
+    expect(frame).toContain('[5] The Coil');
+    expect(frame).toContain('[6] Reverse Run');
+    expect(frame).toContain('[7] Labyrinth');
+    expect(frame).toContain('[8] The Crucible');
+    expect(frame).toContain('[9] Blitz');
+    expect(frame).toContain('[10] Ouroboros');
     expect(frame).toContain('[★★ Intermediate]');
+    expect(frame).toContain('[★★★ Advanced]');
+    expect(frame).toContain('[★★★★ Expert]');
     expect(frame).toContain('↑↓ Select   Enter: Confirm   Esc/B: Back');
 
     const lines = frame.split('\n');

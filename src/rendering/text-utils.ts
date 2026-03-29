@@ -90,7 +90,7 @@ export const truncateDisplay = (value: string, maxWidth: number): string => {
   const plain = stripAnsi(value);
   const plainWidth = getDisplayWidth(plain);
   if (plainWidth <= maxWidth) {
-    return plain;
+    return value;
   }
 
   if (maxWidth === 1) {

@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+import { createOperationsRunConfig, OPERATIONS_MAP_DEFS } from '../../src/const/operations-maps';
 import { EnemyArchetype } from '../../src/const/enemies';
 import { TowerArchetype } from '../../src/const/towers';
 import { colorizeGridSymbol, stripAnsi } from '../../src/rendering/color-map';
@@ -48,7 +49,7 @@ describe('composeFrame', () => {
     expect(frame).toContain('COMMAND CORE');
     expect(frame).toContain('Any key: Choose mode');
     expect(frame).toContain('Q: Quit');
-    expect(frame).toContain('▄▄▄█████▓▓█████  ██▀███');
+    expect(frame).toContain('██████  ██████  ██████  ███████');
   });
 
   test('title scanline animation changes output between frame 0 and frame 3', () => {
@@ -88,8 +89,27 @@ describe('composeFrame', () => {
     const frame = stripAnsi(composeFrame(createInitialState()));
 
     expect(frame).toContain('╔══════════════════════════════════════════╗');
-    expect(frame).toContain('▄▄▄█████▓▓█████  ██▀███');
-    expect(frame).toContain('╚══════════════ COMMAND CORE ═══════════════╝');
+    expect(frame).toContain('██████  ██████  ██████  ███████');
+    expect(frame).toContain('╚══════════════ COMMAND CORE ══════════════╝');
+  });
+
+  test('title logo left border stays vertically aligned from top to bottom', () => {
+    const frame = stripAnsi(composeFrame(createInitialState()));
+    const lines = frame.split('\n');
+    const innerLines = lines.slice(1, -1).map((line) => line.slice(1, -1));
+    const logoLines = innerLines.filter((line) => {
+      return line.includes('╔') || line.includes('║') || line.includes('╚');
+    });
+
+    const firstBorderColumns = logoLines.map((line) => {
+      const top = line.indexOf('╔');
+      const middle = line.indexOf('║');
+      const bottom = line.indexOf('╚');
+
+      return Math.max(top, middle, bottom);
+    });
+
+    expect(new Set(firstBorderColumns).size).toBe(1);
   });
 
   test('title screen uses full frame width budget and keeps title art visible', () => {
@@ -115,12 +135,12 @@ describe('composeFrame', () => {
     expect(frame).toContain('┌');
     expect(frame).toContain('[OPERATIONS]');
     expect(frame).toContain('Crossroads');
-    expect(frame).toContain('Wave 1/5  [PREP]');
+    expect(frame).toContain('Wave 1/15  [PREP]');
     expect(frame).toContain('❤ HP');
     expect(frame).toContain('✦ GOLD $120');
-    expect(frame).toContain('≋ WAVE 1/5');
+    expect(frame).toContain('≋ WAVE 1/15');
     expect(frame).toContain('Incoming: 7× ◀ Standard');
-    expect(frame).toContain('Rapid $50');
+    expect(frame).toContain('Rapid $60');
     expect(frame).toContain('Cannon $100');
     expect(frame).toContain('Sniper $150');
     expect(frame).toContain('[4]⊗');
@@ -132,7 +152,7 @@ describe('composeFrame', () => {
     expect(frame).toContain('· No events yet');
   });
 
-  test('renders new 7-segment path in grid', () => {
+  test('renders crossroads path with multi-crossing lane geometry', () => {
     const state = {
       ...createInitialState(),
       phase: 'WAVE_ACTIVE' as const
@@ -141,16 +161,36 @@ describe('composeFrame', () => {
     const gridLines = getGridLines(frame);
 
     expect(getCellSymbol(gridLines[2], 0)).toBe('⟹');
-    expect(getCellSymbol(gridLines[2], 24)).toBe('┐');
-    expect(getCellSymbol(gridLines[3], 24)).toBe('│');
+    expect(getCellSymbol(gridLines[2], 24)).toBe('┬');
     expect(getCellSymbol(gridLines[13], 24)).toBe('┘');
     expect(getCellSymbol(gridLines[13], 4)).toBe('└');
     expect(getCellSymbol(gridLines[5], 4)).toBe('┌');
-    expect(getCellSymbol(gridLines[5], 13)).toBe('┐');
-    expect(getCellSymbol(gridLines[10], 13)).toBe('└');
+    expect(getCellSymbol(gridLines[5], 18)).toBe('┐');
+    expect(getCellSymbol(gridLines[10], 18)).toBe('┘');
+    expect(getCellSymbol(gridLines[10], 8)).toBe('└');
+    expect(getCellSymbol(gridLines[2], 8)).toBe('┬');
+    expect(getCellSymbol(gridLines[2], 30)).toBe('┐');
+    expect(getCellSymbol(gridLines[10], 30)).toBe('└');
+    expect(getCellSymbol(gridLines[13], 24)).toBe('┘');
     expect(getCellSymbol(gridLines[10], 33)).toBe('⬡');
     expect(getCellSymbol(gridLines[0], 1)).toBe('░');
     expect(getCellSymbol(gridLines[7], 1)).toBe('░');
+  });
+
+  test('renders BLOCKED obstacle glyph on grid for map with obstacles', () => {
+    const map09 = OPERATIONS_MAP_DEFS.find((mapDef) => mapDef.id === 'map-09');
+    expect(map09).toBeDefined();
+
+    const runConfig = createOperationsRunConfig(map09!);
+    const state = {
+      ...createInitialState(runConfig),
+      phase: 'PREP' as const
+    };
+    const frame = stripAnsi(composeFrame(state));
+    const gridLines = getGridLines(frame);
+    const gridContent = gridLines.join('');
+
+    expect(gridContent).toContain('▪');
   });
 
   test('renders range ring ◌ on BUILDABLE cells in PREP when cursor on BUILDABLE', () => {
@@ -399,7 +439,7 @@ describe('composeFrame', () => {
     expect(frame).toContain('All waves cleared. Base secured.');
     expect(frame).toContain('Enemies killed: 18');
     expect(frame).toContain('Gold remaining: 305');
-    expect(frame).toContain('Score: 1021');
+    expect(frame).toContain('Score: 2021');
     expect(frame).toContain('R: New Run');
     expect(frame).toContain('Q: Quit');
     expect(frame).toContain('┌');

@@ -16,7 +16,9 @@ const CELL_SYMBOLS: Record<CellType, string> = {
 const ENEMY_CLASS_MAP: Record<EnemyArchetype, GridEntityClass> = {
   [EnemyArchetype.STANDARD]: 'STANDARD_ENEMY',
   [EnemyArchetype.TANK]: 'TANK_ENEMY',
-  [EnemyArchetype.FAST]: 'FAST_ENEMY'
+  [EnemyArchetype.FAST]: 'FAST_ENEMY',
+  [EnemyArchetype.BRUTE]: 'BRUTE_ENEMY',
+  [EnemyArchetype.COLOSSUS]: 'COLOSSUS_ENEMY'
 };
 
 const TOWER_CLASS_MAP: Record<TowerArchetype, GridEntityClass> = {

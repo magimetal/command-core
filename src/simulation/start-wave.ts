@@ -14,12 +14,31 @@ export const startWave = (state: GameState): GameState => {
     };
   }
 
-  const spawnQueue = waveDefinition.enemies.flatMap((group) =>
+  const groupSlots = waveDefinition.enemies.map((group) =>
     Array.from({ length: group.count }, () => ({
       archetype: group.archetype,
       spawnIntervalTicks: group.spawnIntervalTicks
     }))
   );
+
+  const spawnQueue: GameState['spawnQueue'] = [];
+  let groupIndex = 0;
+
+  while (groupSlots.some((slots) => slots.length > 0)) {
+    const slots = groupSlots[groupIndex % groupSlots.length];
+
+    if (slots.length > 0) {
+      const [entry, ...rest] = slots;
+
+      if (entry !== undefined) {
+        spawnQueue.push(entry);
+      }
+
+      groupSlots[groupIndex % groupSlots.length] = rest;
+    }
+
+    groupIndex += 1;
+  }
 
   return {
     ...state,

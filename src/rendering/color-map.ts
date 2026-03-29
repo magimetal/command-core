@@ -19,6 +19,8 @@ export type GridEntityClass =
   | 'STANDARD_ENEMY'
   | 'TANK_ENEMY'
   | 'FAST_ENEMY'
+  | 'BRUTE_ENEMY'
+  | 'COLOSSUS_ENEMY'
   | 'CURSOR';
 
 type HudValueClass = 'HP' | 'GOLD' | 'WAVE' | 'PHASE';
@@ -116,6 +118,34 @@ export const colorizeGridSymbol = (
     }
 
     return chalk.bold.yellowBright(symbol);
+  }
+
+  if (entityClass === 'BRUTE_ENEMY') {
+    if (hpRatio !== undefined) {
+      if (hpRatio < 0.33) {
+        return chalk.bold.redBright(symbol);
+      }
+
+      if (hpRatio <= 0.66) {
+        return chalk.dim.red(symbol);
+      }
+    }
+
+    return chalk.bold.red(symbol);
+  }
+
+  if (entityClass === 'COLOSSUS_ENEMY') {
+    if (hpRatio !== undefined) {
+      if (hpRatio < 0.33) {
+        return chalk.bold.red(symbol);
+      }
+
+      if (hpRatio <= 0.66) {
+        return chalk.dim.white(symbol);
+      }
+    }
+
+    return chalk.bold.white(symbol);
   }
 
   return chalk.bgYellow.black.bold(symbol);

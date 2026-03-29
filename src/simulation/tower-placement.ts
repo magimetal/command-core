@@ -6,6 +6,7 @@ import type { Tower } from '../models/tower';
 
 export enum PlacementErrorCode {
   OUT_OF_BOUNDS = 'OUT_OF_BOUNDS',
+  OBSTACLE = 'OBSTACLE',
   NOT_BUILDABLE = 'NOT_BUILDABLE',
   OCCUPIED = 'OCCUPIED',
   INSUFFICIENT_CURRENCY = 'INSUFFICIENT_CURRENCY'
@@ -28,6 +29,10 @@ export const placeTower = (
 
   const [col, row] = pos;
   const cell = state.grid[row][col];
+
+  if (cell.type === CellType.BLOCKED) {
+    return { error: PlacementErrorCode.OBSTACLE };
+  }
 
   if (cell.type !== CellType.BUILDABLE) {
     return { error: PlacementErrorCode.NOT_BUILDABLE };

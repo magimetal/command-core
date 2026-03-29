@@ -138,6 +138,23 @@ describe('InputHandler title gating', () => {
     expect(onSelectTower).not.toHaveBeenCalled();
   });
 
+  test('in menu phase, key 0 routes to map index 9', () => {
+    const onMenuDirectSelect = vi.fn();
+    const onSelectTower = vi.fn();
+    const handler = renderAndGetHandler(
+      defaultInputProps({
+        phase: 'MAP_SELECT',
+        onMenuDirectSelect,
+        onSelectTower
+      })
+    );
+
+    handler('0', {});
+
+    expect(onMenuDirectSelect).toHaveBeenCalledWith(9);
+    expect(onSelectTower).not.toHaveBeenCalled();
+  });
+
   test('ignores unavailable numeric tower key when only three towers are available', () => {
     const onSelectTower = vi.fn();
     const handler = renderAndGetHandler(

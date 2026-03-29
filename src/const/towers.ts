@@ -22,7 +22,7 @@ export const TOWER_DEFS: Record<TowerArchetype, TowerDef> = {
     damage: 1,
     range: 3,
     cooldownTicks: 2,
-    cost: 50,
+    cost: 60,
     slowDurationTicks: 0
   },
   [TowerArchetype.CANNON]: {
