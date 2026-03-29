@@ -1,0 +1,170 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Ink ceremony screens > GameOverScreen snapshots at 78 and 64 columns with content parity > game-over-64 1`] = `
+"╭────────────────────────────────────────────────────────────╮
+│ ╔═╗╔═╗╔╦╗╔═╗   ╔═╗╦  ╦╔═╗╦═╗                               │
+│ ║ ╦╠═╣║║║║╣    ║ ║╚╗╔╝║╣ ╠╦╝                               │
+│ ╚═╝╩ ╩╩ ╩╚═╝   ╚═╝ ╚╝ ╚═╝╩╚═                               │
+│ ────────────────────────────────────────────────────       │
+│ Base destroyed. Mission failed.                            │
+│ Operations · Crossroads                                    │
+│ Enemies killed: 7  Gold remaining: 220                     │
+│ Score: 304                                                 │
+│ ────────────────────────────────────────────────────       │
+│ R: New Run   Q: Quit ▌                                     │
+╰────────────────────────────────────────────────────────────╯"
+`;
+
+exports[`Ink ceremony screens > GameOverScreen snapshots at 78 and 64 columns with content parity > game-over-78 1`] = `
+"╭──────────────────────────────────────────────────────────────────────────╮
+│ ╔═╗╔═╗╔╦╗╔═╗   ╔═╗╦  ╦╔═╗╦═╗                                             │
+│ ║ ╦╠═╣║║║║╣    ║ ║╚╗╔╝║╣ ╠╦╝                                             │
+│ ╚═╝╩ ╩╩ ╩╚═╝   ╚═╝ ╚╝ ╚═╝╩╚═                                             │
+│ ────────────────────────────────────────────────────                     │
+│ Base destroyed. Mission failed.                                          │
+│ Operations · Crossroads                                                  │
+│ Enemies killed: 7  Gold remaining: 220                                   │
+│ Score: 304                                                               │
+│ ────────────────────────────────────────────────────                     │
+│ R: New Run   Q: Quit ▌                                                   │
+╰──────────────────────────────────────────────────────────────────────────╯"
+`;
+
+exports[`Ink ceremony screens > MapSelectScreen snapshots at 78 and 64 columns with content parity > map-select-64 1`] = `
+"╭──────────────────────────────────────────────────────────────╮
+│ OPERATIONS MAP SELECT                                        │
+│ Choose a battlefield                                         │
+│ ────────────────────────────────────────────────────         │
+│ ▶ [1] Crossroads  Triple crossing lanes …  [★★ Intermediate] │
+│   [2] The Gauntlet  Extended Z-lane with…  [★★ Intermediate] │
+│   [3] Perimeter  Perimeter sweep with an…  [★★ Intermediate] │
+│   [4] Zigzag  Long W-chain with extra te…  [★★ Intermediate] │
+│   [5] The Coil  Double-loop coil crossing t…  [★★★ Advanced] │
+│   [6] Reverse Run  Reverse entry detour tha…  [★★★ Advanced] │
+│   [7] Labyrinth  High-turn labyrinth with l…  [★★★ Advanced] │
+│   [8] The Crucible  Open-center hairpin rou…  [★★★ Advanced] │
+│   [9] Blitz  Straight sprint lane split by d…  [★★★★ Expert] │
+│   [10] Ouroboros  Figure-eight loop with a c…  [★★★★ Expert] │
+│ ────────────────────────────────────────────────────         │
+│ ↑↓ Select   Enter: Confirm   Esc/B: Back                     │
+╰──────────────────────────────────────────────────────────────╯"
+`;
+
+exports[`Ink ceremony screens > MapSelectScreen snapshots at 78 and 64 columns with content parity > map-select-78 1`] = `
+"╭──────────────────────────────────────────────────────────────────────────╮
+│ OPERATIONS MAP SELECT                                                    │
+│ Choose a battlefield                                                     │
+│ ────────────────────────────────────────────────────                     │
+│ ▶ [1] Crossroads  Triple crossing lanes split upper …  [★★ Intermediate] │
+│   [2] The Gauntlet  Extended Z-lane with alternating…  [★★ Intermediate] │
+│   [3] Perimeter  Perimeter sweep with an inward cros…  [★★ Intermediate] │
+│   [4] Zigzag  Long W-chain with extra teeth and pivo…  [★★ Intermediate] │
+│   [5] The Coil  Double-loop coil crossing through a nar…  [★★★ Advanced] │
+│   [6] Reverse Run  Reverse entry detour that crosses it…  [★★★ Advanced] │
+│   [7] Labyrinth  High-turn labyrinth with limited build…  [★★★ Advanced] │
+│   [8] The Crucible  Open-center hairpin route with obst…  [★★★ Advanced] │
+│   [9] Blitz  Straight sprint lane split by dense obstacl…  [★★★★ Expert] │
+│   [10] Ouroboros  Figure-eight loop with a contested cen…  [★★★★ Expert] │
+│ ────────────────────────────────────────────────────                     │
+│ ↑↓ Select   Enter: Confirm   Esc/B: Back                                 │
+╰──────────────────────────────────────────────────────────────────────────╯"
+`;
+
+exports[`Ink ceremony screens > ModeSelectScreen snapshots at 78 and 64 columns with content parity > mode-select-64 1`] = `
+"╭────────────────────────────────────────────────────────────╮
+│ COMMAND CORE                                               │
+│ Choose a run type                                          │
+│ Newcomer? Start with OPERATIONS · Veteran? Try ANOMALY for │
+│  chaos                                                     │
+│ ────────────────────────────────────────────────────       │
+│ ▶ [1] OPERATIONS  Hand-crafted maps with fixed waves       │
+│   [2] ANOMALY  Procedural map and randomized waves         │
+│ ────────────────────────────────────────────────────       │
+│ ↑↓ Navigate   Enter: Confirm   Q: Quit                     │
+╰────────────────────────────────────────────────────────────╯"
+`;
+
+exports[`Ink ceremony screens > ModeSelectScreen snapshots at 78 and 64 columns with content parity > mode-select-78 1`] = `
+"╭──────────────────────────────────────────────────────────────────────────╮
+│ COMMAND CORE                                                             │
+│ Choose a run type                                                        │
+│ Newcomer? Start with OPERATIONS · Veteran? Try ANOMALY for chaos         │
+│ ────────────────────────────────────────────────────                     │
+│ ▶ [1] OPERATIONS  Hand-crafted maps with fixed waves                     │
+│   [2] ANOMALY  Procedural map and randomized waves                       │
+│ ────────────────────────────────────────────────────                     │
+│ ↑↓ Navigate   Enter: Confirm   Q: Quit                                   │
+╰──────────────────────────────────────────────────────────────────────────╯"
+`;
+
+exports[`Ink ceremony screens > TitleScreen snapshots at 78 and 64 columns with content parity > title-64 1`] = `
+"╭────────────────────────────────────────────────────────────╮
+│ ╔══════════════════════════════════════════╗               │
+│                                                            │
+│                                                            │
+│                                                            │
+│                                                            │
+│                                                            │
+│                                                            │
+│                                                            │
+│                                                            │
+│                                                            │
+│ ────────────────────────────────────────────────────       │
+│ :: COMMAND CORE ONLINE ::                                  │
+│ Defend the base through escalating waves                   │
+│ Any key: Choose mode                                       │
+│ ────────────────────────────────────────────────────       │
+│ Q: Quit                                                    │
+╰────────────────────────────────────────────────────────────╯"
+`;
+
+exports[`Ink ceremony screens > TitleScreen snapshots at 78 and 64 columns with content parity > title-78 1`] = `
+"╭──────────────────────────────────────────────────────────────────────────╮
+│ ╔══════════════════════════════════════════╗                             │
+│                                                                          │
+│                                                                          │
+│                                                                          │
+│                                                                          │
+│                                                                          │
+│                                                                          │
+│                                                                          │
+│                                                                          │
+│                                                                          │
+│ ────────────────────────────────────────────────────                     │
+│ :: COMMAND CORE ONLINE ::                                                │
+│ Defend the base through escalating waves                                 │
+│ Any key: Choose mode                                                     │
+│ ────────────────────────────────────────────────────                     │
+│ Q: Quit                                                                  │
+╰──────────────────────────────────────────────────────────────────────────╯"
+`;
+
+exports[`Ink ceremony screens > VictoryScreen snapshots at 78 and 64 columns with content parity > victory-64 1`] = `
+"╭────────────────────────────────────────────────────────────╮
+│ ╦  ╦╦╔═╗╔╦╗╔═╗╦═╗╦ ╦                                       │
+│ ╚╗╔╝║║   ║ ║ ║╠╦╝╚╦╝                                       │
+│  ╚╝ ╩╚═╝ ╩ ╚═╝╩╚═ ╩                                        │
+│ ────────────────────────────────────────────────────       │
+│ All waves cleared. Base secured.                           │
+│ Operations · Crossroads                                    │
+│ Enemies killed: 18  Gold remaining: 305                    │
+│ Score: 2021                                                │
+│ ────────────────────────────────────────────────────       │
+│ R: New Run   Q: Quit ▌                                     │
+╰────────────────────────────────────────────────────────────╯"
+`;
+
+exports[`Ink ceremony screens > VictoryScreen snapshots at 78 and 64 columns with content parity > victory-78 1`] = `
+"╭──────────────────────────────────────────────────────────────────────────╮
+│ ╦  ╦╦╔═╗╔╦╗╔═╗╦═╗╦ ╦                                                     │
+│ ╚╗╔╝║║   ║ ║ ║╠╦╝╚╦╝                                                     │
+│  ╚╝ ╩╚═╝ ╩ ╚═╝╩╚═ ╩                                                      │
+│ ────────────────────────────────────────────────────                     │
+│ All waves cleared. Base secured.                                         │
+│ Operations · Crossroads                                                  │
+│ Enemies killed: 18  Gold remaining: 305                                  │
+│ Score: 2021                                                              │
+│ ────────────────────────────────────────────────────                     │
+│ R: New Run   Q: Quit ▌                                                   │
+╰──────────────────────────────────────────────────────────────────────────╯"
+`;

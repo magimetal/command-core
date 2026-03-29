@@ -9,11 +9,11 @@ describe('color-map text metrics hardening', () => {
   });
 
   test('treats width-safe enemy glyphs as single-column symbols', () => {
-    expect(getDisplayWidth('S')).toBe(1);
-    expect(getDisplayWidth('F')).toBe(1);
-    expect(getDisplayWidth('T')).toBe(1);
-    expect(getDisplayWidth('B')).toBe(1);
-    expect(getDisplayWidth('C')).toBe(1);
+    expect(getDisplayWidth('▸')).toBe(1);
+    expect(getDisplayWidth('■')).toBe(1);
+    expect(getDisplayWidth('◂')).toBe(1);
+    expect(getDisplayWidth('▲')).toBe(1);
+    expect(getDisplayWidth('◆')).toBe(1);
   });
 
   test('truncates by visible display width with ellipsis', () => {

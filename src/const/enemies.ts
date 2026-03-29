@@ -1,3 +1,5 @@
+import { ENEMY_GLYPH_REGISTRY } from './glyphs';
+
 export enum EnemyArchetype {
   STANDARD = 'STANDARD',
   TANK = 'TANK',
@@ -9,6 +11,7 @@ export enum EnemyArchetype {
 export interface EnemyDef {
   displayName: string;
   symbol: string;
+  symbolFallback: string;
   maxHp: number;
   speed: number;
   reward: number;
@@ -18,7 +21,8 @@ export interface EnemyDef {
 export const ENEMY_DEFS: Record<EnemyArchetype, EnemyDef> = {
   [EnemyArchetype.STANDARD]: {
     displayName: 'Standard',
-    symbol: 'S',
+    symbol: ENEMY_GLYPH_REGISTRY.STANDARD.primary,
+    symbolFallback: ENEMY_GLYPH_REGISTRY.STANDARD.fallback,
     maxHp: 10,
     speed: 2,
     reward: 10,
@@ -26,7 +30,8 @@ export const ENEMY_DEFS: Record<EnemyArchetype, EnemyDef> = {
   },
   [EnemyArchetype.TANK]: {
     displayName: 'Tank',
-    symbol: 'T',
+    symbol: ENEMY_GLYPH_REGISTRY.TANK.primary,
+    symbolFallback: ENEMY_GLYPH_REGISTRY.TANK.fallback,
     maxHp: 40,
     speed: 4,
     reward: 25,
@@ -34,7 +39,8 @@ export const ENEMY_DEFS: Record<EnemyArchetype, EnemyDef> = {
   },
   [EnemyArchetype.FAST]: {
     displayName: 'Fast',
-    symbol: 'F',
+    symbol: ENEMY_GLYPH_REGISTRY.FAST.primary,
+    symbolFallback: ENEMY_GLYPH_REGISTRY.FAST.fallback,
     maxHp: 5,
     speed: 1,
     reward: 4,
@@ -42,7 +48,8 @@ export const ENEMY_DEFS: Record<EnemyArchetype, EnemyDef> = {
   },
   [EnemyArchetype.BRUTE]: {
     displayName: 'Brute',
-    symbol: 'B',
+    symbol: ENEMY_GLYPH_REGISTRY.BRUTE.primary,
+    symbolFallback: ENEMY_GLYPH_REGISTRY.BRUTE.fallback,
     maxHp: 80,
     speed: 5,
     reward: 28,
@@ -50,7 +57,8 @@ export const ENEMY_DEFS: Record<EnemyArchetype, EnemyDef> = {
   },
   [EnemyArchetype.COLOSSUS]: {
     displayName: 'Colossus',
-    symbol: 'C',
+    symbol: ENEMY_GLYPH_REGISTRY.COLOSSUS.primary,
+    symbolFallback: ENEMY_GLYPH_REGISTRY.COLOSSUS.fallback,
     maxHp: 150,
     speed: 7,
     reward: 40,
@@ -60,4 +68,12 @@ export const ENEMY_DEFS: Record<EnemyArchetype, EnemyDef> = {
 
 export const getEnemyDisplayName = (archetype: EnemyArchetype): string => {
   return ENEMY_DEFS[archetype].displayName;
+};
+
+export const getEnemySymbol = (
+  archetype: EnemyArchetype,
+  options: { reducedGlyph?: boolean } = {}
+): string => {
+  const def = ENEMY_DEFS[archetype];
+  return options.reducedGlyph ? def.symbolFallback : def.symbol;
 };

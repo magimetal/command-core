@@ -7,6 +7,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Unreleased]
 
 ### Added
+- Componentized Ink presentation layer:
+  - new `src/components/*` screen/panel modules (`TitleScreen`, `ModeSelectScreen`, `MapSelectScreen`, `GameplayFrame`, `VictoryScreen`, `GameOverScreen`, and supporting HUD/event components)
+  - new component-level render/snapshot coverage under `tests/components/*`
+- Rendering design-token system:
+  - new `src/rendering/design-tokens.ts` with centralized semantic color/styling helpers used by HUD/grid/event rendering
+  - new `tests/rendering/design-tokens.test.ts` and snapshot coverage for token output stability
 - Simulation grid-cell utility module (`src/simulation/grid-cell.ts`) with shared `isInBounds`, `getCellAt`, and `updateCellAt` helpers to centralize coordinate-safe cell reads/writes.
 - Operations content expansion for long-form runs:
   - added eight new Operations maps (Perimeter, Zigzag, The Coil, Reverse Run, Labyrinth, The Crucible, Blitz, Ouroboros) for a total of 10 map options
@@ -28,6 +34,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - New end-state restart control (`R`) with input coverage for `GAME_OVER` and `VICTORY`.
 
 ### Changed
+- Refactored app rendering flow to compose phase views via dedicated Ink components instead of a single prebuilt frame string in `App`.
+- Updated enemy glyph handling to use a central registry with Unicode primary symbols plus ASCII fallbacks when `REDUCED_GLYPH=1`.
+- Refreshed HUD semantics and copy with shared glyph constants/event prefixes, including corrected wave-clear line messaging to use semantic wave event prefixes.
+- Migrated legacy `color-map` styling exports to `design-tokens` aliases to preserve compatibility while consolidating style logic in one module.
 - Simplified Operations map definitions by introducing a shared map-grid factory to remove repeated `createGrid` lambda patterns across all 10 maps.
 - Refactored tower placement and tower sell mutations to use shared grid-cell helpers instead of duplicating row/column traversal logic in each simulation module.
 - Removed legacy `src/const/map.ts` compatibility stub that no longer provided runtime behavior.
@@ -66,6 +76,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Updated `README.md` enemy archetype table to match the runtime width-safe symbol set.
 
 ### Tested
+- Added component-level rendering tests for gameplay and ceremony screens, including snapshots for regression detection.
+- Expanded HUD/frame/rendering coverage for:
+  - reduced-glyph ASCII fallback behavior (`REDUCED_GLYPH=1`)
+  - event-log header semantics and hidden-event hints
+  - wave-active phase badge pulse behavior and reduced-motion suppression
+  - wave-clear HUD messaging semantics regression
 - Refined simulation tests for maintainability:
   - extracted shared wave-to-victory helper in `tests/simulation/operations-maps.test.ts`
   - replaced repeated setup blocks in `tests/simulation/tower-sell.test.ts` with shared prep-state and placement helpers

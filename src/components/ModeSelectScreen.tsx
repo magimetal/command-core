@@ -1,0 +1,42 @@
+import React from 'react';
+import { Box, Text, useStdout } from 'ink';
+import type { GameState } from '../models/game-state';
+import { GLYPH } from '../const/glyphs';
+
+interface ModeSelectScreenProps {
+  state: GameState;
+  terminalColumnsOverride?: number;
+}
+
+const renderModeLine = (label: string, description: string, selected: boolean): React.ReactElement => {
+  const text = `${label}  ${description}`;
+
+  if (selected) {
+    return (
+      <Text color="cyanBright">
+        {GLYPH.MENU_ARROW} {text}
+      </Text>
+    );
+  }
+
+  return <Text>  {text}</Text>;
+};
+
+export const ModeSelectScreen = ({ state, terminalColumnsOverride }: ModeSelectScreenProps): React.ReactElement => {
+  const { stdout } = useStdout();
+  const terminalColumns = terminalColumnsOverride ?? stdout?.columns ?? process.stdout.columns ?? 78;
+  const width = Math.max(56, Math.min(76, terminalColumns - 2));
+
+  return (
+    <Box borderStyle="round" width={width} flexDirection="column" paddingX={1}>
+      <Text color="cyanBright">COMMAND CORE</Text>
+      <Text dimColor>Choose a run type</Text>
+      <Text dimColor>Newcomer? Start with OPERATIONS · Veteran? Try ANOMALY for chaos</Text>
+      <Text>────────────────────────────────────────────────────</Text>
+      {renderModeLine('[1] OPERATIONS', 'Hand-crafted maps with fixed waves', state.menuCursor === 0)}
+      {renderModeLine('[2] ANOMALY', 'Procedural map and randomized waves', state.menuCursor === 1)}
+      <Text>────────────────────────────────────────────────────</Text>
+      <Text dimColor>↑↓ Navigate   Enter: Confirm   Q: Quit</Text>
+    </Box>
+  );
+};

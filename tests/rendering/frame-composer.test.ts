@@ -139,7 +139,7 @@ describe('composeFrame', () => {
     expect(frame).toContain('❤ HP');
     expect(frame).toContain('✦ GOLD $120');
     expect(frame).toContain('≋ WAVE 1/15');
-    expect(frame).toContain('Incoming: 7× S Standard');
+    expect(frame).toContain('Incoming: 7× ▸ Standard');
     expect(frame).toContain('Rapid $60');
     expect(frame).toContain('Cannon $100');
     expect(frame).toContain('Sniper $150');
@@ -148,7 +148,7 @@ describe('composeFrame', () => {
     expect(frame).toContain(
       '[1-4] Tower  [↑↓←→] Move  [Enter] Place  [S] Sell  [Space] Start  [Q] Quit'
     );
-    expect(frame).toContain('─── Events');
+    expect(frame).toContain('╌╌ Events');
     expect(frame).toContain('· No events yet');
   });
 
@@ -495,6 +495,52 @@ describe('composeFrame', () => {
 
     expect(frame).toContain('⟁');
     expect(frame).toContain('⊛');
+    expect(getCellSymbol(gridLines[7], 1)).toBe('▸');
+    expect(getCellSymbol(gridLines[7], 3)).toBe('■');
+  });
+
+  test('REDUCED_GLYPH=1 falls back to ASCII enemy symbols', () => {
+    const previousReducedGlyph = process.env.REDUCED_GLYPH;
+    process.env.REDUCED_GLYPH = '1';
+
+    const base = createInitialState();
+    const state = {
+      ...base,
+      phase: 'PREP' as const,
+      enemies: [
+        {
+          id: 'enemy-standard',
+          archetype: EnemyArchetype.STANDARD,
+          pos: [1, 7] as [number, number],
+          pathIndex: 1,
+          hp: 10,
+          maxHp: 10,
+          moveCooldown: 2,
+          dead: false
+        },
+        {
+          id: 'enemy-tank',
+          archetype: EnemyArchetype.TANK,
+          pos: [3, 7] as [number, number],
+          pathIndex: 3,
+          hp: 40,
+          maxHp: 40,
+          moveCooldown: 4,
+          dead: false
+        }
+      ]
+    };
+
+    const frame = stripAnsi(composeFrame(state));
+    const gridLines = getGridLines(frame);
+
+    if (previousReducedGlyph === undefined) {
+      delete process.env.REDUCED_GLYPH;
+    } else {
+      process.env.REDUCED_GLYPH = previousReducedGlyph;
+    }
+
+    expect(frame).toContain('Incoming: 7× S Standard');
     expect(getCellSymbol(gridLines[7], 1)).toBe('S');
     expect(getCellSymbol(gridLines[7], 3)).toBe('T');
   });

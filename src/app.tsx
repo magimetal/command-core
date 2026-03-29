@@ -1,13 +1,17 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Text, useApp } from 'ink';
+import { useApp } from 'ink';
+import { GameplayFrame } from './components/GameplayFrame';
+import { GameOverScreen } from './components/GameOverScreen';
+import { MapSelectScreen } from './components/MapSelectScreen';
+import { ModeSelectScreen } from './components/ModeSelectScreen';
+import { TitleScreen } from './components/TitleScreen';
+import { VictoryScreen } from './components/VictoryScreen';
 import { EVENT_PREFIX } from './const/event-prefixes';
 import { FRAME_INTERVAL_MS } from './const/game';
 import { TowerArchetype } from './const/towers';
 import { InputHandler } from './input/input-handler';
 import { isMenuPhase, type GamePhase } from './models/game-state';
 import { appendEventLog } from './utils/event-log';
-import { composeFrame } from './rendering/frame-composer';
-import { isReducedMotionEnabled } from './rendering/accessibility';
 import { createInitialState } from './simulation/create-initial-state';
 import {
   advanceFromTitleState,
@@ -51,8 +55,6 @@ export const App = () => {
   const [state, setState] = useState(createInitialState);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const phaseRef = useRef<GamePhase>(state.phase);
-  const lastRenderedFrameKeyRef = useRef<string | null>(null);
-  const frameStringRef = useRef<string>('');
 
   useEffect(() => {
     phaseRef.current = state.phase;
@@ -221,23 +223,6 @@ export const App = () => {
     return true;
   };
 
-  const titleRenderKey = isReducedMotionEnabled()
-    ? 'TITLE-STATIC'
-    : // Keep "10" in sync with logoArt.length in src/rendering/title-composer.ts.
-      `TITLE-${Math.floor(state.frame / 2) % 10}`;
-  const renderKey =
-    state.phase === 'TITLE' ? titleRenderKey : `${state.phase}-${state.frame}`;
-
-  if (renderKey !== lastRenderedFrameKeyRef.current) {
-    lastRenderedFrameKeyRef.current = renderKey;
-    frameStringRef.current = composeFrame(state, {
-      terminalColumns: process.stdout.columns,
-      terminalRows: process.stdout.rows
-    });
-  }
-
-  const frame = frameStringRef.current;
-
   const handleMenuNavigate = (delta: number) => {
     setState((previousState) => navigateMenuState(previousState, delta));
   };
@@ -301,7 +286,14 @@ export const App = () => {
           })
         }
       />
-      <Text>{frame}</Text>
+      {(state.phase === 'PREP' || state.phase === 'WAVE_ACTIVE' || state.phase === 'WAVE_CLEAR') && (
+        <GameplayFrame state={state} />
+      )}
+      {state.phase === 'TITLE' && <TitleScreen state={state} />}
+      {state.phase === 'MODE_SELECT' && <ModeSelectScreen state={state} />}
+      {state.phase === 'MAP_SELECT' && <MapSelectScreen state={state} />}
+      {state.phase === 'VICTORY' && <VictoryScreen state={state} />}
+      {state.phase === 'GAME_OVER' && <GameOverScreen state={state} />}
     </>
   );
 };

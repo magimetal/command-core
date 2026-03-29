@@ -1,22 +1,30 @@
 import { getTowerDef, TowerArchetype } from '../const/towers';
-import { ENEMY_DEFS } from '../const/enemies';
+import { ENEMY_DEFS, getEnemySymbol } from '../const/enemies';
 import { EVENT_PREFIX } from '../const/event-prefixes';
 import { GLYPH } from '../const/glyphs';
 import { isPlacementPhase, type GameState } from '../models/game-state';
-import chalk from 'chalk';
 import {
-  colorizeEventLogMessage,
-  colorizeEventMessage,
-  colorizeGridSymbol,
-  colorizePhaseLabel,
-  getDisplayWidth,
-  truncateDisplay,
+  tokenDim,
+  tokenEventLogMessage,
+  tokenEventMessage,
+  tokenGridSymbol,
+  tokenHudValue,
+  tokenNeutral,
+  tokenPhaseLabel,
+  tokenStrong,
+  styleAnomaly,
+  styleEmphasis,
+  stylePrimary,
+  styleSubtle,
+  styleSurge,
+  styleThreat,
   type EventMessageClass
-} from './color-map';
+} from './design-tokens';
+import { getDisplayWidth, truncateDisplay } from './text-utils';
 import { getVisibleEventLog } from '../utils/event-log';
 import { composeWaveDrainBar, getPriorityTarget, getSurgeState } from '../utils/threat-radar';
-import { renderHpBar, renderWideHpBar } from './hp-bar';
-import { styleAnomaly, styleEmphasis, stylePrimary, styleSubtle, styleSurge, styleThreat } from './text-styles';
+import { renderHpBar, renderProgressBar, renderWideHpBar } from './hp-bar';
+import { isReducedGlyphEnabled, isReducedMotionEnabled } from './accessibility';
 
 const HUD_WIDTH = 76;
 
@@ -51,36 +59,58 @@ const fitHudLine = (left: string, right: string = '', width: number = HUD_WIDTH)
 };
 
 const composeIncomingPreview = (state: GameState): string => {
+  const reducedGlyph = isReducedGlyphEnabled();
   const waveDef = state.runConfig.waves[state.wave - 1];
   if (waveDef === undefined) {
     return 'none';
   }
 
   return waveDef.enemies
-    .map((group) => `${group.count}× ${ENEMY_DEFS[group.archetype].symbol} ${ENEMY_DEFS[group.archetype].displayName}`)
+    .map(
+      (group) =>
+        `${group.count}× ${getEnemySymbol(group.archetype, { reducedGlyph })} ${ENEMY_DEFS[group.archetype].displayName}`
+    )
     .join('  ');
 };
 
 const composeHpGoldLine = (state: GameState): string => {
-  const hpTone = state.baseHp < 5 ? chalk.redBright : chalk.greenBright;
-  const hpPrefix = hpTone('❤ HP ');
-  const hpValue = hpTone(`  ${state.baseHp}/${state.runConfig.startingBaseHp}`);
-  const goldSection = chalk.yellow(`✦ GOLD $${state.currency}`);
+  const hpGlyph =
+    state.baseHp < 3
+      ? GLYPH.HP_CRITICAL
+      : state.baseHp < Math.ceil(state.runConfig.startingBaseHp / 2)
+        ? GLYPH.HP_LOW
+        : GLYPH.HP_FULL;
+  const hpPrefix = tokenHudValue(`${hpGlyph} HP `, 'HP', state.baseHp);
+  const hpValue = tokenHudValue(`  ${state.baseHp}/${state.runConfig.startingBaseHp}`, 'HP', state.baseHp);
+  const goldSection = tokenHudValue(`${GLYPH.GOLD} GOLD $${state.currency}`, 'GOLD', state.baseHp);
+  const hpRatio = state.runConfig.startingBaseHp > 0 ? (state.baseHp / state.runConfig.startingBaseHp) * 100 : 0;
+  const criticalIndicator =
+    state.baseHp < 5 ? tokenHudValue(` ${renderProgressBar(hpRatio, 4)}`, 'HP', state.baseHp) : '';
   const barWidth = Math.max(
     20,
-    HUD_WIDTH - getDisplayWidth(hpPrefix) - getDisplayWidth(hpValue) - getDisplayWidth(goldSection) - 2
+    HUD_WIDTH -
+      getDisplayWidth(hpPrefix) -
+      getDisplayWidth(hpValue) -
+      getDisplayWidth(goldSection) -
+      getDisplayWidth(criticalIndicator) -
+      2
   );
-  const hpBar = hpTone(renderWideHpBar(state.baseHp, state.runConfig.startingBaseHp, barWidth));
-  const left = `${hpPrefix}${hpBar}${hpValue}`;
+  const hpBar = tokenHudValue(
+    renderWideHpBar(state.baseHp, state.runConfig.startingBaseHp, barWidth),
+    'HP',
+    state.baseHp
+  );
+  const left = `${hpPrefix}${hpBar}${hpValue}${criticalIndicator}`;
 
   return fitHudLine(left, goldSection);
 };
 
 const composeWaveActiveTelemetry = (state: GameState): string[] => {
   const leakedCount = Math.max(0, state.runConfig.startingBaseHp - state.baseHp);
+  const waveHeader = stylePrimary(`${GLYPH.WAVE} WAVE ${state.wave}/${state.runConfig.waves.length}`);
   const waveLine = fitHudLine(
-    `${chalk.cyan(`≋ WAVE ${state.wave}/${state.runConfig.waves.length}`)}  ${stylePrimary(composeWaveDrainBar(state))} deployed`,
-    `${chalk.greenBright(`✕ ${state.enemiesKilled} KILLED`)}  ${chalk.redBright(`! ${leakedCount} LEAKED`)}`
+    `${waveHeader}  ${stylePrimary(composeWaveDrainBar(state))} deployed`,
+    `${tokenEventMessage(`${EVENT_PREFIX.KILL} ${state.enemiesKilled} KILLED`, 'KILL')}  ${tokenEventMessage(`${EVENT_PREFIX.LEAK} ${leakedCount} LEAKED`, 'LEAK')}`
   );
 
   const target = getPriorityTarget(state);
@@ -90,18 +120,17 @@ const composeWaveActiveTelemetry = (state: GameState): string[] => {
     }
 
     const def = ENEMY_DEFS[target.archetype];
+    const threatSymbol = getEnemySymbol(target.archetype, { reducedGlyph: isReducedGlyphEnabled() });
     const hpBar = renderHpBar(target.hp, target.maxHp);
     const pathLength = Math.max(1, state.runConfig.enemyPath.length - 1);
     const progress = Math.max(0, Math.min(1, target.pathIndex / pathLength));
     const pctToBase = Math.round(progress * 100);
-    const progressWidth = 8;
-    const progressFilled = Math.max(0, Math.min(progressWidth, Math.round(progress * progressWidth)));
-    const progressBar = `${'━'.repeat(progressFilled)}${' '.repeat(progressWidth - progressFilled)}▸`;
+    const progressBar = renderProgressBar(pctToBase, 8);
     const surgeState = getSurgeState(state);
-    const surgeBadge = surgeState.active && surgeState.pulse ? styleSurge('◆ SURGE') : '';
-    const threatPrefix = styleThreat('⚠ THREAT');
+    const surgeBadge = surgeState.active && surgeState.pulse ? styleSurge(`${GLYPH.SEPARATOR} ${GLYPH.SURGE_BADGE}`) : '';
+    const threatPrefix = styleThreat(GLYPH.THREAT_LABEL);
     const threatBody = styleThreat(
-      `${def.symbol} ${def.displayName} [${hpBar}] ${target.hp}/${target.maxHp}  ${progressBar} ${pctToBase}% to base`
+      `${threatSymbol} ${def.displayName} [${hpBar}] ${target.hp}/${target.maxHp}  ${progressBar} ${pctToBase}% to base`
     );
 
     return fitHudLine(`${threatPrefix} ${threatBody}`, surgeBadge);
@@ -111,8 +140,9 @@ const composeWaveActiveTelemetry = (state: GameState): string[] => {
 };
 
 const composePrepTelemetry = (state: GameState): string[] => {
+  const waveHeader = stylePrimary(`${GLYPH.WAVE} WAVE ${state.wave}/${state.runConfig.waves.length}`);
   const waveLine = fitHudLine(
-    `${chalk.cyan(`≋ WAVE ${state.wave}/${state.runConfig.waves.length}`)}  ${styleSubtle(`Incoming: ${composeIncomingPreview(state)}`)}`,
+    `${waveHeader}  ${styleSubtle(`Incoming: ${composeIncomingPreview(state)}`)}`,
     styleSubtle('(Space: start wave)')
   );
 
@@ -127,10 +157,11 @@ const composePrepTelemetry = (state: GameState): string[] => {
 const composeWaveClearTelemetry = (state: GameState): string[] => {
   const leakedCount = Math.max(0, state.runConfig.startingBaseHp - state.baseHp);
   const clearedWave = Math.max(1, state.wave - 1);
+  const waveHeader = stylePrimary(`${GLYPH.WAVE} WAVE ${state.wave}/${state.runConfig.waves.length}`);
 
   const clearLine = fitHudLine(
-    `${chalk.cyan(`≋ WAVE ${state.wave}/${state.runConfig.waves.length}`)}  ${chalk.greenBright(`✓ Wave ${clearedWave} cleared!`)}`,
-    `${chalk.greenBright(`✕ ${state.enemiesKilled} KILLED`)}  ${chalk.redBright(`! ${leakedCount} LEAKED`)}`
+    `${waveHeader}  ${tokenEventMessage(`${EVENT_PREFIX.WAVE} Wave ${clearedWave} cleared!`, 'WAVE')}`,
+    `${tokenEventMessage(`${EVENT_PREFIX.KILL} ${state.enemiesKilled} KILLED`, 'KILL')}  ${tokenEventMessage(`${EVENT_PREFIX.LEAK} ${leakedCount} LEAKED`, 'LEAK')}`
   );
 
   const guidanceLine = fitHudLine(
@@ -152,7 +183,7 @@ const composeArsenalLines = (state: GameState): [string, string] => {
 
   let cursorDetail = '';
   if (towerAtCursor !== undefined && towerAtCursor.kills > 0) {
-    cursorDetail = ` [✕${towerAtCursor.kills}]`;
+    cursorDetail = ` [${EVENT_PREFIX.KILL}${towerAtCursor.kills}]`;
   } else if (enemyAtCursor !== undefined) {
     cursorDetail = ` [${renderHpBar(enemyAtCursor.hp, enemyAtCursor.maxHp)} ${enemyAtCursor.hp}/${enemyAtCursor.maxHp}]`;
   }
@@ -161,26 +192,27 @@ const composeArsenalLines = (state: GameState): [string, string] => {
     .map((archetype, index) => {
       const towerDef = getTowerDef(archetype);
       const keyLabel = `${index + 1}`;
-      const symbol = colorizeGridSymbol(towerDef.symbol, towerClassByArchetype[archetype]);
+      const symbol = tokenGridSymbol(towerDef.symbol, towerClassByArchetype[archetype]);
+      const marker = state.selectedTowerArchetype === archetype ? GLYPH.MENU_ARROW : '-';
 
       if (state.selectedTowerArchetype === archetype) {
-        return chalk.bold(
-          `[${keyLabel}]${symbol} ${towerNameByArchetype[archetype]} $${towerDef.cost} Dmg ${towerDef.damage} Rng ${towerDef.range}`
+        return tokenStrong(
+          `${marker}[${keyLabel}]${symbol} ${towerNameByArchetype[archetype]} $${towerDef.cost} Dmg ${towerDef.damage} Rng ${towerDef.range}`
         );
       }
 
-      return chalk.dim(`[${keyLabel}]${symbol} ${towerNameByArchetype[archetype]} $${towerDef.cost}`);
+      return tokenDim(`${marker}[${keyLabel}]${symbol} ${towerNameByArchetype[archetype]} $${towerDef.cost}`);
     })
     .join('  ');
 
-  const lineFive = truncateDisplay(`▸ ${lineFiveTokens}`, HUD_WIDTH);
+  const lineFive = truncateDisplay(lineFiveTokens, HUD_WIDTH);
   const selectedDef = getTowerDef(state.selectedTowerArchetype);
-  const selectedSymbol = colorizeGridSymbol(
+  const selectedSymbol = tokenGridSymbol(
     selectedDef.symbol,
     towerClassByArchetype[state.selectedTowerArchetype]
   );
-  const detailLeft = chalk.white(
-    `▸ ${selectedSymbol} ${state.selectedTowerArchetype}  Dmg ${selectedDef.damage}  Rng ${selectedDef.range}  Cd ${selectedDef.cooldownTicks}`
+  const detailLeft = tokenNeutral(
+    `${GLYPH.MENU_ARROW} ${selectedSymbol} ${state.selectedTowerArchetype}  Dmg ${selectedDef.damage}  Rng ${selectedDef.range}  Cd ${selectedDef.cooldownTicks}`
   );
   const contextualHint = (() => {
     if (towerAtCursor !== undefined) {
@@ -193,7 +225,7 @@ const composeArsenalLines = (state: GameState): [string, string] => {
 
     return '[S] Sell  [Q] Quit';
   })();
-  const detailRight = `${chalk.white(`◎ (${cursorCol},${cursorRow})${cursorDetail}`)}  ${styleSubtle(`· ${contextualHint}`)}`;
+  const detailRight = `${tokenNeutral(`${GLYPH.CURSOR_RETICLE} (${cursorCol},${cursorRow})${cursorDetail}`)}  ${tokenDim(GLYPH.SEPARATOR)}  ${styleSubtle(contextualHint)}`;
   const lineSix = fitHudLine(detailLeft, detailRight);
 
   return [lineFive, lineSix];
@@ -213,7 +245,7 @@ export const composeHud = (state: GameState): string => {
   })();
 
   const arsenal = composeArsenalLines(state);
-  const divider = chalk.dim('╌'.repeat(HUD_WIDTH));
+  const divider = tokenDim(GLYPH.EVENT_DIVIDER.repeat(HUD_WIDTH));
 
   return [telemetry[0], telemetry[1], telemetry[2], divider, arsenal[0], arsenal[1]].join('\n');
 };
@@ -229,18 +261,23 @@ export const composeTitleBar = (state: GameState): string => {
       ? styleAnomaly('[ANOMALY]')
       : stylePrimary('[OPERATIONS]');
   const mapIdentity = styleEmphasis(truncateDisplay(mapLabel, MAX_MAP_LABEL_WIDTH));
-  const wave = chalk.cyan(`Wave ${state.wave}/${state.runConfig.waves.length}`);
-  const phase = colorizePhaseLabel(state.phase);
+  const wave = tokenHudValue(`Wave ${state.wave}/${state.runConfig.waves.length}`, 'WAVE', state.baseHp);
+  const phase =
+    state.phase === 'WAVE_ACTIVE' && !isReducedMotionEnabled() && state.frame % 4 >= 2
+      ? tokenDim('[WAVE ACTIVE]')
+      : tokenPhaseLabel(state.phase);
 
   return `${GLYPH.RUN_PREFIX} ${modeBadge} ${mapIdentity}  ${GLYPH.SEPARATOR}  ${wave}  ${phase}`;
 };
 
 export const composeEventLog = (state: GameState, visibleCount: number = 7): string[] => {
   const eventLines = getVisibleEventLog(state.eventLog, visibleCount);
+  const hiddenCount = Math.max(0, state.eventLog.length - visibleCount);
+  const eventHeader = composeEventHeader(hiddenCount);
 
   const renderedEvents = eventLines.map((eventLine, index) => {
     if (eventLine.length === 0) {
-      return index === 0 ? colorizeEventLogMessage('· No events yet') : colorizeEventLogMessage('  ─');
+      return index === 0 ? tokenEventLogMessage('  · No events yet') : tokenEventLogMessage('    ─');
     }
 
     let messageClass: EventMessageClass = 'INFO';
@@ -254,10 +291,18 @@ export const composeEventLog = (state: GameState, visibleCount: number = 7): str
       messageClass = 'ERROR';
     }
 
-    const renderedLine = colorizeEventMessage(eventLine, messageClass);
+    const renderedLine = tokenEventMessage(eventLine, messageClass);
 
-    return renderedLine;
+    return `  ${renderedLine}`;
   });
 
-  return [chalk.dim('─── Events ───────────────────────────────────────────'), ...renderedEvents];
+  return [eventHeader, ...renderedEvents];
+};
+const composeEventHeader = (hiddenCount: number): string => {
+  const hint = hiddenCount > 0 ? ` ${GLYPH.SCROLL_UP} ${hiddenCount} more` : '';
+  const label = `${GLYPH.EVENTS_LABEL}${hint}`;
+  const prefix = `${GLYPH.EVENT_DIVIDER.repeat(2)} `;
+  const suffixPad = Math.max(0, HUD_WIDTH - getDisplayWidth(prefix) - getDisplayWidth(label) - 1);
+
+  return tokenEventLogMessage(`${prefix}${label} ${GLYPH.EVENT_DIVIDER.repeat(suffixPad)}`);
 };

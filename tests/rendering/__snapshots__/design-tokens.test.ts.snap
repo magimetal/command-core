@@ -1,0 +1,120 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`design token snapshots (FORCE_COLOR=3) > locks tokenGridSymbol color chains across classes and hp buckets 1`] = `
+[
+  {
+    "entityClass": "PATH",
+    "hp0": "[2m[37m▸[39m[22m",
+    "hp100": "[2m[37m▸[39m[22m",
+    "hp50": "[2m[37m▸[39m[22m",
+  },
+  {
+    "entityClass": "BUILDABLE",
+    "hp0": "[2m[32m▸[39m[22m",
+    "hp100": "[2m[32m▸[39m[22m",
+    "hp50": "[2m[32m▸[39m[22m",
+  },
+  {
+    "entityClass": "BLOCKED",
+    "hp0": "[2m[36m▸[39m[22m",
+    "hp100": "[2m[36m▸[39m[22m",
+    "hp50": "[2m[36m▸[39m[22m",
+  },
+  {
+    "entityClass": "SPAWN",
+    "hp0": "[1m[93m▸[39m[22m",
+    "hp100": "[1m[93m▸[39m[22m",
+    "hp50": "[1m[93m▸[39m[22m",
+  },
+  {
+    "entityClass": "BASE",
+    "hp0": "[1m[96m▸[39m[22m",
+    "hp100": "[1m[96m▸[39m[22m",
+    "hp50": "[1m[96m▸[39m[22m",
+  },
+  {
+    "entityClass": "RAPID_TOWER",
+    "hp0": "[1m[92m▸[39m[22m",
+    "hp100": "[1m[92m▸[39m[22m",
+    "hp50": "[1m[92m▸[39m[22m",
+  },
+  {
+    "entityClass": "CANNON_TOWER",
+    "hp0": "[1m[31m▸[39m[22m",
+    "hp100": "[1m[31m▸[39m[22m",
+    "hp50": "[1m[31m▸[39m[22m",
+  },
+  {
+    "entityClass": "SNIPER_TOWER",
+    "hp0": "[1m[97m▸[39m[22m",
+    "hp100": "[1m[97m▸[39m[22m",
+    "hp50": "[1m[97m▸[39m[22m",
+  },
+  {
+    "entityClass": "SLOW_TOWER",
+    "hp0": "[1m[95m▸[39m[22m",
+    "hp100": "[1m[95m▸[39m[22m",
+    "hp50": "[1m[95m▸[39m[22m",
+  },
+  {
+    "entityClass": "RAPID_PROJ",
+    "hp0": "[1m[92m▸[39m[22m",
+    "hp100": "[1m[92m▸[39m[22m",
+    "hp50": "[1m[92m▸[39m[22m",
+  },
+  {
+    "entityClass": "CANNON_PROJ",
+    "hp0": "[1m[91m▸[39m[22m",
+    "hp100": "[1m[91m▸[39m[22m",
+    "hp50": "[1m[91m▸[39m[22m",
+  },
+  {
+    "entityClass": "SNIPER_PROJ",
+    "hp0": "[1m[37m▸[39m[22m",
+    "hp100": "[1m[37m▸[39m[22m",
+    "hp50": "[1m[37m▸[39m[22m",
+  },
+  {
+    "entityClass": "SLOW_PROJ",
+    "hp0": "[1m[35m▸[39m[22m",
+    "hp100": "[1m[35m▸[39m[22m",
+    "hp50": "[1m[35m▸[39m[22m",
+  },
+  {
+    "entityClass": "STANDARD_ENEMY",
+    "hp0": "[1m[31m▸[39m[22m",
+    "hp100": "[1m[33m▸[39m[22m",
+    "hp50": "[2m[33m▸[39m[22m",
+  },
+  {
+    "entityClass": "TANK_ENEMY",
+    "hp0": "[1m[31m▸[39m[22m",
+    "hp100": "[1m[35m▸[39m[22m",
+    "hp50": "[2m[95m▸[39m[22m",
+  },
+  {
+    "entityClass": "FAST_ENEMY",
+    "hp0": "[1m[31m▸[39m[22m",
+    "hp100": "[1m[93m▸[39m[22m",
+    "hp50": "[1m[93m▸[39m[22m",
+  },
+  {
+    "entityClass": "BRUTE_ENEMY",
+    "hp0": "[1m[91m▸[39m[22m",
+    "hp100": "[1m[31m▸[39m[22m",
+    "hp50": "[2m[31m▸[39m[22m",
+  },
+  {
+    "entityClass": "COLOSSUS_ENEMY",
+    "hp0": "[1m[31m▸[39m[22m",
+    "hp100": "[1m[37m▸[39m[22m",
+    "hp50": "[2m[37m▸[39m[22m",
+  },
+  {
+    "entityClass": "CURSOR",
+    "hp0": "[43m[30m[1m▸[22m[39m[49m",
+    "hp100": "[43m[30m[1m▸[22m[39m[49m",
+    "hp50": "[43m[30m[1m▸[22m[39m[49m",
+  },
+]
+`;

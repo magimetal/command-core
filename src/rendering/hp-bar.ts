@@ -1,3 +1,5 @@
+import { GLYPH } from '../const/glyphs';
+
 export const HP_BAR_SEGMENTS = 5;
 
 export const renderHpBar = (hp: number, maxHp: number): string => {
@@ -16,4 +18,15 @@ export const renderWideHpBar = (hp: number, maxHp: number, barWidth: number): st
   const filled = Math.max(0, Math.min(barWidth, Math.round(ratio * barWidth)));
 
   return '█'.repeat(filled) + '░'.repeat(barWidth - filled);
+};
+
+export const renderProgressBar = (pct: number, width: number): string => {
+  if (width <= 0) {
+    return '';
+  }
+
+  const clampedPct = Number.isFinite(pct) ? Math.max(0, Math.min(100, pct)) : 0;
+  const filled = Math.max(0, Math.min(width, Math.round((clampedPct / 100) * width)));
+
+  return `${GLYPH.PROGRESS_FILL.repeat(filled)}${' '.repeat(width - filled)}${GLYPH.PROGRESS_CURSOR}`;
 };

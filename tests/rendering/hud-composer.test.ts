@@ -3,10 +3,11 @@ import { EnemyArchetype } from '../../src/const/enemies';
 import { TowerArchetype } from '../../src/const/towers';
 import type { Enemy } from '../../src/models/enemy';
 import { stripAnsi } from '../../src/rendering/color-map';
-import { composeHud } from '../../src/rendering/hud-composer';
+import { composeEventLog, composeHud, composeTitleBar } from '../../src/rendering/hud-composer';
 import { getDisplayWidth } from '../../src/rendering/text-utils';
 import { createInitialState } from '../../src/simulation/create-initial-state';
 import { composeWaveDrainBar, getPriorityTarget, getSurgeState } from '../../src/utils/threat-radar';
+import chalk from 'chalk';
 
 const createEnemy = (overrides: Partial<Enemy> = {}): Enemy => {
   return {
@@ -106,6 +107,14 @@ describe('threat radar hud', () => {
     expect(line).toContain('✦ GOLD');
   });
 
+  test('critical HP line uses ☠ glyph and compact progress indicator', () => {
+    const state = { ...createInitialState(), phase: 'WAVE_ACTIVE' as const, baseHp: 2 };
+    const line = stripAnsi(composeHud(state)).split('\n')[0];
+
+    expect(line).toContain('☠ HP');
+    expect(line).toContain('▸');
+  });
+
   test('WAVE_ACTIVE line 2 shows wave drain bar, kill count, and leaked count', () => {
     const state = {
       ...createInitialState(),
@@ -134,7 +143,7 @@ describe('threat radar hud', () => {
     const line = stripAnsi(composeHud(state)).split('\n')[2];
 
     expect(line).toContain('⚠ THREAT');
-    expect(line).toContain('T Tank');
+    expect(line).toContain('■ Tank');
     expect(line).toContain('35/40');
   });
 
@@ -180,7 +189,35 @@ describe('threat radar hud', () => {
 
     expect(line).toContain('≋ WAVE 1/15');
     expect(line).toContain('Incoming:');
-    expect(line).toContain('S Standard');
+    expect(line).toContain('▸ Standard');
+  });
+
+  test('REDUCED_GLYPH=1 uses ASCII enemy symbols in incoming and threat lines', () => {
+    const previousReducedGlyph = process.env.REDUCED_GLYPH;
+    process.env.REDUCED_GLYPH = '1';
+
+    const prepState = {
+      ...createInitialState(),
+      phase: 'PREP' as const
+    };
+    const activeState = {
+      ...createInitialState(),
+      phase: 'WAVE_ACTIVE' as const,
+      enemies: [createEnemy({ id: 'enemy-priority', archetype: EnemyArchetype.TANK, pathIndex: 10, hp: 35, maxHp: 40 })]
+    };
+
+    const prepLines = stripAnsi(composeHud(prepState)).split('\n');
+    const activeLines = stripAnsi(composeHud(activeState)).split('\n');
+
+    if (previousReducedGlyph === undefined) {
+      delete process.env.REDUCED_GLYPH;
+    } else {
+      process.env.REDUCED_GLYPH = previousReducedGlyph;
+    }
+
+    expect(prepLines[1]).toContain('Incoming:');
+    expect(prepLines[1]).toContain('S Standard');
+    expect(activeLines[2]).toContain('T Tank');
   });
 
   test('PREP line 3 with no towers shows build-zone hint', () => {
@@ -220,7 +257,7 @@ describe('threat radar hud', () => {
     };
     const line = stripAnsi(composeHud(state)).split('\n')[1];
 
-    expect(line).toContain('✓ Wave 1 cleared!');
+    expect(line).toContain('>> Wave 1 cleared!');
     expect(line).toContain('✕ 8 KILLED');
     expect(line).toContain('! 2 LEAKED');
   });
@@ -260,7 +297,24 @@ describe('threat radar hud', () => {
     const line = stripAnsi(composeHud(state)).split('\n')[5];
 
     expect(line).toContain('◎ (1,1) [✕12]');
+    expect(line).toContain('⟫');
     expect(line).toContain('[S] Sell');
+  });
+
+  test('event log header uses semantic ╌ divider styling', () => {
+    const header = stripAnsi(composeEventLog(createInitialState(), 2)[0]);
+
+    expect(header.startsWith('╌╌ Events')).toBe(true);
+  });
+
+  test('event log header shows scroll hint when entries are hidden', () => {
+    const state = {
+      ...createInitialState(),
+      eventLog: ['e1', 'e2', 'e3', 'e4']
+    };
+    const header = stripAnsi(composeEventLog(state, 2)[0]);
+
+    expect(header).toContain('↑ 2 more');
   });
 
   test('line 6 detail shows place hint in PREP on non-tower cell', () => {
@@ -318,5 +372,39 @@ describe('threat radar hud', () => {
 
     expect(hpBarMatch).toBeDefined();
     expect(hpBarMatch![0].length).toBeGreaterThanOrEqual(20);
+  });
+
+  test('WAVE_ACTIVE title bar phase badge pulses every 4 frames', () => {
+    const previousLevel = chalk.level;
+    chalk.level = 3;
+
+    const state = { ...createInitialState(), phase: 'WAVE_ACTIVE' as const };
+    const pulsed = composeTitleBar({ ...state, frame: 0 });
+    const dimmed = composeTitleBar({ ...state, frame: 2 });
+
+    chalk.level = previousLevel;
+
+    expect(pulsed).not.toBe(dimmed);
+  });
+
+  test('REDUCED_MOTION=1 disables WAVE_ACTIVE title bar pulse', () => {
+    const previousReducedMotion = process.env.REDUCED_MOTION;
+    const previousLevel = chalk.level;
+    process.env.REDUCED_MOTION = '1';
+    chalk.level = 3;
+
+    const state = { ...createInitialState(), phase: 'WAVE_ACTIVE' as const };
+    const frameZero = composeTitleBar({ ...state, frame: 0 });
+    const frameTwo = composeTitleBar({ ...state, frame: 2 });
+
+    chalk.level = previousLevel;
+
+    if (previousReducedMotion === undefined) {
+      delete process.env.REDUCED_MOTION;
+    } else {
+      process.env.REDUCED_MOTION = previousReducedMotion;
+    }
+
+    expect(frameZero).toBe(frameTwo);
   });
 });

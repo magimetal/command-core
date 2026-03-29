@@ -7,6 +7,7 @@ import { composeEventLog, composeHud, composeTitleBar } from './hud-composer';
 import { composeMapSelectFrame } from './map-select-composer';
 import { composeModeSelectFrame } from './mode-select-composer';
 import { composeTitleFrame } from './title-composer';
+import { GLYPH } from '../const/glyphs';
 
 export const FRAME_INNER_WIDTH_BUDGET = 76;
 
@@ -62,7 +63,7 @@ export const composeFrame = (state: GameState, options: ComposeFrameOptions = {}
   const gridVisibleWidth = Math.max(...gridLines.map((line) => getDisplayWidth(line)));
 
   if (maxInnerWidth < gridVisibleWidth) {
-    const narrowPaneMessageOne = `⚠  Battlefield is wider than this pane: need ${gridVisibleWidth + 2} cols, have ${maxInnerWidth + 2}.`;
+    const narrowPaneMessageOne = `${GLYPH.WARNING}  Battlefield is wider than this pane: need ${gridVisibleWidth + 2} cols, have ${maxInnerWidth + 2}.`;
     const narrowPaneMessageTwo = 'Widen pane (tmux drag or C-b + ←→), or reduce font.';
 
     return composeBorder(

@@ -1,8 +1,8 @@
-import { ENEMY_DEFS, EnemyArchetype } from '../const/enemies';
+import { EnemyArchetype, getEnemySymbol } from '../const/enemies';
 import { getTowerDef, TowerArchetype } from '../const/towers';
 import { CellType } from '../models/cell';
 import { isPlacementPhase, type GameState } from '../models/game-state';
-import { isReducedMotionEnabled } from './accessibility';
+import { isReducedGlyphEnabled, isReducedMotionEnabled } from './accessibility';
 import { colorizeGridSymbol, type GridEntityClass } from './color-map';
 
 const CELL_SYMBOLS: Record<CellType, string> = {
@@ -220,6 +220,7 @@ const buildColorRun = (tokens: GridRenderToken[]): string => {
 
 export const composeGrid = (state: GameState): string[] => {
   const reducedMotion = isReducedMotionEnabled();
+  const reducedGlyph = isReducedGlyphEnabled();
   const enemyLookup = getEnemyLookup(state);
   const towerLookup = getTowerLookup(state);
   const projectileLookup = new Map(
@@ -236,7 +237,7 @@ export const composeGrid = (state: GameState): string[] => {
 
         const enemy = enemyLookup.get(key);
         if (enemy !== undefined) {
-          const enemySymbol = ENEMY_DEFS[enemy.archetype].symbol;
+          const enemySymbol = getEnemySymbol(enemy.archetype, { reducedGlyph });
           if (key === cursorKey) {
             return { symbol: enemySymbol, entityClass: 'CURSOR', singleton: true };
           }
