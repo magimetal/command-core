@@ -12,7 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   - added eight new Operations maps (Perimeter, Zigzag, The Coil, Reverse Run, Labyrinth, The Crucible, Blitz, Ouroboros) for a total of 10 map options
   - added map obstacle stamping support (`CellType.BLOCKED`) so each map can define non-buildable obstacle pockets without mutating path/spawn/base cells
 - Enemy roster expansion with new late-wave archetypes:
-  - added **BRUTE** (`◈`) and **COLOSSUS** (`⬠`) enemy definitions with higher HP/leak pressure profiles for extended-wave scaling
+  - added **BRUTE** (`B`) and **COLOSSUS** (`C`) enemy definitions with higher HP/leak pressure profiles for extended-wave scaling
 - Design context persistence for future sessions:
   - new `.impeccable.md` baseline for users, brand personality, aesthetic direction, and design principles
   - mirrored `## Design Context` section in `AGENTS.md` for agent-wide consistency
@@ -58,10 +58,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   - frame composer now adapts visible event-log rows by terminal height
   - app-level frame memoization prevents unnecessary re-composition between equivalent render keys
   - grid path symbol derivation and color run generation now use caching/grouping for cleaner output and lower per-frame overhead
+- Replaced enemy map glyphs with width-safe single-column symbols (`S`, `T`, `F`, `B`, `C`) to prevent PTY/pane drift and preserve deterministic frame widths.
 
 ### Documentation
 - Documented accessibility hardening flag in `README.md`.
 - Updated internal agent docs (`AGENTS.md`, `src/AGENTS.md`, `src/const/AGENTS.md`) to point to shared rendering utilities and new constant modules.
+- Updated `README.md` enemy archetype table to match the runtime width-safe symbol set.
 
 ### Tested
 - Refined simulation tests for maintainability:
@@ -76,6 +78,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Added coverage for end-state rerun input (`R`) and sell-error mapping in app flow.
 - Expanded rendering assertions for title/mode/map/end-state framing behavior under width and row constraints.
 - Added focused HUD and frame coverage for threat-radar lines, fixed two-entry gameplay event log rendering, and line-width/height guardrails.
+- Added PTY repro harness coverage for dense Crossroads wave-9 rendering stability and updated rendering/simulation assertions for width-safe enemy symbols.
 
 ## [2.0.0] - 2026-03-26
 

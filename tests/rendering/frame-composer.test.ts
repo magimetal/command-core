@@ -139,7 +139,7 @@ describe('composeFrame', () => {
     expect(frame).toContain('❤ HP');
     expect(frame).toContain('✦ GOLD $120');
     expect(frame).toContain('≋ WAVE 1/15');
-    expect(frame).toContain('Incoming: 7× ◀ Standard');
+    expect(frame).toContain('Incoming: 7× S Standard');
     expect(frame).toContain('Rapid $60');
     expect(frame).toContain('Cannon $100');
     expect(frame).toContain('Sniper $150');
@@ -491,11 +491,12 @@ describe('composeFrame', () => {
     };
 
     const frame = stripAnsi(composeFrame(state));
+    const gridLines = getGridLines(frame);
 
     expect(frame).toContain('⟁');
     expect(frame).toContain('⊛');
-    expect(frame).toContain('◀');
-    expect(frame).toContain('⬟');
+    expect(getCellSymbol(gridLines[7], 1)).toBe('S');
+    expect(getCellSymbol(gridLines[7], 3)).toBe('T');
   });
 
   test('event log display shows 2 most recent entries', () => {

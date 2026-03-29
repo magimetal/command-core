@@ -18,7 +18,7 @@ export interface EnemyDef {
 export const ENEMY_DEFS: Record<EnemyArchetype, EnemyDef> = {
   [EnemyArchetype.STANDARD]: {
     displayName: 'Standard',
-    symbol: '◀',
+    symbol: 'S',
     maxHp: 10,
     speed: 2,
     reward: 10,
@@ -26,7 +26,7 @@ export const ENEMY_DEFS: Record<EnemyArchetype, EnemyDef> = {
   },
   [EnemyArchetype.TANK]: {
     displayName: 'Tank',
-    symbol: '⬟',
+    symbol: 'T',
     maxHp: 40,
     speed: 4,
     reward: 25,
@@ -34,7 +34,7 @@ export const ENEMY_DEFS: Record<EnemyArchetype, EnemyDef> = {
   },
   [EnemyArchetype.FAST]: {
     displayName: 'Fast',
-    symbol: '▷',
+    symbol: 'F',
     maxHp: 5,
     speed: 1,
     reward: 4,
@@ -42,7 +42,7 @@ export const ENEMY_DEFS: Record<EnemyArchetype, EnemyDef> = {
   },
   [EnemyArchetype.BRUTE]: {
     displayName: 'Brute',
-    symbol: '◈',
+    symbol: 'B',
     maxHp: 80,
     speed: 5,
     reward: 28,
@@ -50,7 +50,7 @@ export const ENEMY_DEFS: Record<EnemyArchetype, EnemyDef> = {
   },
   [EnemyArchetype.COLOSSUS]: {
     displayName: 'Colossus',
-    symbol: '⬠',
+    symbol: 'C',
     maxHp: 150,
     speed: 7,
     reward: 40,

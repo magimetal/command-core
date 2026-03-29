@@ -134,7 +134,7 @@ describe('threat radar hud', () => {
     const line = stripAnsi(composeHud(state)).split('\n')[2];
 
     expect(line).toContain('⚠ THREAT');
-    expect(line).toContain('⬟ Tank');
+    expect(line).toContain('T Tank');
     expect(line).toContain('35/40');
   });
 
@@ -180,7 +180,7 @@ describe('threat radar hud', () => {
 
     expect(line).toContain('≋ WAVE 1/15');
     expect(line).toContain('Incoming:');
-    expect(line).toContain('◀ Standard');
+    expect(line).toContain('S Standard');
   });
 
   test('PREP line 3 with no towers shows build-zone hint', () => {

@@ -22,7 +22,7 @@ const createEnemy = (overrides: Partial<Enemy> = {}): Enemy => {
 
 describe('advanceEnemies', () => {
   test('FAST enemy archetype is defined with distinct symbol', () => {
-    expect(ENEMY_DEFS[EnemyArchetype.FAST].symbol).toBe('▷');
+    expect(ENEMY_DEFS[EnemyArchetype.FAST].symbol).toBe('F');
     expect(ENEMY_DEFS[EnemyArchetype.FAST].symbol).not.toBe(ENEMY_DEFS[EnemyArchetype.STANDARD].symbol);
     expect(ENEMY_DEFS[EnemyArchetype.FAST].symbol).not.toBe(ENEMY_DEFS[EnemyArchetype.TANK].symbol);
   });

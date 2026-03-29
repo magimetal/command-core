@@ -188,9 +188,9 @@ ANOMALY_SEED=12345 npm start
 
 | Archetype | Symbol | HP | Move cooldown* | Reward | Leak damage |
 |---|---|---:|---:|---:|---:|
-| STANDARD | `◀` | 10 | 2 | 10 | 1 |
-| TANK | `⬟` | 40 | 4 | 25 | 3 |
-| FAST | `▷` | 5 | 1 | 4 | 2 |
+| STANDARD | `S` | 10 | 2 | 10 | 1 |
+| TANK | `T` | 40 | 4 | 25 | 3 |
+| FAST | `F` | 5 | 1 | 4 | 2 |
 
 \*Lower move cooldown means faster movement cadence.
 
