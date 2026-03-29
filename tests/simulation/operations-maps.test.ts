@@ -15,6 +15,29 @@ const isAdjacent = (a: [number, number], b: [number, number]): boolean => {
   return deltaCol + deltaRow === 1;
 };
 
+const runToVictory = (state: GameState): GameState => {
+  let nextState = state;
+
+  while (nextState.phase !== 'VICTORY') {
+    if (nextState.phase === 'PREP') {
+      nextState = startWave(nextState);
+      continue;
+    }
+
+    if (nextState.phase === 'WAVE_ACTIVE') {
+      nextState = {
+        ...nextState,
+        spawnQueue: [],
+        enemies: []
+      };
+    }
+
+    nextState = tick(nextState);
+  }
+
+  return nextState;
+};
+
 describe('operations maps', () => {
   test('Operations mode exposes 10 playable maps', () => {
     expect(OPERATIONS_MAP_DEFS).toHaveLength(10);
@@ -62,29 +85,12 @@ describe('operations maps', () => {
   test('Map 02 run can progress to VICTORY through full wave cycle routing', () => {
     const map02 = OPERATIONS_MAP_DEFS.find((mapDef) => mapDef.id === 'map-02');
     const runConfig = createOperationsRunConfig(map02!);
-    let state: GameState = {
+    const state: GameState = {
       ...createInitialState(runConfig),
       phase: 'PREP'
     };
 
-    while (state.phase !== 'VICTORY') {
-      if (state.phase === 'PREP') {
-        state = startWave(state);
-        continue;
-      }
-
-      if (state.phase === 'WAVE_ACTIVE') {
-        state = {
-          ...state,
-          spawnQueue: [],
-          enemies: []
-        };
-      }
-
-      state = tick(state);
-    }
-
-    expect(state.phase).toBe('VICTORY');
+    expect(runToVictory(state).phase).toBe('VICTORY');
   });
 
   const newMapSpecs: Array<{
@@ -165,29 +171,12 @@ describe('operations maps', () => {
     test(`${id} run can progress to VICTORY through full wave cycle routing`, () => {
       const mapDef = getMapDef(id);
       const runConfig = createOperationsRunConfig(mapDef);
-      let state: GameState = {
+      const state: GameState = {
         ...createInitialState(runConfig),
         phase: 'PREP'
       };
 
-      while (state.phase !== 'VICTORY') {
-        if (state.phase === 'PREP') {
-          state = startWave(state);
-          continue;
-        }
-
-        if (state.phase === 'WAVE_ACTIVE') {
-          state = {
-            ...state,
-            spawnQueue: [],
-            enemies: []
-          };
-        }
-
-        state = tick(state);
-      }
-
-      expect(state.phase).toBe('VICTORY');
+      expect(runToVictory(state).phase).toBe('VICTORY');
     });
   });
 });

@@ -1,16 +1,24 @@
 import { describe, expect, test } from 'vitest';
 import { TowerArchetype, TOWER_DEFS } from '../../src/const/towers';
-import { createInitialState } from '../../src/simulation/create-initial-state';
 import { placeTower } from '../../src/simulation/tower-placement';
 import { sellTower } from '../../src/simulation/tower-sell';
+import { createState } from '../helpers/builders';
+
+const createPrepState = () => createState({ phase: 'PREP' });
+
+const placeRapidTowerAtDefaultCell = () => {
+  const initial = createPrepState();
+  const placed = placeTower(initial, [1, 1], TowerArchetype.RAPID);
+  if ('error' in placed) {
+    throw new Error('unexpected placement error');
+  }
+
+  return { initial, placed };
+};
 
 describe('sellTower', () => {
   test('removes tower and refunds 50% of cost', () => {
-    const initial = { ...createInitialState(), phase: 'PREP' as const };
-    const placed = placeTower(initial, [1, 1], TowerArchetype.RAPID);
-    if ('error' in placed) {
-      throw new Error('unexpected placement error');
-    }
+    const { initial, placed } = placeRapidTowerAtDefaultCell();
 
     const result = sellTower(placed, [1, 1]);
     if ('error' in result) {
@@ -26,17 +34,13 @@ describe('sellTower', () => {
   });
 
   test('returns error when no tower at cursor', () => {
-    const state = { ...createInitialState(), phase: 'PREP' as const };
+    const state = createPrepState();
     const result = sellTower(state, [1, 1]);
     expect(result).toEqual({ error: 'No tower at cursor to sell' });
   });
 
   test('returns error outside placement phase', () => {
-    const initial = { ...createInitialState(), phase: 'PREP' as const };
-    const placed = placeTower(initial, [1, 1], TowerArchetype.RAPID);
-    if ('error' in placed) {
-      throw new Error('unexpected placement error');
-    }
+    const { placed } = placeRapidTowerAtDefaultCell();
 
     const activeState = { ...placed, phase: 'WAVE_ACTIVE' as const };
     const result = sellTower(activeState, [1, 1]);
@@ -44,11 +48,7 @@ describe('sellTower', () => {
   });
 
   test('sell then rebuy does not create currency exploit', () => {
-    const initial = { ...createInitialState(), phase: 'PREP' as const };
-    const placed = placeTower(initial, [1, 1], TowerArchetype.RAPID);
-    if ('error' in placed) {
-      throw new Error('unexpected placement error');
-    }
+    const { initial, placed } = placeRapidTowerAtDefaultCell();
 
     const sold = sellTower(placed, [1, 1]);
     if ('error' in sold) {
@@ -70,11 +70,7 @@ describe('sellTower', () => {
   });
 
   test('allows sell during WAVE_CLEAR phase', () => {
-    const initial = { ...createInitialState(), phase: 'PREP' as const };
-    const placed = placeTower(initial, [1, 1], TowerArchetype.RAPID);
-    if ('error' in placed) {
-      throw new Error('unexpected placement error');
-    }
+    const { placed } = placeRapidTowerAtDefaultCell();
 
     const waveClearState = { ...placed, phase: 'WAVE_CLEAR' as const };
     const result = sellTower(waveClearState, [1, 1]);

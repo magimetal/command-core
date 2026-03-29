@@ -84,6 +84,13 @@ const stampObstacles = (grid: Cell[][], obstacles: [number, number][]): Cell[][]
   return next;
 };
 
+const createMapGridFactory = (
+  createEnemyPath: () => [number, number][],
+  obstacles: [number, number][]
+): (() => Cell[][]) => {
+  return () => stampObstacles(createGridFromPath(createEnemyPath()), obstacles);
+};
+
 const createCrossroadsPath = (): [number, number][] => {
   const path: [number, number][] = [];
 
@@ -604,7 +611,7 @@ export const OPERATIONS_MAP_DEFS: OperationsMapDef[] = [
     id: 'map-01',
     label: 'Crossroads',
     description: 'Triple crossing lanes split upper and mid firing angles.',
-    createGrid: () => stampObstacles(createGridFromPath(createCrossroadsPath()), CROSSROADS_OBSTACLES),
+    createGrid: createMapGridFactory(createCrossroadsPath, CROSSROADS_OBSTACLES),
     createEnemyPath: createCrossroadsPath,
     waves: CROSSROADS_WAVES
   },
@@ -612,7 +619,7 @@ export const OPERATIONS_MAP_DEFS: OperationsMapDef[] = [
     id: 'map-02',
     label: 'The Gauntlet',
     description: 'Extended Z-lane with alternating flank windows.',
-    createGrid: () => stampObstacles(createGridFromPath(createGauntletPath()), GAUNTLET_OBSTACLES),
+    createGrid: createMapGridFactory(createGauntletPath, GAUNTLET_OBSTACLES),
     createEnemyPath: createGauntletPath,
     waves: GAUNTLET_WAVES
   },
@@ -620,7 +627,7 @@ export const OPERATIONS_MAP_DEFS: OperationsMapDef[] = [
     id: 'map-03',
     label: 'Perimeter',
     description: 'Perimeter sweep with an inward crossing spike.',
-    createGrid: () => stampObstacles(createGridFromPath(createPerimeterPath()), PERIMETER_OBSTACLES),
+    createGrid: createMapGridFactory(createPerimeterPath, PERIMETER_OBSTACLES),
     createEnemyPath: createPerimeterPath,
     waves: PERIMETER_WAVES
   },
@@ -628,7 +635,7 @@ export const OPERATIONS_MAP_DEFS: OperationsMapDef[] = [
     id: 'map-04',
     label: 'Zigzag',
     description: 'Long W-chain with extra teeth and pivot pressure.',
-    createGrid: () => stampObstacles(createGridFromPath(createZigzagPath()), ZIGZAG_OBSTACLES),
+    createGrid: createMapGridFactory(createZigzagPath, ZIGZAG_OBSTACLES),
     createEnemyPath: createZigzagPath,
     waves: ZIGZAG_WAVES
   },
@@ -636,7 +643,7 @@ export const OPERATIONS_MAP_DEFS: OperationsMapDef[] = [
     id: 'map-05',
     label: 'The Coil',
     description: 'Double-loop coil crossing through a narrow center.',
-    createGrid: () => stampObstacles(createGridFromPath(createCoilPath()), COIL_OBSTACLES),
+    createGrid: createMapGridFactory(createCoilPath, COIL_OBSTACLES),
     createEnemyPath: createCoilPath,
     waves: COIL_WAVES
   },
@@ -644,7 +651,7 @@ export const OPERATIONS_MAP_DEFS: OperationsMapDef[] = [
     id: 'map-06',
     label: 'Reverse Run',
     description: 'Reverse entry detour that crosses its opening lane.',
-    createGrid: () => stampObstacles(createGridFromPath(createReverseRunPath()), REVERSE_RUN_OBSTACLES),
+    createGrid: createMapGridFactory(createReverseRunPath, REVERSE_RUN_OBSTACLES),
     createEnemyPath: createReverseRunPath,
     waves: REVERSE_RUN_WAVES
   },
@@ -652,7 +659,7 @@ export const OPERATIONS_MAP_DEFS: OperationsMapDef[] = [
     id: 'map-07',
     label: 'Labyrinth',
     description: 'High-turn labyrinth with limited build pockets.',
-    createGrid: () => stampObstacles(createGridFromPath(createLabyrinthPath()), LABYRINTH_OBSTACLES),
+    createGrid: createMapGridFactory(createLabyrinthPath, LABYRINTH_OBSTACLES),
     createEnemyPath: createLabyrinthPath,
     waves: LABYRINTH_WAVES
   },
@@ -660,7 +667,7 @@ export const OPERATIONS_MAP_DEFS: OperationsMapDef[] = [
     id: 'map-08',
     label: 'The Crucible',
     description: 'Open-center hairpin route with obstacle choke islands.',
-    createGrid: () => stampObstacles(createGridFromPath(createCruciblePath()), CRUCIBLE_OBSTACLES),
+    createGrid: createMapGridFactory(createCruciblePath, CRUCIBLE_OBSTACLES),
     createEnemyPath: createCruciblePath,
     waves: CRUCIBLE_WAVES
   },
@@ -668,7 +675,7 @@ export const OPERATIONS_MAP_DEFS: OperationsMapDef[] = [
     id: 'map-09',
     label: 'Blitz',
     description: 'Straight sprint lane split by dense obstacle fields.',
-    createGrid: () => stampObstacles(createGridFromPath(createBlitzPath()), BLITZ_OBSTACLES),
+    createGrid: createMapGridFactory(createBlitzPath, BLITZ_OBSTACLES),
     createEnemyPath: createBlitzPath,
     waves: BLITZ_WAVES
   },
@@ -676,7 +683,7 @@ export const OPERATIONS_MAP_DEFS: OperationsMapDef[] = [
     id: 'map-10',
     label: 'Ouroboros',
     description: 'Figure-eight loop with a contested center crossing.',
-    createGrid: () => stampObstacles(createGridFromPath(createOuroborosPath()), OUROBOROS_OBSTACLES),
+    createGrid: createMapGridFactory(createOuroborosPath, OUROBOROS_OBSTACLES),
     createEnemyPath: createOuroborosPath,
     waves: OUROBOROS_WAVES
   }

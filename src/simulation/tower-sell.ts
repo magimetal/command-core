@@ -1,6 +1,7 @@
 import { getTowerDef } from '../const/towers';
 import { isPlacementPhase, type GameState } from '../models/game-state';
 import type { OperationError } from '../models/operation-error';
+import { getCellAt, updateCellAt } from './grid-cell';
 
 export const sellTower = (
   state: GameState,
@@ -10,8 +11,7 @@ export const sellTower = (
     return { error: 'You can only sell towers between waves' };
   }
 
-  const [col, row] = pos;
-  const cell = state.grid[row]?.[col];
+  const cell = getCellAt(state.grid, pos);
   if (!cell || cell.tower === undefined) {
     return { error: 'No tower at cursor to sell' };
   }
@@ -23,19 +23,9 @@ export const sellTower = (
 
   const refund = Math.floor(getTowerDef(tower.archetype).cost / 2);
 
-  const nextGrid = state.grid.map((gridRow, rowIndex) => {
-    if (rowIndex !== row) {
-      return gridRow;
-    }
-
-    return gridRow.map((gridCell, colIndex) => {
-      if (colIndex !== col) {
-        return gridCell;
-      }
-
-      const { tower: _removedTower, ...rest } = gridCell;
-      return { ...rest };
-    });
+  const nextGrid = updateCellAt(state.grid, pos, (gridCell) => {
+    const { tower: _removedTower, ...rest } = gridCell;
+    return { ...rest };
   });
 
   return {

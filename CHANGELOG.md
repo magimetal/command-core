@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Unreleased]
 
 ### Added
+- Simulation grid-cell utility module (`src/simulation/grid-cell.ts`) with shared `isInBounds`, `getCellAt`, and `updateCellAt` helpers to centralize coordinate-safe cell reads/writes.
 - Operations content expansion for long-form runs:
   - added eight new Operations maps (Perimeter, Zigzag, The Coil, Reverse Run, Labyrinth, The Crucible, Blitz, Ouroboros) for a total of 10 map options
   - added map obstacle stamping support (`CellType.BLOCKED`) so each map can define non-buildable obstacle pockets without mutating path/spawn/base cells
@@ -27,6 +28,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - New end-state restart control (`R`) with input coverage for `GAME_OVER` and `VICTORY`.
 
 ### Changed
+- Simplified Operations map definitions by introducing a shared map-grid factory to remove repeated `createGrid` lambda patterns across all 10 maps.
+- Refactored tower placement and tower sell mutations to use shared grid-cell helpers instead of duplicating row/column traversal logic in each simulation module.
+- Removed legacy `src/const/map.ts` compatibility stub that no longer provided runtime behavior.
 - Operations progression now uses map-specific extended wave tables:
   - moved Gauntlet wave definitions into shared `waves.ts`
   - expanded Crossroads and Gauntlet to 15-wave progression
@@ -60,6 +64,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Updated internal agent docs (`AGENTS.md`, `src/AGENTS.md`, `src/const/AGENTS.md`) to point to shared rendering utilities and new constant modules.
 
 ### Tested
+- Refined simulation tests for maintainability:
+  - extracted shared wave-to-victory helper in `tests/simulation/operations-maps.test.ts`
+  - replaced repeated setup blocks in `tests/simulation/tower-sell.test.ts` with shared prep-state and placement helpers
 - Added new focused test suites:
   - `tests/simulation/combat.los.test.ts` for projectile/combat line-of-sight behavior
   - `tests/rendering/text-utils.test.ts` for grapheme/display-width helpers

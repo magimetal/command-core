@@ -2,7 +2,7 @@ import { getDisplayWidth, truncateDisplay } from './color-map';
 
 export const SECTION_BREAK = '__DIVIDER__';
 
-export const padVisibleLine = (line: string, width: number): string => {
+const padVisibleLine = (line: string, width: number): string => {
   const visibleLength = getDisplayWidth(line);
   if (visibleLength >= width) {
     return line;
@@ -11,7 +11,7 @@ export const padVisibleLine = (line: string, width: number): string => {
   return `${line}${' '.repeat(width - visibleLength)}`;
 };
 
-export const padCenteredVisibleLine = (line: string, width: number): string => {
+const padCenteredVisibleLine = (line: string, width: number): string => {
   const visibleLength = getDisplayWidth(line);
   if (visibleLength >= width) {
     return line;
