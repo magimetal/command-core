@@ -7,6 +7,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Unreleased]
 
 ### Added
+- Anomaly mode wave system expansion:
+  - Extended wave progression from 4-6 to 15-20 waves with exponential scaling (1.15-1.20x growth factor)
+  - Archetype progression tiers: TANK unlocks wave 3, BRUTE wave 8, COLOSSUS wave 9
+  - Per-archetype spawn intervals with wave-scaling (FAST 7→3 ticks, COLOSSUS 28→20 ticks)
+  - Centralized archetype constants: `ARCHETYPE_UNLOCK_WAVES` and `BASE_DISTRIBUTION_WEIGHTS`
+- Path personality system for procedural map generation:
+  - Five distinct generation algorithms: CLASSIC (40%), SPIRAL (15%), BACKTRACK (15%), ZIGZAG_INTENSE (15%), MULTI_PASS (15%)
+  - Weighted personality selection with validation
+  - New shape validation helpers: `hasBacktrackMoves`, `hasPhaseTransitions`
+  - Comprehensive test coverage in `tests/simulation/anomaly-path-personality.test.ts`
+
+### Changed
+- Refactored Anomaly generation for maintainability:
+  - Extracted 18 path generation constants (scoring weights, thresholds, limits)
+  - Added `isReversal()` helper to eliminate duplicate direction-check logic
+  - Fixed spawn interval progress calculation to use actual wave count
+  - Fixed archetype count adjustment to target most numerous (not last) archetype
+- Improved type safety in path generation with explicit `1 | -1` annotations
 - Hierarchical agent documentation system:
   - generated root `AGENTS.md` as project knowledge base with structure, code map, conventions, and design context
   - generated `src/AGENTS.md`, `src/const/AGENTS.md`, `src/components/AGENTS.md`, `src/models/AGENTS.md`, `src/rendering/AGENTS.md`, `src/simulation/AGENTS.md`, and `tests/AGENTS.md` for directory-specific guidance

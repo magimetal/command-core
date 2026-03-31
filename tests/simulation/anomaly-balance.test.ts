@@ -31,12 +31,12 @@ describe('anomaly balance guardrails', () => {
     expect(anomaly.startingBaseHp).toBeGreaterThan(operations.startingBaseHp);
   });
 
-  test('anomaly wave HP pressure stays below operations map 01 baseline for seed 7', () => {
+  test('anomaly wave HP pressure stays below operations baseline for first 6 waves', () => {
     const operations = createOperationsRunConfig(OPERATIONS_MAP_DEFS[0]);
     const anomaly = generateAnomalyRunConfig(7);
 
-    const totalWaveHp = (waves: typeof operations.waves): number => {
-      return waves.reduce((waveSum, wave) => {
+    const totalWaveHp = (waves: typeof operations.waves, maxWaves: number): number => {
+      return waves.slice(0, maxWaves).reduce((waveSum, wave) => {
         const waveHp = wave.enemies.reduce((groupSum, group) => {
           return groupSum + ENEMY_DEFS[group.archetype].maxHp * group.count;
         }, 0);
@@ -44,6 +44,20 @@ describe('anomaly balance guardrails', () => {
       }, 0);
     };
 
-    expect(totalWaveHp(anomaly.waves)).toBeLessThan(totalWaveHp(operations.waves));
+    // Compare first 6 waves only since Anomaly now has 15-20
+    expect(totalWaveHp(anomaly.waves, 6)).toBeLessThan(totalWaveHp(operations.waves, 6));
+  });
+
+  test('late-game waves have appropriate challenge scaling', () => {
+    const config = generateAnomalyRunConfig(7);
+
+    if (config.waves.length >= 15) {
+      const wave1Count = config.waves[0].enemies.reduce((sum, g) => sum + g.count, 0);
+      const wave15Count = config.waves[14].enemies.reduce((sum, g) => sum + g.count, 0);
+
+      // Wave 15 should have 5-15x more enemies than wave 1
+      expect(wave15Count).toBeGreaterThan(wave1Count * 5);
+      expect(wave15Count).toBeLessThan(wave1Count * 15);
+    }
   });
 });

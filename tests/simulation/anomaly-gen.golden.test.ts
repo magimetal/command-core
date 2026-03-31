@@ -37,8 +37,8 @@ describe('anomaly-gen golden output', () => {
         [4, 9]
       ],
       towerPool: [TowerArchetype.RAPID, TowerArchetype.SNIPER, TowerArchetype.CANNON],
-      waveCount: 4,
-      totalEnemyCountPerWave: [3, 6, 8, 8]
+      waveCount: 16,
+      totalEnemyCountPerWave: [9, 11, 11, 12, 12, 21, 29, 28, 33, 42, 39, 54, 82, 49, 76, 107]
     });
   });
 
@@ -57,8 +57,8 @@ describe('anomaly-gen golden output', () => {
         [0, 10]
       ],
       towerPool: [TowerArchetype.SLOW, TowerArchetype.RAPID, TowerArchetype.CANNON],
-      waveCount: 4,
-      totalEnemyCountPerWave: [5, 8, 10, 13]
+      waveCount: 17,
+      totalEnemyCountPerWave: [10, 10, 12, 13, 15, 24, 18, 24, 39, 32, 32, 62, 69, 55, 64, 94, 115]
     });
   });
 
@@ -67,18 +67,18 @@ describe('anomaly-gen golden output', () => {
       firstWaypoints: [
         [0, 9],
         [1, 9],
-        [1, 10],
-        [1, 11],
-        [1, 12],
-        [1, 13],
-        [2, 13],
-        [3, 13],
-        [3, 14],
-        [4, 14]
+        [2, 9],
+        [3, 9],
+        [4, 9],
+        [5, 9],
+        [6, 9],
+        [7, 9],
+        [8, 9],
+        [9, 9]
       ],
       towerPool: [TowerArchetype.SLOW, TowerArchetype.SNIPER, TowerArchetype.RAPID],
-      waveCount: 4,
-      totalEnemyCountPerWave: [3, 5, 8, 9]
+      waveCount: 16,
+      totalEnemyCountPerWave: [10, 11, 14, 15, 17, 20, 20, 24, 38, 45, 30, 43, 49, 101, 63, 75]
     });
   });
 });
