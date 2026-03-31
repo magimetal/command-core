@@ -155,7 +155,9 @@ Quick safety keys:
 - Grid size: **16 rows × 34 columns**
 - Starting state: **24 HP**, **$165**
 - Tower pool: randomized **3 of 4** towers per run
-- Wave count: randomized **4 to 5** waves per run
+- Wave count: **15 to 20** waves per run with exponential scaling
+- Archetype progression: **TANK** unlocks wave 3, **BRUTE** wave 8, **COLOSSUS** wave 9
+- Path personality system creates varied map shapes (CLASSIC, SPIRAL, BACKTRACK, ZIGZAG, MULTI_PASS)
 - Score multiplier: **1.5x**
 - Run identity: `Anomaly #<seed>`
 
@@ -191,6 +193,8 @@ ANOMALY_SEED=12345 npm start
 | STANDARD | `S` | 10 | 2 | 10 | 1 |
 | TANK | `T` | 40 | 4 | 25 | 3 |
 | FAST | `F` | 5 | 1 | 4 | 2 |
+| BRUTE | `B` | 80 | 5 | 40 | 5 |
+| COLOSSUS | `C` | 200 | 6 | 100 | 10 |
 
 \*Lower move cooldown means faster movement cadence.
 
