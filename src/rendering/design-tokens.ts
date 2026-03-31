@@ -24,6 +24,110 @@ export type GridEntityClass =
   | 'COLOSSUS_ENEMY'
   | 'CURSOR';
 
+type ChalkStyle = (value: string) => string;
+
+type EntityColorConfig = {
+  full: ChalkStyle;
+  mid?: ChalkStyle;
+  low?: ChalkStyle;
+  render: (symbol: string, style: ChalkStyle) => string;
+};
+
+const renderWithStyle = (symbol: string, style: ChalkStyle): string => style(symbol);
+
+const GRID_ENTITY_COLOR_MAP: Record<GridEntityClass, EntityColorConfig> = {
+  PATH: {
+    full: chalk.dim.white,
+    render: renderWithStyle
+  },
+  BUILDABLE: {
+    full: chalk.dim.green,
+    render: renderWithStyle
+  },
+  BLOCKED: {
+    full: chalk.dim.cyan,
+    render: renderWithStyle
+  },
+  SPAWN: {
+    full: chalk.bold.yellowBright,
+    render: renderWithStyle
+  },
+  BASE: {
+    full: chalk.bold.cyanBright,
+    render: renderWithStyle
+  },
+  RAPID_TOWER: {
+    full: chalk.bold.greenBright,
+    render: renderWithStyle
+  },
+  CANNON_TOWER: {
+    full: chalk.bold.red,
+    render: renderWithStyle
+  },
+  SNIPER_TOWER: {
+    full: chalk.bold.whiteBright,
+    render: renderWithStyle
+  },
+  SLOW_TOWER: {
+    full: chalk.bold.magentaBright,
+    render: renderWithStyle
+  },
+  RAPID_PROJ: {
+    full: chalk.bold.greenBright,
+    render: renderWithStyle
+  },
+  CANNON_PROJ: {
+    full: chalk.bold.redBright,
+    render: renderWithStyle
+  },
+  SNIPER_PROJ: {
+    full: chalk.bold.white,
+    render: renderWithStyle
+  },
+  SLOW_PROJ: {
+    full: chalk.bold.magenta,
+    render: renderWithStyle
+  },
+  STANDARD_ENEMY: {
+    full: chalk.bold.yellow,
+    mid: (value) => chalk.dim(chalk.yellow(value)),
+    low: chalk.bold.red,
+    render: renderWithStyle
+  },
+  TANK_ENEMY: {
+    full: chalk.bold.magenta,
+    mid: (value) => chalk.dim(chalk.magentaBright(value)),
+    low: chalk.bold.red,
+    render: renderWithStyle
+  },
+  FAST_ENEMY: {
+    full: chalk.bold.yellowBright,
+    low: chalk.bold.red,
+    render: renderWithStyle
+  },
+  BRUTE_ENEMY: {
+    full: chalk.bold.red,
+    mid: chalk.dim.red,
+    low: chalk.bold.redBright,
+    render: renderWithStyle
+  },
+  COLOSSUS_ENEMY: {
+    full: chalk.bold.white,
+    mid: chalk.dim.white,
+    low: chalk.bold.red,
+    render: renderWithStyle
+  },
+  CURSOR: {
+    full: chalk.bgYellow.black.bold,
+    render: renderWithStyle
+  }
+};
+
+const DEFAULT_GRID_ENTITY_COLOR_CONFIG: EntityColorConfig = {
+  full: chalk.dim.white,
+  render: renderWithStyle
+};
+
 type HudValueClass = 'HP' | 'GOLD' | 'WAVE' | 'PHASE';
 
 export type EventMessageClass = 'KILL' | 'LEAK' | 'WAVE' | 'INFO' | 'ERROR' | 'THREAT' | 'SURGE';
@@ -33,123 +137,17 @@ export const tokenGridSymbol = (
   entityClass: GridEntityClass,
   hpRatio?: number
 ): string => {
-  if (entityClass === 'PATH') {
-    return chalk.dim.white(symbol);
-  }
+  const config = GRID_ENTITY_COLOR_MAP[entityClass] ?? DEFAULT_GRID_ENTITY_COLOR_CONFIG;
+  const style =
+    hpRatio === undefined
+      ? config.full
+      : hpRatio <= 0.33 && config.low !== undefined
+        ? config.low
+        : hpRatio <= 0.66 && config.mid !== undefined
+          ? config.mid
+          : config.full;
 
-  if (entityClass === 'BUILDABLE') {
-    return chalk.dim.green(symbol);
-  }
-
-  if (entityClass === 'BLOCKED') {
-    return chalk.dim.cyan(symbol);
-  }
-
-  if (entityClass === 'SPAWN') {
-    return chalk.bold.yellowBright(symbol);
-  }
-
-  if (entityClass === 'BASE') {
-    return chalk.bold.cyanBright(symbol);
-  }
-
-  if (entityClass === 'RAPID_TOWER') {
-    return chalk.bold.greenBright(symbol);
-  }
-
-  if (entityClass === 'CANNON_TOWER') {
-    return chalk.bold.red(symbol);
-  }
-
-  if (entityClass === 'SNIPER_TOWER') {
-    return chalk.bold.whiteBright(symbol);
-  }
-
-  if (entityClass === 'SLOW_TOWER') {
-    return chalk.bold.magentaBright(symbol);
-  }
-
-  if (entityClass === 'RAPID_PROJ') {
-    return chalk.bold.greenBright(symbol);
-  }
-
-  if (entityClass === 'CANNON_PROJ') {
-    return chalk.bold.redBright(symbol);
-  }
-
-  if (entityClass === 'SNIPER_PROJ') {
-    return chalk.bold.white(symbol);
-  }
-
-  if (entityClass === 'SLOW_PROJ') {
-    return chalk.bold.magenta(symbol);
-  }
-
-  if (entityClass === 'STANDARD_ENEMY') {
-    if (hpRatio !== undefined) {
-      if (hpRatio < 0.33) {
-        return chalk.bold.red(symbol);
-      }
-
-      if (hpRatio <= 0.66) {
-        return chalk.dim(chalk.yellow(symbol));
-      }
-    }
-
-    return chalk.bold.yellow(symbol);
-  }
-
-  if (entityClass === 'TANK_ENEMY') {
-    if (hpRatio !== undefined) {
-      if (hpRatio < 0.33) {
-        return chalk.bold.red(symbol);
-      }
-
-      if (hpRatio <= 0.66) {
-        return chalk.dim(chalk.magentaBright(symbol));
-      }
-    }
-
-    return chalk.bold.magenta(symbol);
-  }
-
-  if (entityClass === 'FAST_ENEMY') {
-    if (hpRatio !== undefined && hpRatio < 0.33) {
-      return chalk.bold.red(symbol);
-    }
-
-    return chalk.bold.yellowBright(symbol);
-  }
-
-  if (entityClass === 'BRUTE_ENEMY') {
-    if (hpRatio !== undefined) {
-      if (hpRatio < 0.33) {
-        return chalk.bold.redBright(symbol);
-      }
-
-      if (hpRatio <= 0.66) {
-        return chalk.dim.red(symbol);
-      }
-    }
-
-    return chalk.bold.red(symbol);
-  }
-
-  if (entityClass === 'COLOSSUS_ENEMY') {
-    if (hpRatio !== undefined) {
-      if (hpRatio < 0.33) {
-        return chalk.bold.red(symbol);
-      }
-
-      if (hpRatio <= 0.66) {
-        return chalk.dim.white(symbol);
-      }
-    }
-
-    return chalk.bold.white(symbol);
-  }
-
-  return chalk.bgYellow.black.bold(symbol);
+  return config.render(symbol, style);
 };
 
 export const tokenHudValue = (

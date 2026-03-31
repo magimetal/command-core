@@ -1,6 +1,6 @@
 import type { GameState } from '../models/game-state';
 import { composeBorder, SECTION_BREAK } from './border';
-import { getDisplayWidth } from './color-map';
+import { getDisplayWidth } from './text-utils';
 import { composeEndStateFrame } from './end-state-composer';
 import { composeGrid } from './grid-composer';
 import { composeEventLog, composeHud, composeTitleBar } from './hud-composer';

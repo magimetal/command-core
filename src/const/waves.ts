@@ -1,6 +1,6 @@
 import { EnemyArchetype } from './enemies';
 
-interface WaveEnemyGroup {
+export interface WaveEnemyGroup {
   archetype: EnemyArchetype;
   count: number;
   spawnIntervalTicks: number;

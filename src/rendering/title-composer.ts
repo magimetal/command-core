@@ -1,7 +1,8 @@
 import chalk from 'chalk';
 import type { GameState } from '../models/game-state';
 import { isReducedMotionEnabled } from './accessibility';
-import { colorizeEventLogMessage, getDisplayWidth } from './color-map';
+import { tokenEventLogMessage } from './design-tokens';
+import { getDisplayWidth } from './text-utils';
 import { composeBorder, SECTION_BREAK } from './border';
 import { FRAME_INNER_WIDTH_BUDGET } from './frame-composer';
 import { stylePrimary, styleSubtle } from './text-styles';
@@ -27,7 +28,7 @@ export const composeTitleFrame = (state: GameState, maxInnerWidth?: number): str
   const lineOne = stylePrimary(':: COMMAND CORE ONLINE ::');
   const lineTwo = styleSubtle('Defend the base through escalating waves');
   const lineThree = chalk.white('Any key: Choose mode');
-  const lineFour = colorizeEventLogMessage('Q: Quit');
+  const lineFour = tokenEventLogMessage('Q: Quit');
 
   return composeBorder(
     [

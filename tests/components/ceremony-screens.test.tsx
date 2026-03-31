@@ -1,12 +1,11 @@
 import React from 'react';
 import { afterEach, describe, expect, test } from 'vitest';
 import { cleanup, render } from 'ink-testing-library';
-import { GameOverScreen } from '../../src/components/GameOverScreen';
+import { EndStateScreen } from '../../src/components/EndStateScreen';
 import { MapSelectScreen } from '../../src/components/MapSelectScreen';
 import { ModeSelectScreen } from '../../src/components/ModeSelectScreen';
 import { TitleScreen } from '../../src/components/TitleScreen';
-import { VictoryScreen } from '../../src/components/VictoryScreen';
-import { stripAnsi } from '../../src/rendering/color-map';
+import { stripAnsi } from '../../src/rendering/text-utils';
 import { composeEndStateFrame } from '../../src/rendering/end-state-composer';
 import { composeMapSelectFrame } from '../../src/rendering/map-select-composer';
 import { composeModeSelectFrame } from '../../src/rendering/mode-select-composer';
@@ -105,11 +104,11 @@ describe('Ink ceremony screens', () => {
     };
     const composerOutput = stripAnsi(composeEndStateFrame(state, 76));
 
-    const wide = render(<VictoryScreen state={state} terminalColumnsOverride={78} />);
+    const wide = render(<EndStateScreen state={state} variant="victory" terminalColumnsOverride={78} />);
     const wideOutput = stripAnsi(wide.lastFrame() ?? '');
     expect(wideOutput).toMatchSnapshot('victory-78');
 
-    const narrow = render(<VictoryScreen state={state} terminalColumnsOverride={64} />);
+    const narrow = render(<EndStateScreen state={state} variant="victory" terminalColumnsOverride={64} />);
     const narrowOutput = stripAnsi(narrow.lastFrame() ?? '');
     expect(narrowOutput).toMatchSnapshot('victory-64');
 
@@ -133,11 +132,11 @@ describe('Ink ceremony screens', () => {
     };
     const composerOutput = stripAnsi(composeEndStateFrame(state, 76));
 
-    const wide = render(<GameOverScreen state={state} terminalColumnsOverride={78} />);
+    const wide = render(<EndStateScreen state={state} variant="game-over" terminalColumnsOverride={78} />);
     const wideOutput = stripAnsi(wide.lastFrame() ?? '');
     expect(wideOutput).toMatchSnapshot('game-over-78');
 
-    const narrow = render(<GameOverScreen state={state} terminalColumnsOverride={64} />);
+    const narrow = render(<EndStateScreen state={state} variant="game-over" terminalColumnsOverride={64} />);
     const narrowOutput = stripAnsi(narrow.lastFrame() ?? '');
     expect(narrowOutput).toMatchSnapshot('game-over-64');
 

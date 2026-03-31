@@ -1,5 +1,5 @@
 import { getTowerDef, type TowerArchetype } from '../const/towers';
-import { CellType } from '../models/cell';
+import { CellType, type GridPos } from '../models/cell';
 import type { GameState } from '../models/game-state';
 import type { OperationError } from '../models/operation-error';
 import type { Tower } from '../models/tower';
@@ -15,7 +15,7 @@ export enum PlacementErrorCode {
 
 export const placeTower = (
   state: GameState,
-  pos: [number, number],
+  pos: GridPos,
   archetype: TowerArchetype
 ): GameState | OperationError<PlacementErrorCode> => {
   if (!isInBounds(state.grid, pos)) {

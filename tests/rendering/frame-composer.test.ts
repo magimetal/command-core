@@ -2,7 +2,8 @@ import { describe, expect, test } from 'vitest';
 import { createOperationsRunConfig, OPERATIONS_MAP_DEFS } from '../../src/const/operations-maps';
 import { EnemyArchetype } from '../../src/const/enemies';
 import { TowerArchetype } from '../../src/const/towers';
-import { colorizeGridSymbol, stripAnsi } from '../../src/rendering/color-map';
+import { tokenGridSymbol } from '../../src/rendering/design-tokens';
+import { stripAnsi } from '../../src/rendering/text-utils';
 import { composeFrame } from '../../src/rendering/frame-composer';
 import { getDisplayWidth } from '../../src/rendering/text-utils';
 import { createInitialState } from '../../src/simulation/create-initial-state';
@@ -545,31 +546,6 @@ describe('composeFrame', () => {
     expect(getCellSymbol(gridLines[7], 3)).toBe('T');
   });
 
-  test('event log display shows 2 most recent entries', () => {
-    const state = {
-      ...createInitialState(),
-      phase: 'PREP' as const,
-      towers: [
-        {
-          id: 'tower-rapid',
-          archetype: TowerArchetype.RAPID,
-          pos: [1, 1] as [number, number],
-          cooldownRemaining: 0,
-          kills: 0
-        }
-      ],
-      eventLog: ['e1', 'e2', 'e3', 'e4', 'e5', 'e6', 'e7', 'older event that should be hidden']
-    };
-
-    const frame = stripAnsi(composeFrame(state));
-
-    expect(frame).toContain('e1');
-    expect(frame).toContain('e2');
-    expect(frame).not.toContain('e3');
-    expect(frame).not.toContain('e7');
-    expect(frame).not.toContain('older event that should be hidden');
-  });
-
   test('event log always renders exactly 2 entries in gameplay frame', () => {
     const state = {
       ...createInitialState(),
@@ -937,8 +913,8 @@ describe('composeFrame', () => {
     const previousLevel = chalk.level;
     chalk.level = 3;
 
-    const sniper = colorizeGridSymbol('⟇', 'SNIPER_TOWER');
-    const rapid = colorizeGridSymbol('⟇', 'RAPID_TOWER');
+    const sniper = tokenGridSymbol('⟇', 'SNIPER_TOWER');
+    const rapid = tokenGridSymbol('⟇', 'RAPID_TOWER');
 
     chalk.level = previousLevel;
 

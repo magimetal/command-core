@@ -1,9 +1,10 @@
 import React from 'react';
-import { Box, Text, useStdout } from 'ink';
+import { Box, Text } from 'ink';
 import { GLYPH } from '../const/glyphs';
 import { OPERATIONS_MAP_DEFS } from '../const/operations-maps';
 import type { GameState } from '../models/game-state';
 import { getDisplayWidth, truncateDisplay } from '../rendering/text-utils';
+import { useTerminalWidth } from './use-terminal-width';
 
 interface MapSelectScreenProps {
   state: GameState;
@@ -24,9 +25,7 @@ const DIFFICULTY_TAGS: Record<string, string> = {
 };
 
 export const MapSelectScreen = ({ state, terminalColumnsOverride }: MapSelectScreenProps): React.ReactElement => {
-  const { stdout } = useStdout();
-  const terminalColumns = terminalColumnsOverride ?? stdout?.columns ?? process.stdout.columns ?? 78;
-  const width = Math.max(64, Math.min(76, terminalColumns - 2));
+  const width = useTerminalWidth({ min: 64, override: terminalColumnsOverride });
   const lineBudget = width - 6;
 
   return (

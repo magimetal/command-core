@@ -3,7 +3,7 @@ import { getTowerDef, TowerArchetype } from '../const/towers';
 import { CellType } from '../models/cell';
 import { isPlacementPhase, type GameState } from '../models/game-state';
 import { isReducedGlyphEnabled, isReducedMotionEnabled } from './accessibility';
-import { colorizeGridSymbol, type GridEntityClass } from './color-map';
+import { tokenGridSymbol, type GridEntityClass } from './design-tokens';
 
 const CELL_SYMBOLS: Record<CellType, string> = {
   [CellType.PATH]: '─',
@@ -184,7 +184,7 @@ const buildColorRun = (tokens: GridRenderToken[]): string => {
     const token = tokens[index];
 
     if (token.singleton) {
-      segments.push(colorizeGridSymbol(token.symbol, token.entityClass, token.hpRatio));
+      segments.push(tokenGridSymbol(token.symbol, token.entityClass, token.hpRatio));
       index += 1;
       continue;
     }
@@ -211,7 +211,7 @@ const buildColorRun = (tokens: GridRenderToken[]): string => {
       cursor += 1;
     }
 
-    segments.push(colorizeGridSymbol(runSymbols.join(' '), runClass, token.hpRatio));
+    segments.push(tokenGridSymbol(runSymbols.join(' '), runClass, token.hpRatio));
     index = cursor;
   }
 

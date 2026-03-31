@@ -20,13 +20,12 @@ import {
   styleThreat,
   type EventMessageClass
 } from './design-tokens';
+import { FRAME_INNER_WIDTH_BUDGET } from './frame-composer';
 import { getDisplayWidth, truncateDisplay } from './text-utils';
 import { getVisibleEventLog } from '../utils/event-log';
 import { composeWaveDrainBar, getPriorityTarget, getSurgeState } from '../utils/threat-radar';
 import { renderHpBar, renderProgressBar, renderWideHpBar } from './hp-bar';
 import { isReducedGlyphEnabled, isReducedMotionEnabled } from './accessibility';
-
-const HUD_WIDTH = 76;
 
 const towerNameByArchetype: Record<TowerArchetype, string> = {
   [TowerArchetype.RAPID]: 'Rapid',
@@ -42,7 +41,7 @@ const towerClassByArchetype: Record<TowerArchetype, 'RAPID_TOWER' | 'CANNON_TOWE
   [TowerArchetype.SLOW]: 'SLOW_TOWER'
 };
 
-const fitHudLine = (left: string, right: string = '', width: number = HUD_WIDTH): string => {
+const fitHudLine = (left: string, right: string = '', width: number = FRAME_INNER_WIDTH_BUDGET): string => {
   if (right.length === 0) {
     return truncateDisplay(left, width);
   }
@@ -88,7 +87,7 @@ const composeHpGoldLine = (state: GameState): string => {
     state.baseHp < 5 ? tokenHudValue(` ${renderProgressBar(hpRatio, 4)}`, 'HP', state.baseHp) : '';
   const barWidth = Math.max(
     20,
-    HUD_WIDTH -
+    FRAME_INNER_WIDTH_BUDGET -
       getDisplayWidth(hpPrefix) -
       getDisplayWidth(hpValue) -
       getDisplayWidth(goldSection) -
@@ -205,7 +204,7 @@ const composeArsenalLines = (state: GameState): [string, string] => {
     })
     .join('  ');
 
-  const lineFive = truncateDisplay(lineFiveTokens, HUD_WIDTH);
+  const lineFive = truncateDisplay(lineFiveTokens, FRAME_INNER_WIDTH_BUDGET);
   const selectedDef = getTowerDef(state.selectedTowerArchetype);
   const selectedSymbol = tokenGridSymbol(
     selectedDef.symbol,
@@ -245,7 +244,7 @@ export const composeHud = (state: GameState): string => {
   })();
 
   const arsenal = composeArsenalLines(state);
-  const divider = tokenDim(GLYPH.EVENT_DIVIDER.repeat(HUD_WIDTH));
+  const divider = tokenDim(GLYPH.EVENT_DIVIDER.repeat(FRAME_INNER_WIDTH_BUDGET));
 
   return [telemetry[0], telemetry[1], telemetry[2], divider, arsenal[0], arsenal[1]].join('\n');
 };
@@ -302,7 +301,7 @@ const composeEventHeader = (hiddenCount: number): string => {
   const hint = hiddenCount > 0 ? ` ${GLYPH.SCROLL_UP} ${hiddenCount} more` : '';
   const label = `${GLYPH.EVENTS_LABEL}${hint}`;
   const prefix = `${GLYPH.EVENT_DIVIDER.repeat(2)} `;
-  const suffixPad = Math.max(0, HUD_WIDTH - getDisplayWidth(prefix) - getDisplayWidth(label) - 1);
+  const suffixPad = Math.max(0, FRAME_INNER_WIDTH_BUDGET - getDisplayWidth(prefix) - getDisplayWidth(label) - 1);
 
   return tokenEventLogMessage(`${prefix}${label} ${GLYPH.EVENT_DIVIDER.repeat(suffixPad)}`);
 };

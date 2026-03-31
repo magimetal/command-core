@@ -1,4 +1,4 @@
-import { getDisplayWidth, truncateDisplay } from './color-map';
+import { getDisplayWidth, truncateDisplay } from './text-utils';
 
 export const SECTION_BREAK = '__DIVIDER__';
 

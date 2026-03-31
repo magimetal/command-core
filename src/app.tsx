@@ -1,11 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useApp } from 'ink';
+import { EndStateScreen } from './components/EndStateScreen';
 import { GameplayFrame } from './components/GameplayFrame';
-import { GameOverScreen } from './components/GameOverScreen';
 import { MapSelectScreen } from './components/MapSelectScreen';
 import { ModeSelectScreen } from './components/ModeSelectScreen';
 import { TitleScreen } from './components/TitleScreen';
-import { VictoryScreen } from './components/VictoryScreen';
 import { EVENT_PREFIX } from './const/event-prefixes';
 import { FRAME_INTERVAL_MS } from './const/game';
 import { TowerArchetype } from './const/towers';
@@ -292,8 +291,8 @@ export const App = () => {
       {state.phase === 'TITLE' && <TitleScreen state={state} />}
       {state.phase === 'MODE_SELECT' && <ModeSelectScreen state={state} />}
       {state.phase === 'MAP_SELECT' && <MapSelectScreen state={state} />}
-      {state.phase === 'VICTORY' && <VictoryScreen state={state} />}
-      {state.phase === 'GAME_OVER' && <GameOverScreen state={state} />}
+      {state.phase === 'VICTORY' && <EndStateScreen state={state} variant="victory" />}
+      {state.phase === 'GAME_OVER' && <EndStateScreen state={state} variant="game-over" />}
     </>
   );
 };

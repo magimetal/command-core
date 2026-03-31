@@ -1,7 +1,8 @@
 import React from 'react';
-import { Box, Text, useStdout } from 'ink';
+import { Box, Text } from 'ink';
 import type { GameState } from '../models/game-state';
 import { GLYPH } from '../const/glyphs';
+import { useTerminalWidth } from './use-terminal-width';
 
 interface ModeSelectScreenProps {
   state: GameState;
@@ -23,9 +24,7 @@ const renderModeLine = (label: string, description: string, selected: boolean): 
 };
 
 export const ModeSelectScreen = ({ state, terminalColumnsOverride }: ModeSelectScreenProps): React.ReactElement => {
-  const { stdout } = useStdout();
-  const terminalColumns = terminalColumnsOverride ?? stdout?.columns ?? process.stdout.columns ?? 78;
-  const width = Math.max(56, Math.min(76, terminalColumns - 2));
+  const width = useTerminalWidth({ override: terminalColumnsOverride });
 
   return (
     <Box borderStyle="round" width={width} flexDirection="column" paddingX={1}>

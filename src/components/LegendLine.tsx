@@ -1,5 +1,6 @@
 import React from 'react';
-import { Text, useStdout } from 'ink';
+import { Text } from 'ink';
+import { useTerminalWidth } from './use-terminal-width';
 
 interface LegendLineProps {
   availableTowerCount: number;
@@ -18,9 +19,7 @@ export const LegendLine = ({
   availableTowerCount,
   terminalColumnsOverride
 }: LegendLineProps): React.ReactElement => {
-  const { stdout } = useStdout();
-  const terminalColumns = terminalColumnsOverride ?? stdout?.columns ?? process.stdout.columns ?? 78;
-  const maxInnerWidth = Math.max(20, Math.min(76, terminalColumns - 2));
+  const maxInnerWidth = useTerminalWidth({ min: 20, override: terminalColumnsOverride });
 
   return <Text>{composeLegendLine(availableTowerCount, maxInnerWidth)}</Text>;
 };

@@ -1,6 +1,7 @@
 import { EVENT_PREFIX } from '../const/event-prefixes';
 import { getEnemyDisplayName } from '../const/enemies';
 import { getTowerDef } from '../const/towers';
+import type { GridPos } from '../models/cell';
 import type { Enemy } from '../models/enemy';
 import type { GameState } from '../models/game-state';
 import { CellType } from '../models/cell';
@@ -8,7 +9,7 @@ import type { Projectile } from '../models/projectile';
 import { renderHpBar } from '../rendering/hp-bar';
 import { appendEventLog } from '../utils/event-log';
 
-const distanceSquared = (a: [number, number], b: [number, number]): number => {
+const distanceSquared = (a: GridPos, b: GridPos): number => {
   const dx = a[0] - b[0];
   const dy = a[1] - b[1];
 
@@ -17,8 +18,8 @@ const distanceSquared = (a: [number, number], b: [number, number]): number => {
 
 const hasLineOfSight = (
   grid: GameState['grid'],
-  from: [number, number],
-  to: [number, number]
+  from: GridPos,
+  to: GridPos
 ): boolean => {
   const [fromCol, fromRow] = from;
   const [toCol, toRow] = to;
@@ -68,7 +69,7 @@ const hasLineOfSight = (
 
 const getNearestEnemyInRange = (
   enemies: Enemy[],
-  towerPos: [number, number],
+  towerPos: GridPos,
   range: number,
   grid: GameState['grid']
 ): Enemy | undefined => {

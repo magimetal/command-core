@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vitest';
 import { EnemyArchetype } from '../../src/const/enemies';
 import { TowerArchetype } from '../../src/const/towers';
 import type { Enemy } from '../../src/models/enemy';
-import { stripAnsi } from '../../src/rendering/color-map';
+import { stripAnsi } from '../../src/rendering/text-utils';
 import { composeEventLog, composeHud, composeTitleBar } from '../../src/rendering/hud-composer';
 import { getDisplayWidth } from '../../src/rendering/text-utils';
 import { createInitialState } from '../../src/simulation/create-initial-state';

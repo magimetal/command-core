@@ -1,10 +1,11 @@
 import { EVENT_PREFIX } from '../const/event-prefixes';
 import { ENEMY_DEFS, getEnemyDisplayName } from '../const/enemies';
+import type { GridPos } from '../models/cell';
 import type { Enemy } from '../models/enemy';
 import type { GameState } from '../models/game-state';
 import { appendEventLog } from '../utils/event-log';
 
-const moveEnemy = (enemy: Enemy, enemyPath: [number, number][]): Enemy => {
+const moveEnemy = (enemy: Enemy, enemyPath: GridPos[]): Enemy => {
   const { speed } = ENEMY_DEFS[enemy.archetype];
 
   if (enemy.moveCooldown > 1) {

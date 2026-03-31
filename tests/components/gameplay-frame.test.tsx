@@ -4,7 +4,7 @@ import { cleanup, render } from 'ink-testing-library';
 import { GameplayFrame } from '../../src/components/GameplayFrame';
 import { composeGrid } from '../../src/rendering/grid-composer';
 import { composeEventLog, composeHud } from '../../src/rendering/hud-composer';
-import { stripAnsi } from '../../src/rendering/color-map';
+import { stripAnsi } from '../../src/rendering/text-utils';
 import { getDisplayWidth } from '../../src/rendering/text-utils';
 import { createInitialState } from '../../src/simulation/create-initial-state';
 

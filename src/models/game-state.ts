@@ -1,4 +1,4 @@
-import type { Cell } from './cell';
+import type { Cell, GridPos } from './cell';
 import type { EnemyArchetype } from '../const/enemies';
 import type { TowerArchetype } from '../const/towers';
 import type { Enemy } from './enemy';
@@ -36,7 +36,7 @@ export interface GameState {
   phase: GamePhase;
   frame: number;
   menuCursor: number;
-  cursor: [number, number];
+  cursor: GridPos;
   selectedTowerArchetype: TowerArchetype;
   spawnQueue: Array<{
     archetype: EnemyArchetype;

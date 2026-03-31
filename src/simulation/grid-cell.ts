@@ -1,11 +1,11 @@
-import type { Cell } from '../models/cell';
+import type { Cell, GridPos } from '../models/cell';
 
-export const isInBounds = (grid: Cell[][], pos: [number, number]): boolean => {
+export const isInBounds = (grid: Cell[][], pos: GridPos): boolean => {
   const [col, row] = pos;
   return row >= 0 && row < grid.length && col >= 0 && col < grid[0].length;
 };
 
-export const getCellAt = (grid: Cell[][], pos: [number, number]): Cell | undefined => {
+export const getCellAt = (grid: Cell[][], pos: GridPos): Cell | undefined => {
   if (!isInBounds(grid, pos)) {
     return undefined;
   }
@@ -16,7 +16,7 @@ export const getCellAt = (grid: Cell[][], pos: [number, number]): Cell | undefin
 
 export const updateCellAt = (
   grid: Cell[][],
-  pos: [number, number],
+  pos: GridPos,
   update: (cell: Cell) => Cell
 ): Cell[][] => {
   const [targetCol, targetRow] = pos;

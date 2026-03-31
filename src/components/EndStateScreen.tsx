@@ -1,18 +1,37 @@
 import React from 'react';
-import { Box, Text, useStdout } from 'ink';
+import { Box, Text } from 'ink';
 import type { GameState } from '../models/game-state';
 import { calculateScore } from '../simulation/score';
 import { isReducedMotionEnabled } from '../rendering/accessibility';
+import { useTerminalWidth } from './use-terminal-width';
 
-interface VictoryScreenProps {
+interface EndStateScreenProps {
   state: GameState;
+  variant: 'game-over' | 'victory';
   terminalColumnsOverride?: number;
 }
 
-export const VictoryScreen = ({ state, terminalColumnsOverride }: VictoryScreenProps): React.ReactElement => {
-  const { stdout } = useStdout();
-  const terminalColumns = terminalColumnsOverride ?? stdout?.columns ?? process.stdout.columns ?? 78;
-  const width = Math.max(56, Math.min(76, terminalColumns - 2));
+const END_STATE_VARIANTS = {
+  'game-over': {
+    banner: [
+      { text: '╔═╗╔═╗╔╦╗╔═╗   ╔═╗╦  ╦╔═╗╦═╗', color: 'red' as const },
+      { text: '║ ╦╠═╣║║║║╣    ║ ║╚╗╔╝║╣ ╠╦╝', color: 'red' as const },
+      { text: '╚═╝╩ ╩╩ ╩╚═╝   ╚═╝ ╚╝ ╚═╝╩╚═', color: 'redBright' as const }
+    ],
+    message: 'Base destroyed. Mission failed.'
+  },
+  victory: {
+    banner: [
+      { text: '╦  ╦╦╔═╗╔╦╗╔═╗╦═╗╦ ╦', color: 'cyanBright' as const },
+      { text: '╚╗╔╝║║   ║ ║ ║╠╦╝╚╦╝', color: 'greenBright' as const },
+      { text: ' ╚╝ ╩╚═╝ ╩ ╚═╝╩╚═ ╩ ', color: 'white' as const }
+    ],
+    message: 'All waves cleared. Base secured.'
+  }
+} as const;
+
+export const EndStateScreen = ({ state, variant, terminalColumnsOverride }: EndStateScreenProps): React.ReactElement => {
+  const width = useTerminalWidth({ override: terminalColumnsOverride });
   const score = calculateScore(state);
   const modeLine =
     state.runConfig.mode === 'ANOMALY'
@@ -28,16 +47,19 @@ export const VictoryScreen = ({ state, terminalColumnsOverride }: VictoryScreenP
   const visibleStatLines = isReducedMotionEnabled()
     ? statLines
     : statLines.slice(Math.max(0, statLines.length - Math.min(statLines.length, Math.floor(framesSinceEntry / 2) + 1)));
+  const content = END_STATE_VARIANTS[variant];
 
   return (
     <Box borderStyle="round" width={width} flexDirection="column" paddingX={1}>
-      <Text color="cyanBright">╦  ╦╦╔═╗╔╦╗╔═╗╦═╗╦ ╦</Text>
-      <Text color="greenBright">╚╗╔╝║║   ║ ║ ║╠╦╝╚╦╝</Text>
-      <Text color="white"> ╚╝ ╩╚═╝ ╩ ╚═╝╩╚═ ╩ </Text>
+      {content.banner.map((line) => (
+        <Text key={line.text} color={line.color}>
+          {line.text}
+        </Text>
+      ))}
       <Text>────────────────────────────────────────────────────</Text>
-      <Text color="white">All waves cleared. Base secured.</Text>
+      <Text color="white">{content.message}</Text>
       {visibleStatLines.map((line, index) => (
-        <Text key={`victory-stat-${index}`}>{line}</Text>
+        <Text key={`endstate-stat-${index}`}>{line}</Text>
       ))}
       <Text>────────────────────────────────────────────────────</Text>
       <Text color="white">R: New Run   Q: Quit{promptSuffix}</Text>

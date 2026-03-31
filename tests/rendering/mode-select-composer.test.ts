@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { stripAnsi } from '../../src/rendering/color-map';
+import { stripAnsi } from '../../src/rendering/text-utils';
 import { composeModeSelectFrame } from '../../src/rendering/mode-select-composer';
 import { createInitialState } from '../../src/simulation/create-initial-state';
 

@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { getDisplayWidth, truncateDisplay } from '../../src/rendering/color-map';
+import { getDisplayWidth, truncateDisplay } from '../../src/rendering/text-utils';
 
 describe('color-map text metrics hardening', () => {
   test('measures display width for ASCII, CJK, and emoji glyphs', () => {

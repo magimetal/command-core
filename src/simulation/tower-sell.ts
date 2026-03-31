@@ -1,11 +1,12 @@
 import { getTowerDef } from '../const/towers';
+import type { GridPos } from '../models/cell';
 import { isPlacementPhase, type GameState } from '../models/game-state';
 import type { OperationError } from '../models/operation-error';
 import { getCellAt, updateCellAt } from './grid-cell';
 
 export const sellTower = (
   state: GameState,
-  pos: [number, number]
+  pos: GridPos
 ): GameState | OperationError => {
   if (!isPlacementPhase(state.phase)) {
     return { error: 'You can only sell towers between waves' };

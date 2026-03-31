@@ -12,3 +12,5 @@ export interface Cell {
   type: CellType;
   tower?: TowerId;
 }
+
+export type GridPos = [number, number];

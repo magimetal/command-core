@@ -1,7 +1,8 @@
 import React from 'react';
-import { Box, Text, useStdout } from 'ink';
+import { Box, Text } from 'ink';
 import type { GameState } from '../models/game-state';
 import { isReducedMotionEnabled } from '../rendering/accessibility';
+import { useTerminalWidth } from './use-terminal-width';
 
 interface TitleScreenProps {
   state: GameState;
@@ -24,9 +25,7 @@ const LOGO_ART = [
 const TITLE_FADE_FRAMES = 10;
 
 export const TitleScreen = ({ state, terminalColumnsOverride }: TitleScreenProps): React.ReactElement => {
-  const { stdout } = useStdout();
-  const terminalColumns = terminalColumnsOverride ?? stdout?.columns ?? process.stdout.columns ?? 78;
-  const width = Math.max(50, Math.min(76, terminalColumns - 2));
+  const width = useTerminalWidth({ min: 50, override: terminalColumnsOverride });
   const reducedMotion = isReducedMotionEnabled();
   const fadeProgress = reducedMotion ? TITLE_FADE_FRAMES : Math.min(TITLE_FADE_FRAMES, Math.max(0, state.frame));
   const revealedRows = Math.floor((fadeProgress / TITLE_FADE_FRAMES) * LOGO_ART.length);

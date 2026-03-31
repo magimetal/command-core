@@ -1,5 +1,6 @@
 import type { Cell } from '../models/cell';
 import { CellType } from '../models/cell';
+import type { GridPos } from '../models';
 import type { RunConfig } from '../models/run-config';
 import { TowerArchetype } from './towers';
 import {
@@ -26,7 +27,7 @@ export interface OperationsMapDef {
   label: string;
   description: string;
   createGrid: () => Cell[][];
-  createEnemyPath: () => [number, number][];
+  createEnemyPath: () => GridPos[];
   waves: WaveDefinition[];
 }
 
@@ -40,7 +41,7 @@ const cloneGrid = (grid: Cell[][]): Cell[][] => {
   return grid.map((row) => row.map((cell) => ({ ...cell })));
 };
 
-const clonePath = (enemyPath: [number, number][]): [number, number][] => {
+const clonePath = (enemyPath: GridPos[]): GridPos[] => {
   return enemyPath.map(([col, row]) => [col, row]);
 };
 
@@ -50,7 +51,7 @@ const cloneWaves = (waves: WaveDefinition[]): WaveDefinition[] => {
   }));
 };
 
-const createGridFromPath = (enemyPath: [number, number][]): Cell[][] => {
+const createGridFromPath = (enemyPath: GridPos[]): Cell[][] => {
   const grid = buildEmptyGrid();
 
   enemyPath.forEach(([col, row], index) => {
@@ -71,7 +72,7 @@ const createGridFromPath = (enemyPath: [number, number][]): Cell[][] => {
   return grid;
 };
 
-const stampObstacles = (grid: Cell[][], obstacles: [number, number][]): Cell[][] => {
+const stampObstacles = (grid: Cell[][], obstacles: GridPos[]): Cell[][] => {
   const next = cloneGrid(grid);
 
   obstacles.forEach(([col, row]) => {
@@ -85,54 +86,64 @@ const stampObstacles = (grid: Cell[][], obstacles: [number, number][]): Cell[][]
 };
 
 const createMapGridFactory = (
-  createEnemyPath: () => [number, number][],
-  obstacles: [number, number][]
+  createEnemyPath: () => GridPos[],
+  obstacles: GridPos[]
 ): (() => Cell[][]) => {
   return () => stampObstacles(createGridFromPath(createEnemyPath()), obstacles);
 };
 
-const createCrossroadsPath = (): [number, number][] => {
-  const path: [number, number][] = [];
+const pushWaypoint = (path: GridPos[], col: number, row: number): void => {
+  const previous = path[path.length - 1];
+  if (previous !== undefined && previous[0] === col && previous[1] === row) {
+    return;
+  }
 
-  const pushWaypoint = (col: number, row: number) => {
-    const previous = path[path.length - 1];
-    if (previous !== undefined && previous[0] === col && previous[1] === row) {
-      return;
-    }
+  path.push([col, row]);
+};
 
-    path.push([col, row]);
-  };
+const buildHorizontal = (
+  path: GridPos[],
+  row: number,
+  startCol: number,
+  endCol: number
+): void => {
+  const step = startCol <= endCol ? 1 : -1;
+  for (let c = startCol; c !== endCol + step; c += step) {
+    pushWaypoint(path, c, row);
+  }
+};
 
-  const buildHorizontal = (row: number, startCol: number, endCol: number) => {
-    const step = startCol <= endCol ? 1 : -1;
-    for (let col = startCol; step > 0 ? col <= endCol : col >= endCol; col += step) {
-      pushWaypoint(col, row);
-    }
-  };
+const buildVertical = (
+  path: GridPos[],
+  col: number,
+  startRow: number,
+  endRow: number
+): void => {
+  const step = startRow <= endRow ? 1 : -1;
+  for (let r = startRow; r !== endRow + step; r += step) {
+    pushWaypoint(path, col, r);
+  }
+};
 
-  const buildVertical = (col: number, startRow: number, endRow: number) => {
-    const step = startRow <= endRow ? 1 : -1;
-    for (let row = startRow; step > 0 ? row <= endRow : row >= endRow; row += step) {
-      pushWaypoint(col, row);
-    }
-  };
+const createCrossroadsPath = (): GridPos[] => {
+  const path: GridPos[] = [];
 
-  buildHorizontal(2, 0, 24);
-  buildVertical(24, 2, 13);
-  buildHorizontal(13, 24, 4);
-  buildVertical(4, 13, 5);
-  buildHorizontal(5, 4, 18);
-  buildVertical(18, 5, 10);
-  buildHorizontal(10, 18, 8);
-  buildVertical(8, 10, 2);
-  buildHorizontal(2, 8, 30);
-  buildVertical(30, 2, 10);
-  buildHorizontal(10, 30, MAP_COLS - 1);
+  buildHorizontal(path, 2, 0, 24);
+  buildVertical(path, 24, 2, 13);
+  buildHorizontal(path, 13, 24, 4);
+  buildVertical(path, 4, 13, 5);
+  buildHorizontal(path, 5, 4, 18);
+  buildVertical(path, 18, 5, 10);
+  buildHorizontal(path, 10, 18, 8);
+  buildVertical(path, 8, 10, 2);
+  buildHorizontal(path, 2, 8, 30);
+  buildVertical(path, 30, 2, 10);
+  buildHorizontal(path, 10, 30, MAP_COLS - 1);
 
   return path;
 };
 
-const CROSSROADS_OBSTACLES: [number, number][] = [
+const CROSSROADS_OBSTACLES: GridPos[] = [
   [12, 0],
   [20, 1],
   [3, 7],
@@ -145,44 +156,21 @@ const CROSSROADS_OBSTACLES: [number, number][] = [
   [27, 15]
 ];
 
-const createGauntletPath = (): [number, number][] => {
-  const path: [number, number][] = [];
+const createGauntletPath = (): GridPos[] => {
+  const path: GridPos[] = [];
 
-  const pushWaypoint = (col: number, row: number) => {
-    const previous = path[path.length - 1];
-    if (previous !== undefined && previous[0] === col && previous[1] === row) {
-      return;
-    }
-
-    path.push([col, row]);
-  };
-
-  const buildHorizontal = (row: number, startCol: number, endCol: number) => {
-    const step = startCol <= endCol ? 1 : -1;
-    for (let col = startCol; step > 0 ? col <= endCol : col >= endCol; col += step) {
-      pushWaypoint(col, row);
-    }
-  };
-
-  const buildVertical = (col: number, startRow: number, endRow: number) => {
-    const step = startRow <= endRow ? 1 : -1;
-    for (let row = startRow; step > 0 ? row <= endRow : row >= endRow; row += step) {
-      pushWaypoint(col, row);
-    }
-  };
-
-  buildHorizontal(8, 0, 4);
-  buildVertical(4, 8, 2);
-  buildHorizontal(2, 4, 22);
-  buildVertical(22, 2, 12);
-  buildHorizontal(12, 22, 10);
-  buildVertical(10, 12, 14);
-  buildHorizontal(14, 10, MAP_COLS - 1);
+  buildHorizontal(path, 8, 0, 4);
+  buildVertical(path, 4, 8, 2);
+  buildHorizontal(path, 2, 4, 22);
+  buildVertical(path, 22, 2, 12);
+  buildHorizontal(path, 12, 22, 10);
+  buildVertical(path, 10, 12, 14);
+  buildHorizontal(path, 14, 10, MAP_COLS - 1);
 
   return path;
 };
 
-const GAUNTLET_OBSTACLES: [number, number][] = [
+const GAUNTLET_OBSTACLES: GridPos[] = [
   [7, 5],
   [12, 4],
   [14, 5],
@@ -193,49 +181,26 @@ const GAUNTLET_OBSTACLES: [number, number][] = [
   [27, 6]
 ];
 
-const createPerimeterPath = (): [number, number][] => {
-  const path: [number, number][] = [];
+const createPerimeterPath = (): GridPos[] => {
+  const path: GridPos[] = [];
 
-  const pushWaypoint = (col: number, row: number) => {
-    const previous = path[path.length - 1];
-    if (previous !== undefined && previous[0] === col && previous[1] === row) {
-      return;
-    }
-
-    path.push([col, row]);
-  };
-
-  const buildHorizontal = (row: number, startCol: number, endCol: number) => {
-    const step = startCol <= endCol ? 1 : -1;
-    for (let col = startCol; step > 0 ? col <= endCol : col >= endCol; col += step) {
-      pushWaypoint(col, row);
-    }
-  };
-
-  const buildVertical = (col: number, startRow: number, endRow: number) => {
-    const step = startRow <= endRow ? 1 : -1;
-    for (let row = startRow; step > 0 ? row <= endRow : row >= endRow; row += step) {
-      pushWaypoint(col, row);
-    }
-  };
-
-  buildHorizontal(0, 0, 33);
-  buildVertical(33, 0, 15);
-  buildHorizontal(15, 33, 0);
-  buildVertical(0, 15, 6);
-  buildHorizontal(6, 0, 24);
-  buildVertical(24, 6, 2);
-  buildHorizontal(2, 24, 8);
-  buildVertical(8, 2, 10);
-  buildHorizontal(10, 8, 26);
-  buildVertical(26, 10, 6);
-  buildHorizontal(6, 26, 0);
-  buildVertical(0, 6, 9);
+  buildHorizontal(path, 0, 0, 33);
+  buildVertical(path, 33, 0, 15);
+  buildHorizontal(path, 15, 33, 0);
+  buildVertical(path, 0, 15, 6);
+  buildHorizontal(path, 6, 0, 24);
+  buildVertical(path, 24, 6, 2);
+  buildHorizontal(path, 2, 24, 8);
+  buildVertical(path, 8, 2, 10);
+  buildHorizontal(path, 10, 8, 26);
+  buildVertical(path, 26, 10, 6);
+  buildHorizontal(path, 6, 26, 0);
+  buildVertical(path, 0, 6, 9);
 
   return path;
 };
 
-const PERIMETER_OBSTACLES: [number, number][] = [
+const PERIMETER_OBSTACLES: GridPos[] = [
   [9, 4],
   [14, 4],
   [19, 4],
@@ -248,46 +213,23 @@ const PERIMETER_OBSTACLES: [number, number][] = [
   [30, 12]
 ];
 
-const createZigzagPath = (): [number, number][] => {
-  const path: [number, number][] = [];
+const createZigzagPath = (): GridPos[] => {
+  const path: GridPos[] = [];
 
-  const pushWaypoint = (col: number, row: number) => {
-    const previous = path[path.length - 1];
-    if (previous !== undefined && previous[0] === col && previous[1] === row) {
-      return;
-    }
-
-    path.push([col, row]);
-  };
-
-  const buildHorizontal = (row: number, startCol: number, endCol: number) => {
-    const step = startCol <= endCol ? 1 : -1;
-    for (let col = startCol; step > 0 ? col <= endCol : col >= endCol; col += step) {
-      pushWaypoint(col, row);
-    }
-  };
-
-  const buildVertical = (col: number, startRow: number, endRow: number) => {
-    const step = startRow <= endRow ? 1 : -1;
-    for (let row = startRow; step > 0 ? row <= endRow : row >= endRow; row += step) {
-      pushWaypoint(col, row);
-    }
-  };
-
-  buildHorizontal(2, 0, 14);
-  buildVertical(14, 2, 10);
-  buildHorizontal(10, 14, 1);
-  buildVertical(1, 10, 15);
-  buildHorizontal(15, 1, 20);
-  buildVertical(20, 15, 3);
-  buildHorizontal(3, 20, 30);
-  buildVertical(30, 3, 12);
-  buildHorizontal(12, 30, 33);
+  buildHorizontal(path, 2, 0, 14);
+  buildVertical(path, 14, 2, 10);
+  buildHorizontal(path, 10, 14, 1);
+  buildVertical(path, 1, 10, 15);
+  buildHorizontal(path, 15, 1, 20);
+  buildVertical(path, 20, 15, 3);
+  buildHorizontal(path, 3, 20, 30);
+  buildVertical(path, 30, 3, 12);
+  buildHorizontal(path, 12, 30, 33);
 
   return path;
 };
 
-const ZIGZAG_OBSTACLES: [number, number][] = [
+const ZIGZAG_OBSTACLES: GridPos[] = [
   [4, 0],
   [9, 1],
   [14, 7],
@@ -298,46 +240,23 @@ const ZIGZAG_OBSTACLES: [number, number][] = [
   [27, 14]
 ];
 
-const createCoilPath = (): [number, number][] => {
-  const path: [number, number][] = [];
+const createCoilPath = (): GridPos[] => {
+  const path: GridPos[] = [];
 
-  const pushWaypoint = (col: number, row: number) => {
-    const previous = path[path.length - 1];
-    if (previous !== undefined && previous[0] === col && previous[1] === row) {
-      return;
-    }
-
-    path.push([col, row]);
-  };
-
-  const buildHorizontal = (row: number, startCol: number, endCol: number) => {
-    const step = startCol <= endCol ? 1 : -1;
-    for (let col = startCol; step > 0 ? col <= endCol : col >= endCol; col += step) {
-      pushWaypoint(col, row);
-    }
-  };
-
-  const buildVertical = (col: number, startRow: number, endRow: number) => {
-    const step = startRow <= endRow ? 1 : -1;
-    for (let row = startRow; step > 0 ? row <= endRow : row >= endRow; row += step) {
-      pushWaypoint(col, row);
-    }
-  };
-
-  buildHorizontal(1, 0, 20);
-  buildVertical(20, 1, 11);
-  buildHorizontal(11, 20, 6);
-  buildVertical(6, 11, 4);
-  buildHorizontal(4, 6, 26);
-  buildVertical(26, 4, 14);
-  buildHorizontal(14, 26, 10);
-  buildVertical(10, 14, 1);
-  buildHorizontal(1, 10, 33);
+  buildHorizontal(path, 1, 0, 20);
+  buildVertical(path, 20, 1, 11);
+  buildHorizontal(path, 11, 20, 6);
+  buildVertical(path, 6, 11, 4);
+  buildHorizontal(path, 4, 6, 26);
+  buildVertical(path, 26, 4, 14);
+  buildHorizontal(path, 14, 26, 10);
+  buildVertical(path, 10, 14, 1);
+  buildHorizontal(path, 1, 10, 33);
 
   return path;
 };
 
-const COIL_OBSTACLES: [number, number][] = [
+const COIL_OBSTACLES: GridPos[] = [
   [2, 0],
   [30, 0],
   [4, 13],
@@ -348,46 +267,23 @@ const COIL_OBSTACLES: [number, number][] = [
   [31, 15]
 ];
 
-const createReverseRunPath = (): [number, number][] => {
-  const path: [number, number][] = [];
+const createReverseRunPath = (): GridPos[] => {
+  const path: GridPos[] = [];
 
-  const pushWaypoint = (col: number, row: number) => {
-    const previous = path[path.length - 1];
-    if (previous !== undefined && previous[0] === col && previous[1] === row) {
-      return;
-    }
-
-    path.push([col, row]);
-  };
-
-  const buildHorizontal = (row: number, startCol: number, endCol: number) => {
-    const step = startCol <= endCol ? 1 : -1;
-    for (let col = startCol; step > 0 ? col <= endCol : col >= endCol; col += step) {
-      pushWaypoint(col, row);
-    }
-  };
-
-  const buildVertical = (col: number, startRow: number, endRow: number) => {
-    const step = startRow <= endRow ? 1 : -1;
-    for (let row = startRow; step > 0 ? row <= endRow : row >= endRow; row += step) {
-      pushWaypoint(col, row);
-    }
-  };
-
-  buildHorizontal(3, 33, 10);
-  buildVertical(10, 3, 9);
-  buildHorizontal(9, 10, 24);
-  buildVertical(24, 9, 14);
-  buildHorizontal(14, 24, 6);
-  buildVertical(6, 14, 5);
-  buildHorizontal(5, 6, 18);
-  buildVertical(18, 5, 3);
-  buildHorizontal(3, 18, 0);
+  buildHorizontal(path, 3, 33, 10);
+  buildVertical(path, 10, 3, 9);
+  buildHorizontal(path, 9, 10, 24);
+  buildVertical(path, 24, 9, 14);
+  buildHorizontal(path, 14, 24, 6);
+  buildVertical(path, 6, 14, 5);
+  buildHorizontal(path, 5, 6, 18);
+  buildVertical(path, 18, 5, 3);
+  buildHorizontal(path, 3, 18, 0);
 
   return path;
 };
 
-const REVERSE_RUN_OBSTACLES: [number, number][] = [
+const REVERSE_RUN_OBSTACLES: GridPos[] = [
   [30, 1],
   [3, 8],
   [2, 11],
@@ -398,51 +294,28 @@ const REVERSE_RUN_OBSTACLES: [number, number][] = [
   [4, 15]
 ];
 
-const createLabyrinthPath = (): [number, number][] => {
-  const path: [number, number][] = [];
+const createLabyrinthPath = (): GridPos[] => {
+  const path: GridPos[] = [];
 
-  const pushWaypoint = (col: number, row: number) => {
-    const previous = path[path.length - 1];
-    if (previous !== undefined && previous[0] === col && previous[1] === row) {
-      return;
-    }
-
-    path.push([col, row]);
-  };
-
-  const buildHorizontal = (row: number, startCol: number, endCol: number) => {
-    const step = startCol <= endCol ? 1 : -1;
-    for (let col = startCol; step > 0 ? col <= endCol : col >= endCol; col += step) {
-      pushWaypoint(col, row);
-    }
-  };
-
-  const buildVertical = (col: number, startRow: number, endRow: number) => {
-    const step = startRow <= endRow ? 1 : -1;
-    for (let row = startRow; step > 0 ? row <= endRow : row >= endRow; row += step) {
-      pushWaypoint(col, row);
-    }
-  };
-
-  buildHorizontal(1, 0, 33);
-  buildVertical(33, 1, 3);
-  buildHorizontal(3, 33, 4);
-  buildVertical(4, 3, 5);
-  buildHorizontal(5, 4, 30);
-  buildVertical(30, 5, 7);
-  buildHorizontal(7, 30, 6);
-  buildVertical(6, 7, 9);
-  buildHorizontal(9, 6, 28);
-  buildVertical(28, 9, 11);
-  buildHorizontal(11, 28, 8);
-  buildVertical(8, 11, 13);
-  buildHorizontal(13, 8, 33);
-  buildVertical(33, 13, 15);
+  buildHorizontal(path, 1, 0, 33);
+  buildVertical(path, 33, 1, 3);
+  buildHorizontal(path, 3, 33, 4);
+  buildVertical(path, 4, 3, 5);
+  buildHorizontal(path, 5, 4, 30);
+  buildVertical(path, 30, 5, 7);
+  buildHorizontal(path, 7, 30, 6);
+  buildVertical(path, 6, 7, 9);
+  buildHorizontal(path, 9, 6, 28);
+  buildVertical(path, 28, 9, 11);
+  buildHorizontal(path, 11, 28, 8);
+  buildVertical(path, 8, 11, 13);
+  buildHorizontal(path, 13, 8, 33);
+  buildVertical(path, 33, 13, 15);
 
   return path;
 };
 
-const LABYRINTH_OBSTACLES: [number, number][] = [
+const LABYRINTH_OBSTACLES: GridPos[] = [
   [2, 0],
   [12, 0],
   [20, 0],
@@ -457,46 +330,23 @@ const LABYRINTH_OBSTACLES: [number, number][] = [
   [24, 14]
 ];
 
-const createCruciblePath = (): [number, number][] => {
-  const path: [number, number][] = [];
+const createCruciblePath = (): GridPos[] => {
+  const path: GridPos[] = [];
 
-  const pushWaypoint = (col: number, row: number) => {
-    const previous = path[path.length - 1];
-    if (previous !== undefined && previous[0] === col && previous[1] === row) {
-      return;
-    }
-
-    path.push([col, row]);
-  };
-
-  const buildHorizontal = (row: number, startCol: number, endCol: number) => {
-    const step = startCol <= endCol ? 1 : -1;
-    for (let col = startCol; step > 0 ? col <= endCol : col >= endCol; col += step) {
-      pushWaypoint(col, row);
-    }
-  };
-
-  const buildVertical = (col: number, startRow: number, endRow: number) => {
-    const step = startRow <= endRow ? 1 : -1;
-    for (let row = startRow; step > 0 ? row <= endRow : row >= endRow; row += step) {
-      pushWaypoint(col, row);
-    }
-  };
-
-  buildHorizontal(8, 0, 10);
-  buildVertical(10, 8, 3);
-  buildHorizontal(3, 10, 25);
-  buildVertical(25, 3, 11);
-  buildHorizontal(11, 25, 14);
-  buildVertical(14, 11, 6);
-  buildHorizontal(6, 14, 13);
-  buildVertical(13, 6, 12);
-  buildHorizontal(12, 13, 33);
+  buildHorizontal(path, 8, 0, 10);
+  buildVertical(path, 10, 8, 3);
+  buildHorizontal(path, 3, 10, 25);
+  buildVertical(path, 25, 3, 11);
+  buildHorizontal(path, 11, 25, 14);
+  buildVertical(path, 14, 11, 6);
+  buildHorizontal(path, 6, 14, 13);
+  buildVertical(path, 13, 6, 12);
+  buildHorizontal(path, 12, 13, 33);
 
   return path;
 };
 
-const CRUCIBLE_OBSTACLES: [number, number][] = [
+const CRUCIBLE_OBSTACLES: GridPos[] = [
   [4, 1],
   [8, 2],
   [17, 1],
@@ -511,31 +361,15 @@ const CRUCIBLE_OBSTACLES: [number, number][] = [
   [31, 15]
 ];
 
-const createBlitzPath = (): [number, number][] => {
-  const path: [number, number][] = [];
+const createBlitzPath = (): GridPos[] => {
+  const path: GridPos[] = [];
 
-  const pushWaypoint = (col: number, row: number) => {
-    const previous = path[path.length - 1];
-    if (previous !== undefined && previous[0] === col && previous[1] === row) {
-      return;
-    }
-
-    path.push([col, row]);
-  };
-
-  const buildHorizontal = (row: number, startCol: number, endCol: number) => {
-    const step = startCol <= endCol ? 1 : -1;
-    for (let col = startCol; step > 0 ? col <= endCol : col >= endCol; col += step) {
-      pushWaypoint(col, row);
-    }
-  };
-
-  buildHorizontal(7, 0, 33);
+  buildHorizontal(path, 7, 0, 33);
 
   return path;
 };
 
-const BLITZ_OBSTACLES: [number, number][] = [
+const BLITZ_OBSTACLES: GridPos[] = [
   [2, 1],
   [4, 5],
   [6, 13],
@@ -552,48 +386,25 @@ const BLITZ_OBSTACLES: [number, number][] = [
   [32, 14]
 ];
 
-const createOuroborosPath = (): [number, number][] => {
-  const path: [number, number][] = [];
+const createOuroborosPath = (): GridPos[] => {
+  const path: GridPos[] = [];
 
-  const pushWaypoint = (col: number, row: number) => {
-    const previous = path[path.length - 1];
-    if (previous !== undefined && previous[0] === col && previous[1] === row) {
-      return;
-    }
-
-    path.push([col, row]);
-  };
-
-  const buildHorizontal = (row: number, startCol: number, endCol: number) => {
-    const step = startCol <= endCol ? 1 : -1;
-    for (let col = startCol; step > 0 ? col <= endCol : col >= endCol; col += step) {
-      pushWaypoint(col, row);
-    }
-  };
-
-  const buildVertical = (col: number, startRow: number, endRow: number) => {
-    const step = startRow <= endRow ? 1 : -1;
-    for (let row = startRow; step > 0 ? row <= endRow : row >= endRow; row += step) {
-      pushWaypoint(col, row);
-    }
-  };
-
-  buildHorizontal(2, 0, 16);
-  buildVertical(16, 2, 7);
-  buildHorizontal(7, 16, 6);
-  buildVertical(6, 7, 12);
-  buildHorizontal(12, 6, 16);
-  buildVertical(16, 12, 7);
-  buildHorizontal(7, 16, 28);
-  buildVertical(28, 7, 3);
-  buildHorizontal(3, 28, 18);
-  buildVertical(18, 3, 10);
-  buildHorizontal(10, 18, 33);
+  buildHorizontal(path, 2, 0, 16);
+  buildVertical(path, 16, 2, 7);
+  buildHorizontal(path, 7, 16, 6);
+  buildVertical(path, 6, 7, 12);
+  buildHorizontal(path, 12, 6, 16);
+  buildVertical(path, 16, 12, 7);
+  buildHorizontal(path, 7, 16, 28);
+  buildVertical(path, 28, 7, 3);
+  buildHorizontal(path, 3, 28, 18);
+  buildVertical(path, 18, 3, 10);
+  buildHorizontal(path, 10, 18, 33);
 
   return path;
 };
 
-const OUROBOROS_OBSTACLES: [number, number][] = [
+const OUROBOROS_OBSTACLES: GridPos[] = [
   [4, 0],
   [22, 1],
   [12, 5],

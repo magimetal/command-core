@@ -1,6 +1,6 @@
 import type { TowerArchetype } from '../const/towers';
 import type { WaveDefinition } from '../const/waves';
-import type { Cell } from './cell';
+import type { Cell, GridPos } from './cell';
 
 export type GameMode = 'OPERATIONS' | 'ANOMALY';
 
@@ -12,7 +12,7 @@ export interface RunConfig {
   mapId: string;
   mapLabel: string;
   grid: Cell[][];
-  enemyPath: [number, number][];
+  enemyPath: GridPos[];
   waves: WaveDefinition[];
   availableTowers: TowerArchetype[];
 }

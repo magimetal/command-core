@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Text, useStdout } from 'ink';
+import { Box, Text } from 'ink';
 import type { GameState } from '../models/game-state';
 import { composeGrid } from '../rendering/grid-composer';
 import { composeEventLog, composeHud, composeTitleBar } from '../rendering/hud-composer';
@@ -9,6 +9,7 @@ import { EventLogPanel } from './EventLogPanel';
 import { HudPanel } from './HudPanel';
 import { composeLegendLine, LegendLine } from './LegendLine';
 import { TitleBar } from './TitleBar';
+import { useTerminalWidth } from './use-terminal-width';
 
 interface GameplayFrameProps {
   state: GameState;
@@ -19,9 +20,7 @@ export const GameplayFrame = ({
   state,
   terminalColumnsOverride
 }: GameplayFrameProps): React.ReactElement => {
-  const { stdout } = useStdout();
-  const terminalColumns = terminalColumnsOverride ?? stdout?.columns ?? process.stdout.columns ?? 78;
-  const maxInnerWidth = Math.max(20, Math.min(76, terminalColumns - 2));
+  const maxInnerWidth = useTerminalWidth({ min: 20, override: terminalColumnsOverride });
   const eventLogLines = composeEventLog(state, 2);
   const gridLines = composeGrid(state);
   const hudLines = composeHud(state).split('\n');

@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import type { GameState } from '../models/game-state';
 import { calculateScore } from '../simulation/score';
 import { isReducedMotionEnabled } from './accessibility';
-import { colorizeHudValue } from './color-map';
+import { tokenHudValue } from './design-tokens';
 import { composeBorder, SECTION_BREAK } from './border';
 import { styleEmphasis } from './text-styles';
 
@@ -32,17 +32,17 @@ export const composeEndStateFrame = (state: GameState, maxInnerWidth?: number): 
   });
 
   const titleLine = isVictory
-    ? colorizeHudValue('All waves cleared. Base secured.', 'PHASE', state.baseHp)
-    : colorizeHudValue('Base destroyed. Mission failed.', 'PHASE', 0);
+    ? tokenHudValue('All waves cleared. Base secured.', 'PHASE', state.baseHp)
+    : tokenHudValue('Base destroyed. Mission failed.', 'PHASE', 0);
   const modeLine =
     state.runConfig.mode === 'ANOMALY'
       ? `Anomaly ${state.runConfig.mapLabel.match(/#\d+/)?.[0] ?? state.runConfig.mapLabel}`
       : `Operations · ${state.runConfig.mapLabel}`;
   const statLine =
-    `Enemies killed: ${colorizeHudValue(`${state.enemiesKilled}`, 'GOLD', state.baseHp)}  ` +
-    `Gold remaining: ${colorizeHudValue(`${state.currency}`, 'GOLD', state.baseHp)}`;
+    `Enemies killed: ${tokenHudValue(`${state.enemiesKilled}`, 'GOLD', state.baseHp)}  ` +
+    `Gold remaining: ${tokenHudValue(`${state.currency}`, 'GOLD', state.baseHp)}`;
   const score = calculateScore(state);
-  const scoreLine = `Score: ${colorizeHudValue(`${score}`, 'GOLD', state.baseHp)}`;
+  const scoreLine = `Score: ${tokenHudValue(`${score}`, 'GOLD', state.baseHp)}`;
   const blinkPrompt = isReducedMotionEnabled()
     ? styleEmphasis('R: New Run   Q: Quit')
     : `${styleEmphasis('R: New Run   Q: Quit')} \u001b[5m▌\u001b[0m`;
