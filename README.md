@@ -198,7 +198,8 @@ ANOMALY_SEED=12345 npm start
 
 - Full bordered frame with section dividers.
 - Grid is centered against wider HUD/log sections for tmux readability.
-- Ceremony screens for `TITLE`, `MODE_SELECT`, `MAP_SELECT`, `VICTORY`, and `GAME_OVER`.
+- **Ceremony screens** (`TITLE`, `MODE_SELECT`, `MAP_SELECT`, `VICTORY`, `GAME_OVER`) are React/Ink components with semantic styling.
+- **Gameplay screen** (`PREP`, `WAVE_ACTIVE`, `WAVE_CLEAR`) uses high-performance string composition for the grid and HUD (15 FPS real-time updates).
 - Gameplay HUD uses a **fixed 6-line block**:
   - HP + gold line with wide HP bar
   - wave progress telemetry
@@ -251,14 +252,16 @@ src/
   const/        canonical gameplay constants (maps, towers, enemies, waves, timing)
   models/       state and domain types
   simulation/   pure deterministic game-state transforms
-  rendering/    frame/HUD/menu/end-state composition and colorization
+  rendering/    gameplay composition (grid, HUD) and colorization
+  components/   Ink React components for all screens (title, menus, gameplay, end-states)
   input/        Ink key adapter
   app.tsx       loop timer + action wiring + phase transitions
   main.ts       CLI entrypoint
 
 tests/
   simulation/   movement, combat, economy, placement/sell, waves, end-states, score
-  rendering/    frame layout, HUD/menu/title/end-state behavior, terminal guardrails
+  rendering/    gameplay frame, HUD behavior, terminal guardrails
+  components/   Ink component rendering and ceremony screen behavior
   input/        control routing and title/menu precedence behavior
 ```
 
@@ -267,3 +270,20 @@ tests/
 - `SPEC.md` — product and MVP contract
 - `MVP.md` — implementation process/decision history
 - `CHANGELOG.md` — milestone and unreleased change history
+
+## Technical Notes
+
+### Rendering Architecture
+
+Command Core uses a **hybrid rendering approach** optimized for terminal constraints:
+
+- **Ceremony screens** (title, menus, end-states): React/Ink components with rich styling and animation support
+- **Gameplay**: High-performance string composition for real-time grid/HUD updates at 15 FPS
+
+This consolidation (completed March 2025) eliminated ~1,500 lines of duplicate composer code while maintaining terminal-native performance.
+
+### Key Types
+
+- `GridPos` — semantic `[col, row]` coordinate type used across simulation, rendering, and models
+- `GameState` — immutable game state passed through pure transform pipeline
+- `GamePhase` — explicit state machine: `TITLE` → `MODE_SELECT` → `MAP_SELECT` → `PREP` → `WAVE_ACTIVE` → `WAVE_CLEAR` → `VICTORY`/`GAME_OVER`
