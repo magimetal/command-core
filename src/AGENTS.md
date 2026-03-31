@@ -12,7 +12,9 @@ src/
 ├── models/              # State contracts and domain types
 ├── simulation/          # Tick pipeline and pure state transforms
 ├── rendering/           # Frame builder, color mapping, HUD/event presentation
-└── input/               # Keyboard adapter (`useInput` -> app callbacks)
+├── input/               # Keyboard adapter (`useInput` -> app callbacks)
+├── components/          # React UI screens and HUD panels
+└── utils/               # Event log, PRNG, threat radar helpers
 ```
 
 ## WHERE TO LOOK
@@ -23,9 +25,13 @@ src/
 | Core tick contract | `simulation/tick.ts` | Locked sequence + cleanup phase changes |
 | Wave start and queue materialization | `simulation/start-wave.ts` | PREP gate + queue generation from `WAVES` |
 | Spawn cadence and PREP/VICTORY transitions | `simulation/wave-controller.ts` | `spawnTimerTicks` + WAVE_CLEAR logic |
-| Terminal layout constraints | `components/GameplayFrame.tsx` | Gameplay section composition, centering, and pane-fit guidance |
-| Shared rendering tokens/utilities | `rendering/text-utils.ts`, `rendering/text-styles.ts`, `rendering/hp-bar.ts` | ANSI width helpers, semantic text styles, reusable HP bar text |
+| Grid composition and centering | `rendering/grid-composer.tsx` | 16x34 grid, centered layout |
+| HUD panel composition | `rendering/hud-composer.ts` | Currency, HP, wave status bars |
+| Terminal layout constraints | `components/GameplayFrame.tsx` | Section composition, pane-fit guidance |
+| Shared rendering tokens | `rendering/text-utils.ts`, `rendering/text-styles.ts`, `rendering/hp-bar.ts` | ANSI width helpers, semantic styles |
 | Input precedence | `input/input-handler.ts` | `Q` first, then title any-key gate, then controls |
+| Event logging | `utils/event-log.ts` | Newest-first, 7-entry cap |
+| Threat radar | `utils/threat-radar.ts` | Proximity-based threat detection |
 
 ## CONVENTIONS (SRC-SPECIFIC)
 - Keep transforms pure: return new state, no in-place mutations.

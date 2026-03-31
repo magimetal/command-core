@@ -1,8 +1,8 @@
 # PROJECT KNOWLEDGE BASE
 
-**Generated:** 2026-03-21
-**Commit:** n/a (workspace is not a git repo)
-**Branch:** n/a (workspace is not a git repo)
+**Generated:** 2026-03-31
+**Commit:** 6d86e3f
+**Branch:** main
 
 ## OVERVIEW
 Command Core is a terminal-native tower defense MVP in Node.js + TypeScript + Ink.
@@ -10,13 +10,15 @@ Single-process game loop: input -> state update -> frame string composition -> t
 
 ## STRUCTURE
 ```text
-terminal-tower-defense/  # Current repository directory name (product name: Command Core)
+terminal-tower-defense/
 ├── src/                # Runtime code (state, simulation, rendering, input)
-│   ├── const/          # Canonical gameplay and map constants
+│   ├── const/          # Archetypes, map/path, wave definitions, runtime constants
 │   ├── models/         # Shared type contracts
 │   ├── simulation/     # Deterministic tick pipeline
 │   ├── rendering/      # ANSI frame composition + HUD/log formatting
 │   ├── input/          # Ink key handler to app callbacks
+│   ├── components/     # React UI screens and HUD panels
+│   ├── utils/          # Event log, PRNG, threat radar helpers
 │   ├── app.tsx         # Main loop, phase transitions, action wiring
 │   └── main.ts         # CLI entrypoint
 ├── tests/              # Guardrails for simulation, rendering, input
@@ -33,28 +35,28 @@ terminal-tower-defense/  # Current repository directory name (product name: Comm
 | Wave spawning and victory transition | `src/simulation/wave-controller.ts`, `src/simulation/start-wave.ts` | `WAVE_CLEAR` advances wave or enters `VICTORY` |
 | Tower placement errors/messages | `src/simulation/tower-placement.ts`, `src/app.tsx` | Error strings converted to user-facing `✗` messages |
 | Grid/map geometry | `src/const/operations-maps.ts` | 16x34 grids; map geometry and paths are defined per operations map |
-| Frame output and width behavior | `src/rendering/frame-composer.ts` | One bordered frame string; grid centered to non-grid width |
-| Shared rendering tokens/utilities | `src/rendering/text-utils.ts`, `src/rendering/text-styles.ts`, `src/rendering/hp-bar.ts` | Centralized ANSI width helpers, semantic text styles, and reusable HP bar text |
+| Terminal layout constraints | `src/components/GameplayFrame.tsx` | Section composition, centering, pane-fit guidance |
+| Shared rendering tokens/utilities | `src/rendering/text-utils.ts`, `src/rendering/text-styles.ts`, `src/rendering/hp-bar.ts` | ANSI width helpers, semantic text styles, HP bar text |
 | Input gates | `src/input/input-handler.ts` | `Q` preempts title any-key gate |
-| Rendering guardrails | `tests/rendering/frame-composer.test.ts` | Width <= 78, height <= 33 |
+| Rendering guardrails | `tests/rendering/` | Width <= 78, height <= 33 assertions |
 
 ## CODE MAP
-LSP codemap unavailable in this run; fallback map below.
-
-| Symbol/Module | Type | Location | Role |
-|---------------|------|----------|------|
-| `App` | React component | `src/app.tsx` | Owns loop timer, dispatches input actions, composes rendered frame |
-| `tick` | state reducer | `src/simulation/tick.ts` | Applies canonical step order and terminal phase transitions |
-| `advanceWave` | wave scheduler | `src/simulation/wave-controller.ts` | Spawns queued enemies and handles wave boundary state changes |
-| `resolveCombat` | combat resolver | `src/simulation/combat.ts` | Targeting, damage, cooldown reset, threshold hit log messages |
-| `composeFrame` | renderer | `src/rendering/frame-composer.ts` | Builds TITLE/PREP/WAVE/END screens into one string block |
+| Symbol | Type | Location | Role |
+|--------|------|----------|------|
+| `App` | React component | `src/app.tsx` | Loop timer, action dispatch, frame composition |
+| `tick` | state reducer | `src/simulation/tick.ts` | Canonical step order + terminal phase transitions |
+| `advanceWave` | wave scheduler | `src/simulation/wave-controller.ts` | Spawns enemies, handles wave boundaries |
+| `resolveCombat` | combat resolver | `src/simulation/combat.ts` | Targeting, damage, cooldown reset |
+| `composeGameplayFrame` | renderer | `src/components/GameplayFrame.tsx` | Gameplay HUD composition |
+| `InputHandler` | React hook | `src/input/input-handler.ts` | `useInput` -> app callback adapter |
 
 ## CONVENTIONS
-- State phases are explicit string unions (`TITLE`, `MODE_SELECT`, `MAP_SELECT`, `PREP`, `WAVE_ACTIVE`, `WAVE_CLEAR`, `VICTORY`, `GAME_OVER`).
+- State phases: explicit string unions (`TITLE`, `MODE_SELECT`, `MAP_SELECT`, `PREP`, `WAVE_ACTIVE`, `WAVE_CLEAR`, `VICTORY`, `GAME_OVER`).
 - Simulation functions are pure-state transforms returning full `GameState` objects.
-- Event log is newest-first; in-memory cap is 7 entries (`appendEventLog`). Display cap is 2 lines in gameplay frame.
-- User-facing event prefixes carry semantics: `✕` kill, `!` leak, `>>` wave, `✗` error, `~` hit-threshold.
-- Rendering path strips ANSI for layout math before padding/centering.
+- Event log newest-first; in-memory cap 7 entries, display cap 2 lines.
+- Event prefixes carry semantics: `✕` kill, `!` leak, `>>` wave, `✗` error, `~` hit-threshold.
+- Rendering strips ANSI for layout math before padding/centering.
+- Unicode glyph language: `△ ◉ ▸ ◈ ⟶ ⬡` as gameplay affordances.
 
 ## ANTI-PATTERNS (THIS PROJECT)
 - Do not reorder tick pipeline steps; tests assert movement-before-combat behavior.
@@ -64,9 +66,9 @@ LSP codemap unavailable in this run; fallback map below.
 - Do not add browser/UI abstractions; product scope is terminal-native Ink.
 
 ## UNIQUE STYLES
-- Uses Unicode-heavy visual language (`△ ◉ ▸ ◈ ⟶ ⬡`) as gameplay affordances.
 - End states are ceremony screens, not HUD overlays.
 - Grid is centered relative to wider non-grid sections for tmux readability.
+- Frame budget discipline: width <= 78, height <= 33.
 
 ## COMMANDS
 ```bash
@@ -77,49 +79,31 @@ npm test
 ```
 
 ## NOTES
-- Runtime is configured as CommonJS in `package.json`.
+- Runtime configured as CommonJS in `package.json`.
 - `FRAME_INTERVAL_MS=67` (~15 FPS target); loop stops on `GAME_OVER`/`VICTORY`.
-- No git metadata available in this workspace; AGENTS omits commit/branch specifics.
+- Anomaly mode uses procedurally generated maps via seed-based PRNG.
 
 ## Design Context
 
 ### Users
 - Primary users are **developers/hobbyists** and **strategy gamers**.
-- Typical usage context includes **quick runs** and **focused sessions**, often inside **tmux/SSH terminal panes**.
-- Core jobs to be done:
-  - Parse battlefield state at a glance (readability first)
-  - Make confident tactical decisions under wave pressure
-  - Explore higher-skill strategy/mastery over repeated runs
-  - Experience a polished terminal-native UX showcase
+- Typical usage context: **quick runs**, **focused sessions**, often inside **tmux/SSH terminal panes**.
+- Core jobs: parse battlefield state at a glance, make confident tactical decisions, explore higher-skill strategy.
 
 ### Brand Personality
 - 3-word personality: **Arcade · Retro · Energetic**.
-- Voice and tone should feel like a **command console with personality**: crisp, tactical messaging with selective bursts of excitement.
-- Emotional goals:
-  - **Confident control** (clear information hierarchy)
-  - **Tense urgency** (waves feel consequential)
-  - **Playful delight** (small moments of charm without sacrificing clarity)
+- Voice and tone: **command console with personality**: crisp, tactical messaging with selective bursts of excitement.
+- Emotional goals: confident control, tense urgency, playful delight.
 
 ### Aesthetic Direction
-- Visual tone: **terminal-first tactical arcade** with Unicode glyph language and bordered frame composition.
-- References:
-  - **Traditional roguelikes** for dense, legible symbol semantics
-  - **Modern game UI/HUD patterns** for hierarchy, momentum, and feedback clarity
-- Anti-reference:
-  - Must **not** resemble a flat spreadsheet-like utility display.
-- Theme and color direction:
-  - ANSI-driven, terminal-native presentation (dark-terminal friendly by default)
-  - No strict required or forbidden brand colors currently
-  - Preserve symbol/text redundancy so meaning is never color-only
+- Visual tone: **terminal-first tactical arcade** with Unicode glyph language.
+- References: traditional roguelikes for dense symbol semantics, modern game UI/HUD patterns for hierarchy.
+- Anti-reference: must **not** resemble flat spreadsheet-like utility display.
+- Theme: ANSI-driven, dark-terminal friendly, no color-only dependencies.
 
 ### Design Principles
-1. **One-glance tactical readability**
-   - Critical state (HP, wave, threats, cursor context, recent events) must be scannable in under a second.
-2. **Energy without noise**
-   - Keep retro-arcade personality and tension cues, but avoid clutter that obscures decision-making.
-3. **Color is reinforcement, not dependency**
-   - Pair color with glyphs, prefixes, and labels to support accessibility and terminal variability.
-4. **Pane-safe composition**
-   - Respect constrained terminal layouts (tmux/SSH) and maintain strict frame-budget discipline.
-5. **Phase-aware ceremony**
-   - Title/mode/end states should feel intentional and expressive, while active gameplay remains information-first.
+1. **One-glance tactical readability** - Critical state scannable in under a second.
+2. **Energy without noise** - Retro-arcade personality without obscuring decisions.
+3. **Color is reinforcement, not dependency** - Pair color with glyphs/labels.
+4. **Pane-safe composition** - Respect constrained terminal layouts.
+5. **Phase-aware ceremony** - Title/mode/end states intentional and expressive.

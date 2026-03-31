@@ -7,6 +7,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Unreleased]
 
 ### Added
+- Hierarchical agent documentation system:
+  - generated root `AGENTS.md` as project knowledge base with structure, code map, conventions, and design context
+  - generated `src/AGENTS.md`, `src/const/AGENTS.md`, `src/components/AGENTS.md`, `src/models/AGENTS.md`, `src/rendering/AGENTS.md`, `src/simulation/AGENTS.md`, and `tests/AGENTS.md` for directory-specific guidance
+  - all agent docs include "Where to Look" tables mapping common tasks to file locations
+  - includes design context section with brand personality, aesthetic direction, and design principles
 - Componentized Ink presentation layer:
   - new `src/components/*` screen/panel modules (`TitleScreen`, `ModeSelectScreen`, `MapSelectScreen`, `GameplayFrame`, `VictoryScreen`, `GameOverScreen`, and supporting HUD/event components)
   - new component-level render/snapshot coverage under `tests/components/*`
