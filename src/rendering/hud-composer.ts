@@ -20,7 +20,6 @@ import {
   styleThreat,
   type EventMessageClass
 } from './design-tokens';
-import { FRAME_INNER_WIDTH_BUDGET } from './frame-composer';
 import { getDisplayWidth, truncateDisplay } from './text-utils';
 import { getVisibleEventLog } from '../utils/event-log';
 import { composeWaveDrainBar, getPriorityTarget, getSurgeState } from '../utils/threat-radar';
@@ -33,6 +32,8 @@ const towerNameByArchetype: Record<TowerArchetype, string> = {
   [TowerArchetype.SNIPER]: 'Sniper',
   [TowerArchetype.SLOW]: 'Slow'
 };
+
+const FRAME_INNER_WIDTH_BUDGET = 76;
 
 const towerClassByArchetype: Record<TowerArchetype, 'RAPID_TOWER' | 'CANNON_TOWER' | 'SNIPER_TOWER' | 'SLOW_TOWER'> = {
   [TowerArchetype.RAPID]: 'RAPID_TOWER',

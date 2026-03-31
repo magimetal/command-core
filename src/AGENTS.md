@@ -23,7 +23,7 @@ src/
 | Core tick contract | `simulation/tick.ts` | Locked sequence + cleanup phase changes |
 | Wave start and queue materialization | `simulation/start-wave.ts` | PREP gate + queue generation from `WAVES` |
 | Spawn cadence and PREP/VICTORY transitions | `simulation/wave-controller.ts` | `spawnTimerTicks` + WAVE_CLEAR logic |
-| Terminal layout constraints | `rendering/frame-composer.ts` | Border composition, centering, title/end screens |
+| Terminal layout constraints | `components/GameplayFrame.tsx` | Gameplay section composition, centering, and pane-fit guidance |
 | Shared rendering tokens/utilities | `rendering/text-utils.ts`, `rendering/text-styles.ts`, `rendering/hp-bar.ts` | ANSI width helpers, semantic text styles, reusable HP bar text |
 | Input precedence | `input/input-handler.ts` | `Q` first, then title any-key gate, then controls |
 

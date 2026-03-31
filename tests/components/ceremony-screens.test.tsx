@@ -6,19 +6,14 @@ import { MapSelectScreen } from '../../src/components/MapSelectScreen';
 import { ModeSelectScreen } from '../../src/components/ModeSelectScreen';
 import { TitleScreen } from '../../src/components/TitleScreen';
 import { stripAnsi } from '../../src/rendering/text-utils';
-import { composeEndStateFrame } from '../../src/rendering/end-state-composer';
-import { composeMapSelectFrame } from '../../src/rendering/map-select-composer';
-import { composeModeSelectFrame } from '../../src/rendering/mode-select-composer';
-import { composeTitleFrame } from '../../src/rendering/title-composer';
 import { createInitialState } from '../../src/simulation/create-initial-state';
 
 afterEach(() => {
   cleanup();
 });
 
-const expectParityTokens = (inkOutput: string, composerOutput: string, tokens: string[]): void => {
+const expectOutputTokens = (inkOutput: string, tokens: string[]): void => {
   for (const token of tokens) {
-    expect(composerOutput).toContain(token);
     expect(inkOutput).toContain(token);
   }
 };
@@ -26,7 +21,6 @@ const expectParityTokens = (inkOutput: string, composerOutput: string, tokens: s
 describe('Ink ceremony screens', () => {
   test('TitleScreen snapshots at 78 and 64 columns with content parity', () => {
     const state = createInitialState();
-    const composerOutput = stripAnsi(composeTitleFrame(state, 76));
 
     const wide = render(<TitleScreen state={state} terminalColumnsOverride={78} />);
     const wideOutput = stripAnsi(wide.lastFrame() ?? '');
@@ -36,7 +30,7 @@ describe('Ink ceremony screens', () => {
     const narrowOutput = stripAnsi(narrow.lastFrame() ?? '');
     expect(narrowOutput).toMatchSnapshot('title-64');
 
-    expectParityTokens(wideOutput, composerOutput, [
+    expectOutputTokens(wideOutput, [
       'COMMAND CORE',
       ':: COMMAND CORE ONLINE ::',
       'Any key: Choose mode',
@@ -54,7 +48,6 @@ describe('Ink ceremony screens', () => {
 
   test('ModeSelectScreen snapshots at 78 and 64 columns with content parity', () => {
     const state = { ...createInitialState(), phase: 'MODE_SELECT' as const, menuCursor: 0 };
-    const composerOutput = stripAnsi(composeModeSelectFrame(state, 76));
 
     const wide = render(<ModeSelectScreen state={state} terminalColumnsOverride={78} />);
     const wideOutput = stripAnsi(wide.lastFrame() ?? '');
@@ -64,7 +57,7 @@ describe('Ink ceremony screens', () => {
     const narrowOutput = stripAnsi(narrow.lastFrame() ?? '');
     expect(narrowOutput).toMatchSnapshot('mode-select-64');
 
-    expectParityTokens(wideOutput, composerOutput, [
+    expectOutputTokens(wideOutput, [
       'COMMAND CORE',
       '[1] OPERATIONS',
       '[2] ANOMALY',
@@ -75,7 +68,6 @@ describe('Ink ceremony screens', () => {
 
   test('MapSelectScreen snapshots at 78 and 64 columns with content parity', () => {
     const state = { ...createInitialState(), phase: 'MAP_SELECT' as const, menuCursor: 0 };
-    const composerOutput = stripAnsi(composeMapSelectFrame(state, 76));
 
     const wide = render(<MapSelectScreen state={state} terminalColumnsOverride={78} />);
     const wideOutput = stripAnsi(wide.lastFrame() ?? '');
@@ -85,7 +77,7 @@ describe('Ink ceremony screens', () => {
     const narrowOutput = stripAnsi(narrow.lastFrame() ?? '');
     expect(narrowOutput).toMatchSnapshot('map-select-64');
 
-    expectParityTokens(wideOutput, composerOutput, [
+    expectOutputTokens(wideOutput, [
       'OPERATIONS MAP SELECT',
       '[1] Crossroads',
       '[10] Ouroboros',
@@ -102,8 +94,6 @@ describe('Ink ceremony screens', () => {
       enemiesKilled: 18,
       currency: 305
     };
-    const composerOutput = stripAnsi(composeEndStateFrame(state, 76));
-
     const wide = render(<EndStateScreen state={state} variant="victory" terminalColumnsOverride={78} />);
     const wideOutput = stripAnsi(wide.lastFrame() ?? '');
     expect(wideOutput).toMatchSnapshot('victory-78');
@@ -112,7 +102,7 @@ describe('Ink ceremony screens', () => {
     const narrowOutput = stripAnsi(narrow.lastFrame() ?? '');
     expect(narrowOutput).toMatchSnapshot('victory-64');
 
-    expectParityTokens(wideOutput, composerOutput, [
+    expectOutputTokens(wideOutput, [
       'All waves cleared. Base secured.',
       'Enemies killed: 18',
       'Gold remaining: 305',
@@ -130,8 +120,6 @@ describe('Ink ceremony screens', () => {
       enemiesKilled: 7,
       currency: 220
     };
-    const composerOutput = stripAnsi(composeEndStateFrame(state, 76));
-
     const wide = render(<EndStateScreen state={state} variant="game-over" terminalColumnsOverride={78} />);
     const wideOutput = stripAnsi(wide.lastFrame() ?? '');
     expect(wideOutput).toMatchSnapshot('game-over-78');
@@ -140,7 +128,7 @@ describe('Ink ceremony screens', () => {
     const narrowOutput = stripAnsi(narrow.lastFrame() ?? '');
     expect(narrowOutput).toMatchSnapshot('game-over-64');
 
-    expectParityTokens(wideOutput, composerOutput, [
+    expectOutputTokens(wideOutput, [
       'Base destroyed. Mission failed.',
       'Enemies killed: 7',
       'Gold remaining: 220',

@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { render, Text, useApp } from 'ink';
+import { render, useApp } from 'ink';
 import { EnemyArchetype, ENEMY_DEFS } from '../../src/const/enemies';
 import { OPERATIONS_MAP_DEFS, createOperationsRunConfig } from '../../src/const/operations-maps';
+import { GameplayFrame } from '../../src/components/GameplayFrame';
 import type { Enemy } from '../../src/models/enemy';
 import type { GameState } from '../../src/models/game-state';
-import { composeFrame } from '../../src/rendering/frame-composer';
 import { createInitialState } from '../../src/simulation/create-initial-state';
 
 const FRAME_COUNT = 8;
@@ -117,12 +117,12 @@ const ReproHarness = () => {
     return () => clearTimeout(timeout);
   }, [frameIndex, exit]);
 
-  const frame = composeFrame(createWaveNineDenseState(frameIndex), {
-    terminalColumns: process.stdout.columns ?? 78,
-    terminalRows: process.stdout.rows ?? 33
-  });
-
-  return <Text>{frame}</Text>;
+  return (
+    <GameplayFrame
+      state={createWaveNineDenseState(frameIndex)}
+      terminalColumnsOverride={process.stdout.columns ?? 78}
+    />
+  );
 };
 
 render(<ReproHarness />, {
